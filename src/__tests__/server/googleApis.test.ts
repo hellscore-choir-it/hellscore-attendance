@@ -94,7 +94,7 @@ describe("Google APIs", () => {
       const testRow = ["Test User", "test@example.com", "Maybe", "2023-04-26"];
       
       // Mock a non-retryable error
-      const error = new Error("Permission denied");
+      const error = new Error("Permission denied") as any;
       error.response = { status: 403 };
       mockAppend.mockRejectedValueOnce(error);
       

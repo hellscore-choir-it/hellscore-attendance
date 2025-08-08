@@ -3,7 +3,20 @@ import { z } from "zod";
 import { env } from "../env/server.mjs";
 import { nowISO } from "../utils/dates";
 import { captureException } from "@sentry/nextjs";
-import { castArray, compact, concat, head, map, size, zip } from "lodash";
+import {
+  castArray,
+  compact,
+  concat,
+  head,
+  map,
+  size,
+  zip,
+} from "lodash";
+import { doAsyncOperationWithRetry } from "./common/doAsyncOperationWithRetry";
+import { RequestQueue } from "./common/RequestQueue";
+
+// Global request queue instance
+const sheetsRequestQueue = new RequestQueue();
 
 // If we need to check if we're running in a build environment (like Vercel build)
 // const isBuildEnvironment = () => process.env.NEXT_PHASE === 'PHASE_PRODUCTION_BUILD' || process.env.VERCEL_ENV === 'production';
@@ -21,7 +34,7 @@ const sheets = google.sheets({ version: "v4", auth });
 const calendars = google.calendar({ version: "v3", auth });
 
 const isTestEnvironment = () =>
-  process.env.TEST_EVENTS === "true" || process.env.TEST_EVENTS === "1";
+  env.TEST_EVENTS === "true" || env.TEST_EVENTS === "1";
 
 export const writeResponseRow = async (
   row: (string | boolean | number)[],
@@ -33,50 +46,18 @@ export const writeResponseRow = async (
     maxRetries?: number;
   } = {}
 ) => {
-  // Maximum number of retry attempts
-  let attempt = 0;
-
-  while (attempt < (retry ? maxRetries : 1)) {
-    try {
-      // Exponential backoff delay on retries
-      if (attempt > 0) {
-        const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
-        await new Promise((resolve) => setTimeout(resolve, delay));
-        console.log(`Retry attempt ${attempt} after ${delay}ms delay`);
-      }
-
-      attempt++;
-
-      return await sheets.spreadsheets.values.append({
-        spreadsheetId: isTestEnvironment() ? env.TEST_SHEET_ID : env.SHEET_ID,
-        requestBody: { values: [row] },
-        range: "response",
-        valueInputOption: "USER_ENTERED",
-      });
-    } catch (error: any) {
-      console.error(
-        `Error writing to sheet (attempt ${attempt}/${maxRetries}):`,
-        error
-      );
-
-      // If we've exhausted retries, throw the error
-      if (attempt >= maxRetries) {
-        throw error;
-      }
-
-      // Check if this is a rate limit error or temporary failure
-      const isRetryableError =
-        error?.response?.status === 429 || // Rate limit
-        error?.response?.status === 500 || // Server error
-        error?.message?.includes("quota") ||
-        error?.message?.includes("rate limit");
-
-      // If it's not a retryable error, don't retry
-      if (!isRetryableError) {
-        throw error;
-      }
-    }
-  }
+  return await doAsyncOperationWithRetry(
+    async () =>
+      sheetsRequestQueue.add(() =>
+        sheets.spreadsheets.values.append({
+          spreadsheetId: isTestEnvironment() ? env.TEST_SHEET_ID : env.SHEET_ID,
+          requestBody: { values: [row] },
+          range: "response",
+          valueInputOption: "USER_ENTERED",
+        })
+      ),
+    { retry, maxRetries }
+  );
 };
 
 const gsheetDataSchema = z.object({
@@ -97,45 +78,71 @@ export interface UserEvent {
   isTest?: boolean;
 }
 
-export const getSheetContent = async (): Promise<UserEvent[]> => {
-  const response = await sheets.spreadsheets.values.batchGet({
-    spreadsheetId: isTestEnvironment() ? env.TEST_SHEET_ID : env.SHEET_ID,
-    ranges: ["user_event_event_title", "user_event_user_email"],
-  });
-  try {
-    const data = gsheetDataSchema.parse(response.data);
-    const events = data.valueRanges[0].values;
-    const emails = data.valueRanges[1].values;
-    if (size(events) !== size(emails)) {
-      throw new Error(
-        `Mismatch in number of events (${size(events)}) and emails (${size(
-          emails
-        )}). Response: ${JSON.stringify(response.data || "No data")}`
+export const getSheetContent = async ({
+  retry = true,
+  maxRetries = 3,
+}: {
+  retry?: boolean;
+  maxRetries?: number;
+} = {}): Promise<UserEvent[] | undefined> => {
+  return await doAsyncOperationWithRetry(
+    async () => {
+      const response = await sheetsRequestQueue.add(() =>
+        sheets.spreadsheets.values.batchGet({
+          spreadsheetId: isTestEnvironment() ? env.TEST_SHEET_ID : env.SHEET_ID,
+          ranges: ["user_event_event_title", "user_event_user_email"],
+        })
       );
-    }
-    const pairs = zip(events, emails) || [];
-    const regularEvents = map(pairs, ([title, email], i) => ({
-      title: head(castArray(title)) || "",
-      email: head(castArray(email)) || "",
-    }));
 
-    const testEvents: UserEvent[] = isTestEnvironment()
-      ? [
-          { title: "Test Event", isTest: true, email: "hellscore.it@gmail.com" },
-          { title: "Test Event 2", isTest: true, email: "hellscore.it@gmail.com" },
-        ]
-      : [];
+      try {
+        const data = gsheetDataSchema.parse(response.data);
+        const events = data.valueRanges[0].values;
+        const emails = data.valueRanges[1].values;
+        if (size(events) !== size(emails)) {
+          throw new Error(
+            `Mismatch in number of events (${size(events)}) and emails (${size(
+              emails
+            )}). Response: ${JSON.stringify(response.data || "No data")}`
+          );
+        }
+        const pairs = zip(events, emails) || [];
+        const regularEvents = map(pairs, ([title, email], i) => ({
+          title: head(castArray(title)) || "",
+          email: head(castArray(email)) || "",
+        }));
 
-    return compact(concat(regularEvents, testEvents));
-  } catch (error) {
-    captureException(error, { extra: { response } });
-    console.error("Failed to parse Google Sheets data:", error, response.data);
-    throw new Error(
-      `Failed to parse Google Sheets data: ${error}. Response: ${JSON.stringify(
-        response.data || "No data"
-      )}`
-    );
-  }
+        const testEvents: UserEvent[] = isTestEnvironment()
+          ? [
+              {
+                title: "Test Event",
+                isTest: true,
+                email: "hellscore.it@gmail.com",
+              },
+              {
+                title: "Test Event 2",
+                isTest: true,
+                email: "hellscore.it@gmail.com",
+              },
+            ]
+          : [];
+
+        return compact(concat(regularEvents, testEvents));
+      } catch (error) {
+        captureException(error, { extra: { response } });
+        console.error(
+          "Failed to parse Google Sheets data:",
+          error,
+          response.data
+        );
+        throw new Error(
+          `Failed to parse Google Sheets data: ${error}. Response: ${JSON.stringify(
+            response.data || "No data"
+          )}`
+        );
+      }
+    },
+    { retry, maxRetries }
+  );
 };
 
 interface EventResponse extends calendar_v3.Schema$Event {
@@ -160,7 +167,7 @@ export const getHellscoreEvents = async (): Promise<EventResponse[]> => {
           ).toISOString(),
           timeZone: "Europe/Berlin",
         },
-        summary: "Test Event",
+        summary: "חזרה Hellscore",
         description: "This is a test event",
         location: "Test Location",
         status: "confirmed",
@@ -169,16 +176,40 @@ export const getHellscoreEvents = async (): Promise<EventResponse[]> => {
       {
         id: "2",
         start: {
-          dateTime: "2023-10-02T14:00:00+02:00",
+          dateTime: new Date(
+            new Date().getTime() + 60 * 60 * 1000 + 24 * 60 * 60 * 1000
+          ).toISOString(),
           timeZone: "Europe/Berlin",
         },
         end: {
-          dateTime: "2023-10-02T16:00:00+02:00",
+          dateTime: new Date(
+            new Date().getTime() + 2 * 60 * 60 * 1000 + 24 * 60 * 60 * 1000
+          ).toISOString(),
           timeZone: "Europe/Berlin",
         },
-        summary: "Test Event 2",
-        description: "This is another test event",
-        location: "Test Location 2",
+        summary: "חזרה פיראטית",
+        description: "This is a test event",
+        location: "Test Location",
+        status: "confirmed",
+        isTest: true,
+      },
+      {
+        id: "3",
+        start: {
+          dateTime: new Date(
+            new Date().getTime() + 60 * 60 * 1000 + 48 * 60 * 60 * 1000
+          ).toISOString(),
+          timeZone: "Europe/Berlin",
+        },
+        end: {
+          dateTime: new Date(
+            new Date().getTime() + 2 * 60 * 60 * 1000 + 48 * 60 * 60 * 1000
+          ).toISOString(),
+          timeZone: "Europe/Berlin",
+        },
+        summary: "חזרת אנסמבל",
+        description: "This is a test event",
+        location: "Test Location",
         status: "confirmed",
         isTest: true,
       },
@@ -197,5 +228,7 @@ export const getHellscoreEvents = async (): Promise<EventResponse[]> => {
   if (!items) {
     throw new Error("No items in Hellscore calendar???");
   }
+
+  console.debug("Returning Hellscore events:", size(items), "items");
   return items;
 };

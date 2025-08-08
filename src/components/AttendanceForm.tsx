@@ -1,7 +1,16 @@
 import { InferGetStaticPropsType } from "next";
 import { Session } from "next-auth";
 import { useEffect, useMemo } from "react";
-import { includes, isString, some } from "lodash";
+import {
+  filter,
+  first,
+  includes,
+  isString,
+  map,
+  size,
+  some,
+  uniq,
+} from "lodash";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/router";
@@ -40,34 +49,41 @@ const AttendanceForm = ({
   });
   const relevantTitles = useMemo(
     () =>
-      userEvents
-        .filter(({ isTest, email }) => isTest || email === session.user?.email)
-        .map(({ title }) => title),
+      map(
+        filter(
+          userEvents,
+          ({ isTest, email }) => isTest || email === session.user?.email
+        ),
+        "title"
+      ),
     [userEvents, session]
   );
   const relevantEvents = useMemo(
     () =>
-      calendarData.filter(
+      filter(
+        calendarData,
         ({ title }) =>
-          Boolean(title) && relevantTitles.includes(title as string)
+          Boolean(title) && includes(relevantTitles, title as string)
       ),
     [calendarData, relevantTitles]
   );
   const sortedRelevantTitles = useMemo(
-    () => [...new Set(relevantEvents.map(({ title }) => title))],
+    () => uniq(map(relevantEvents, ({ title }) => title)),
     [relevantEvents]
   );
-  const relevantDates = relevantEvents
-    .filter(
+  const relevantDates = map(
+    filter(
+      relevantEvents,
       ({ title }) => title === (watch("eventTitle") || sortedRelevantTitles[0])
-    )
-    .map(({ start }) => start);
-  const nextDate = relevantDates[0];
+    ),
+    "start"
+  );
+  const nextDate = first(relevantDates);
   useEffect(() => {
     if (nextDate) setValue("eventDate", nextDate);
   }, [setValue, nextDate]);
   const showWhyNot = !watch("going");
-  if (!relevantTitles.length) {
+  if (!size(relevantTitles)) {
     return <p>לא נמצאו אירועים רלוונטיים עבורך ({session.user?.email})!</p>;
   }
   if (formState.isSubmitting || formState.isSubmitted) {
@@ -131,7 +147,7 @@ const AttendanceForm = ({
           className="select select-bordered"
           {...register("eventTitle", { required: true })}
         >
-          {sortedRelevantTitles.map((title) => (
+          {map(sortedRelevantTitles, (title) => (
             <option value={title} key={title}>
               {title}
             </option>
@@ -144,7 +160,8 @@ const AttendanceForm = ({
           className="select select-bordered"
           {...register("eventDate", { required: true })}
         >
-          {relevantDates.map(
+          {map(
+            relevantDates,
             (date) =>
               Boolean(date) && (
                 <option value={date as string} key={date}>

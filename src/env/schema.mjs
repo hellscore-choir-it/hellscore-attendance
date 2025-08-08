@@ -21,6 +21,8 @@ export const serverSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string(),
   GOOGLE_CLIENT_ID: z.string(),
   TEST_EVENTS: z.string().optional(),
+  MAX_CONCURRENT_GOOGLE_SHEET_REQUESTS: z.coerce.number().optional().default(3),
+  DELAY_BETWEEN_GOOGLE_SHEET_REQUESTS: z.coerce.number().optional().default(100),
 });
 
 /**
