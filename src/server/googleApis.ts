@@ -167,7 +167,7 @@ export const getHellscoreEvents = async (): Promise<EventResponse[]> => {
           ).toISOString(),
           timeZone: "Europe/Berlin",
         },
-        summary: "Test Event",
+        summary: "חזרה Hellscore",
         description: "This is a test event",
         location: "Test Location",
         status: "confirmed",
@@ -176,16 +176,40 @@ export const getHellscoreEvents = async (): Promise<EventResponse[]> => {
       {
         id: "2",
         start: {
-          dateTime: "2023-10-02T14:00:00+02:00",
+          dateTime: new Date(
+            new Date().getTime() + 60 * 60 * 1000 + 24 * 60 * 60 * 1000
+          ).toISOString(),
           timeZone: "Europe/Berlin",
         },
         end: {
-          dateTime: "2023-10-02T16:00:00+02:00",
+          dateTime: new Date(
+            new Date().getTime() + 2 * 60 * 60 * 1000 + 24 * 60 * 60 * 1000
+          ).toISOString(),
           timeZone: "Europe/Berlin",
         },
-        summary: "Test Event 2",
-        description: "This is another test event",
-        location: "Test Location 2",
+        summary: "חזרה פיראטית",
+        description: "This is a test event",
+        location: "Test Location",
+        status: "confirmed",
+        isTest: true,
+      },
+      {
+        id: "3",
+        start: {
+          dateTime: new Date(
+            new Date().getTime() + 60 * 60 * 1000 + 48 * 60 * 60 * 1000
+          ).toISOString(),
+          timeZone: "Europe/Berlin",
+        },
+        end: {
+          dateTime: new Date(
+            new Date().getTime() + 2 * 60 * 60 * 1000 + 48 * 60 * 60 * 1000
+          ).toISOString(),
+          timeZone: "Europe/Berlin",
+        },
+        summary: "חזרת אנסמבל",
+        description: "This is a test event",
+        location: "Test Location",
         status: "confirmed",
         isTest: true,
       },

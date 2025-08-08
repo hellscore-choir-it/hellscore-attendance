@@ -39,8 +39,14 @@ export const googleRouter = router({
         }
 
         if (!some(userEvents, { title: eventTitle, email: userEmail })) {
-          const error = new TRPCError({ code: "UNAUTHORIZED" });
-          captureException(error, { extra: { userEmail, userEvents } });
+          const errorMessage = `User ${userEmail} is not authorized to submit attendance for event "${eventTitle}".`;
+          const error = new TRPCError({
+            code: "UNAUTHORIZED",
+            message: errorMessage,
+          });
+          captureException(error, {
+            extra: { userEmail, userEvents, eventTitle },
+          });
           throw error;
         }
 
