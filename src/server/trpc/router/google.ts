@@ -7,6 +7,7 @@ import {
   attendanceSchema,
   sanitizeText,
 } from "../../../utils/attendanceSchema";
+import { some } from "lodash";
 
 export const googleRouter = router({
   submitAttendance: protectedProcedure
@@ -26,19 +27,18 @@ export const googleRouter = router({
         try {
           userEvents = await getSheetContent({ retry: true, maxRetries: 3 });
         } catch (error) {
-          console.error("Failed to fetch sheet content for authorization check:", error);
+          console.error(
+            "Failed to fetch sheet content for authorization check:",
+            error
+          );
           captureException(error, { extra: { userEmail, eventTitle } });
-          throw new TRPCError({ 
-            code: "INTERNAL_SERVER_ERROR", 
-            message: "Unable to verify user permissions. Please try again." 
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Unable to verify user permissions. Please try again.",
           });
         }
 
-        if (
-          !userEvents.some(
-            ({ title, email }) => userEmail === email && eventTitle === title
-          )
-        ) {
+        if (!some(userEvents, { title: eventTitle, email: userEmail })) {
           const error = new TRPCError({ code: "UNAUTHORIZED" });
           captureException(error, { extra: { userEmail, userEvents } });
           throw error;
@@ -50,16 +50,19 @@ export const googleRouter = router({
 
         // Retry logic for writing attendance data
         try {
-          await writeResponseRow([
-            userEmail,
-            Date.now().toString(),
-            eventTitle,
-            eventDate,
-            going ? "TRUE" : "FALSE",
-            sanitizedWhyNot,
-            wentLastTime ? "TRUE" : "FALSE",
-            sanitizedComments,
-          ], { retry: true, maxRetries: 3 });
+          await writeResponseRow(
+            [
+              userEmail,
+              Date.now().toString(),
+              eventTitle,
+              eventDate,
+              going ? "TRUE" : "FALSE",
+              sanitizedWhyNot,
+              wentLastTime ? "TRUE" : "FALSE",
+              sanitizedComments,
+            ],
+            { retry: true, maxRetries: 3 }
+          );
         } catch (error) {
           console.error("Failed to write attendance row:", error);
           captureException(error, {
@@ -75,9 +78,9 @@ export const googleRouter = router({
               sanitizedComments,
             },
           });
-          throw new TRPCError({ 
-            code: "INTERNAL_SERVER_ERROR", 
-            message: "Unable to submit attendance. Please try again." 
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Unable to submit attendance. Please try again.",
           });
         }
       }
