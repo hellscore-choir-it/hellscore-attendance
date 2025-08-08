@@ -17,11 +17,17 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       </Head>
       <div className="mx-auto min-h-screen max-w-screen-sm p-4" dir="rtl">
         <header className="justify-between align-middle sm:flex">
-          <h1 className="pb-4 text-3xl font-bold leading-normal">
-            סקר נוכחות הלסקור!
+          <h1
+            className="pb-4 text-3xl font-bold leading-normal text-red-400"
+            style={{
+              textShadow:
+                "-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000",
+            }}
+          >
+            גיהנוכחות הלסקור 🔥😈
           </h1>
           <button
-            className="btn"
+            className={session ? "btn text-red-700" : "btn text-green-500"}
             onClick={session ? () => signOut() : () => signIn("google")}
           >
             {session ? "התנתק/י" : "התחבר/י"}
