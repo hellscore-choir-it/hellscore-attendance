@@ -3,22 +3,23 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from "@sentry/nextjs";
+import { filter } from "lodash";
 
 Sentry.init({
   dsn: "https://3a15c33903c2d79f92012dbb69b400d1@o4509730562899968.ingest.de.sentry.io/4509730568339536",
 
   // Filter out problematic integrations that cause fetch issues with Next.js 15 + React 19 + TRPC 10 RC
   integrations: (defaultIntegrations) => [
-    ...defaultIntegrations.filter((integration) => {
+    ...filter(defaultIntegrations, (integration) => {
       // Remove fetch instrumentation to fix compatibility issues
-      return integration.name !== 'Fetch';
+      return integration.name !== "Fetch";
     }),
     Sentry.replayIntegration(),
   ],
 
   // Re-enable performance monitoring but with fetch instrumentation disabled
   tracesSampleRate: 1,
-  
+
   // Enable logs to be sent to Sentry
   enableLogs: true,
 

@@ -142,7 +142,7 @@ const AttendanceForm = ({
       })}
     >
       <label>
-        <div className="pb-2 text-red-200">אירוע</div>
+        <div className="pb-2">אירוע</div>
         <select
           className="select select-bordered"
           {...register("eventTitle", { required: true })}
@@ -155,7 +155,7 @@ const AttendanceForm = ({
         </select>
       </label>
       <label>
-        <div className="pb-2 text-red-200">תאריך</div>
+        <div className="pb-2">תאריך</div>
         <select
           className="select select-bordered"
           {...register("eventDate", { required: true })}
@@ -172,11 +172,11 @@ const AttendanceForm = ({
         </select>
       </label>
       <label className="cursor-pointer">
-        <div className="pb-2 text-red-200">האם את/ה מגיע/ה?</div>
+        <div className="pb-2">האם את/ה מגיע/ה?</div>
         <input type="checkbox" className="toggle" {...register("going")} />
       </label>
       <label className="cursor-pointer">
-        <div className="pb-2 text-red-200">האם הגעת פעם שעברה?</div>
+        <div className="pb-2">האם הגעת פעם שעברה?</div>
         <input
           type="checkbox"
           className="toggle"
@@ -185,7 +185,7 @@ const AttendanceForm = ({
       </label>
       {showWhyNot && (
         <label>
-          <div className="pb-2 text-red-200">נשמח לשמוע למה לא תגיעו 🙂</div>
+          <div className="pb-2">נשמח לשמוע למה לא תגיעו 🙂</div>
           <input
             className="input input-bordered"
             {...register("whyNot")}
@@ -193,7 +193,7 @@ const AttendanceForm = ({
         </label>
       )}
       <label>
-        <div className="pb-2 text-red-200">הערות נוספות?</div>
+        <div className="pb-2">הערות נוספות?</div>
         <input
           className="input input-bordered"
           {...register("comments")}
