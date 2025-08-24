@@ -3,7 +3,6 @@ import { VariantProps, cva } from "class-variance-authority";
 import { PanelLeft } from "lucide-react";
 import * as React from "react";
 
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "./button";
 import { Input } from "./input";
 import { Separator } from "./separator";
@@ -15,6 +14,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./tooltip";
+import { useIsMobile } from "./useMobile";
 import { cn } from "./utils";
 
 const SIDEBAR_COOKIE_NAME = "sidebar:state";
@@ -434,6 +434,7 @@ const SidebarGroupLabel = React.forwardRef<
 
   return (
     <Comp
+      // @ts-ignore
       ref={ref}
       data-sidebar="group-label"
       className={cn(
@@ -455,6 +456,7 @@ const SidebarGroupAction = React.forwardRef<
 
   return (
     <Comp
+      // @ts-ignore
       ref={ref}
       data-sidebar="group-action"
       className={cn(
@@ -556,6 +558,7 @@ const SidebarMenuButton = React.forwardRef<
 
     const button = (
       <Comp
+        // @ts-ignore
         ref={ref}
         data-sidebar="menu-button"
         data-size={size}
@@ -601,6 +604,7 @@ const SidebarMenuAction = React.forwardRef<
 
   return (
     <Comp
+      // @ts-ignore
       ref={ref}
       data-sidebar="menu-action"
       className={cn(
@@ -715,6 +719,7 @@ const SidebarMenuSubButton = React.forwardRef<
 
   return (
     <Comp
+      // @ts-ignore
       ref={ref}
       data-sidebar="menu-sub-button"
       data-size={size}
