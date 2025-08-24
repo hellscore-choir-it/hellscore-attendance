@@ -1,26 +1,17 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { captureException } from "@sentry/nextjs";
+import { filter, first, includes, isString, map, size, uniq } from "lodash";
 import { InferGetStaticPropsType } from "next";
 import { Session } from "next-auth";
-import { useEffect, useMemo } from "react";
-import {
-  filter,
-  first,
-  includes,
-  isString,
-  map,
-  size,
-  some,
-  uniq,
-} from "lodash";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useRouter } from "next/router";
 import { useSnackbar } from "notistack";
+import { useEffect, useMemo } from "react";
 import { useForm, UseFormProps } from "react-hook-form";
-import { captureException } from "@sentry/nextjs";
+import { z } from "zod";
 
-import { trpc } from "../utils/trpc";
-import { attendanceSchema, sanitizeText } from "../utils/attendanceSchema";
 import { getStaticProps } from "../pages/index";
+import { attendanceSchema, sanitizeText } from "../utils/attendanceSchema";
+import { trpc } from "../utils/trpc";
 import { ErrorAccordion } from "./ErrorAccordion";
 
 function useZodForm<TSchema extends z.ZodType>(
@@ -142,7 +133,7 @@ const AttendanceForm = ({
       })}
     >
       <label>
-        <div className="pb-2">אירוע</div>
+        <div className="dark:text-hell-glow pb-2">אירוע</div>
         <select
           className="select select-bordered"
           {...register("eventTitle", { required: true })}
@@ -155,7 +146,7 @@ const AttendanceForm = ({
         </select>
       </label>
       <label>
-        <div className="pb-2">תאריך</div>
+        <div className="dark:text-hell-glow pb-2">תאריך</div>
         <select
           className="select select-bordered"
           {...register("eventDate", { required: true })}
@@ -172,11 +163,11 @@ const AttendanceForm = ({
         </select>
       </label>
       <label className="cursor-pointer">
-        <div className="pb-2">האם את/ה מגיע/ה?</div>
+        <div className="dark:text-hell-glow pb-2">האם את/ה מגיע/ה?</div>
         <input type="checkbox" className="toggle" {...register("going")} />
       </label>
       <label className="cursor-pointer">
-        <div className="pb-2">האם הגעת פעם שעברה?</div>
+        <div className="dark:text-hell-glow pb-2">האם הגעת פעם שעברה?</div>
         <input
           type="checkbox"
           className="toggle"
@@ -185,7 +176,9 @@ const AttendanceForm = ({
       </label>
       {showWhyNot && (
         <label>
-          <div className="pb-2">נשמח לשמוע למה לא תגיעו 🙂</div>
+          <div className="dark:text-hell-glow pb-2">
+            נשמח לשמוע למה לא תגיעו 🙂
+          </div>
           <input
             className="input input-bordered"
             {...register("whyNot")}
@@ -193,13 +186,15 @@ const AttendanceForm = ({
         </label>
       )}
       <label>
-        <div className="pb-2">הערות נוספות?</div>
+        <div className="dark:text-hell-glow pb-2">הערות נוספות?</div>
         <input
           className="input input-bordered"
           {...register("comments")}
         ></input>
       </label>
-      <button className="btn self-center bg-green-800 px-20">שלח/י טופס 🚀</button>
+      <button className="btn self-center bg-green-800 px-20">
+        שלח/י טופס 🚀
+      </button>
     </form>
   );
 };

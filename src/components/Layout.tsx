@@ -1,4 +1,4 @@
-import { signOut, signIn, useSession } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
 import React from "react";
 
@@ -18,7 +18,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       <div className="mx-auto min-h-screen max-w-screen-sm p-4" dir="rtl">
         <header className="justify-between align-middle sm:flex">
           <h1
-            className="pb-4 text-3xl font-bold leading-normal text-red-400"
+            className="text-hell-fire animate-glow-pulse pb-4 text-3xl font-bold leading-normal"
             style={{
               textShadow:
                 "-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000",

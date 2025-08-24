@@ -1,3 +1,192 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Hell-themed dark palette */
+    --background: 0 0% 8%;
+    --foreground: 0 0% 95%;
+
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 95%;
+
+    /* Crimson red primary */
+    --primary: 0 75% 45%;
+    --primary-foreground: 0 0% 98%;
+
+    /* Dark secondary */
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 65%;
+
+    /* Fiery orange accent */
+    --accent: 15 85% 55%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84% 55%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 25%;
+    --input: 0 0% 18%;
+    --ring: 0 75% 45%;
+
+    --radius: 8px;
+
+    /* Custom hell-theme colors */
+    --hell-fire: 12 95% 60%;
+    --hell-ember: 20 80% 50%;
+    --hell-shadow: 0 0% 5%;
+    --hell-glow: 45 100% 70%;
+    --hell-blood: 355 85% 40%;
+
+    /* Gradients */
+    --gradient-fire: linear-gradient(
+      135deg,
+      hsl(var(--hell-fire)),
+      hsl(var(--hell-ember))
+    );
+    --gradient-shadow: linear-gradient(
+      180deg,
+      hsl(var(--hell-shadow)),
+      hsl(var(--background))
+    );
+    --gradient-glow: radial-gradient(
+      circle,
+      hsl(var(--hell-glow) / 0.3),
+      transparent
+    );
+
+    /* Animation variables */
+    --flame-flicker: flicker 1.5s ease-in-out infinite alternate;
+    --glow-pulse: glow-pulse 2s ease-in-out infinite alternate;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+@layer utilities {
+  .gradient-fire {
+    background: var(--gradient-fire);
+  }
+
+  .gradient-shadow {
+    background: var(--gradient-shadow);
+  }
+
+  .text-hell-fire {
+    color: hsl(var(--hell-fire));
+  }
+
+  .text-hell-glow {
+    color: hsl(var(--hell-glow));
+  }
+
+  .bg-hell-shadow {
+    background-color: hsl(var(--hell-shadow));
+  }
+}
+
+@keyframes flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes glow-pulse {
+  0% {
+    filter: drop-shadow(0 0 5px hsl(var(--hell-fire) / 0.5));
+  }
+  100% {
+    filter: drop-shadow(0 0 15px hsl(var(--hell-fire) / 0.8));
+  }
+}
+
+@keyframes flame-dance {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  25% {
+    transform: translateY(-2px) scale(1.05);
+  }
+  75% {
+    transform: translateY(1px) scale(0.95);
+  }
+}
+
+.animate-flicker {
+  animation: flicker 1.5s ease-in-out infinite alternate;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite alternate;
+}
+
+.animate-flame-dance {
+  animation: flame-dance 2s ease-in-out infinite;
+}
