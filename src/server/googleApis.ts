@@ -1,17 +1,9 @@
+import { captureException } from "@sentry/nextjs";
 import { Auth, calendar_v3, google } from "googleapis";
+import { castArray, compact, concat, head, map, size, zip } from "lodash";
 import { z } from "zod";
 import { env } from "../env/server.mjs";
 import { nowISO } from "../utils/dates";
-import { captureException } from "@sentry/nextjs";
-import {
-  castArray,
-  compact,
-  concat,
-  head,
-  map,
-  size,
-  zip,
-} from "lodash";
 import { doAsyncOperationWithRetry } from "./common/doAsyncOperationWithRetry";
 import { RequestQueue } from "./common/RequestQueue";
 
@@ -87,26 +79,33 @@ export const getSheetContent = async ({
 } = {}): Promise<UserEvent[] | undefined> => {
   return await doAsyncOperationWithRetry(
     async () => {
-      const response = await sheetsRequestQueue.add(() =>
-        sheets.spreadsheets.values.batchGet({
-          spreadsheetId: isTestEnvironment() ? env.TEST_SHEET_ID : env.SHEET_ID,
-          ranges: ["user_event_event_title", "user_event_user_email"],
-        })
+      // Get the titles and emails from the "User Events" sheet
+      // This sheet assigns user emails to event types they need to attend
+      const googleSheetsBatchGetParams = {
+        spreadsheetId: isTestEnvironment() ? env.TEST_SHEET_ID : env.SHEET_ID,
+        ranges: ["user_event_event_title", "user_event_user_email"],
+      };
+      const userEventSheetResponse = await sheetsRequestQueue.add(() =>
+        sheets.spreadsheets.values.batchGet(googleSheetsBatchGetParams)
       );
 
       try {
-        const data = gsheetDataSchema.parse(response.data);
-        const events = data.valueRanges[0].values;
-        const emails = data.valueRanges[1].values;
+        const userEventData = gsheetDataSchema.parse(
+          userEventSheetResponse.data
+        );
+        const events = userEventData.valueRanges[0].values;
+        const emails = userEventData.valueRanges[1].values;
         if (size(events) !== size(emails)) {
           throw new Error(
             `Mismatch in number of events (${size(events)}) and emails (${size(
               emails
-            )}). Response: ${JSON.stringify(response.data || "No data")}`
+            )}). Response: ${JSON.stringify(
+              userEventSheetResponse.data || "No data"
+            )}`
           );
         }
         const pairs = zip(events, emails) || [];
-        const regularEvents = map(pairs, ([title, email], i) => ({
+        const regularEvents = map(pairs, ([title, email]) => ({
           title: head(castArray(title)) || "",
           email: head(castArray(email)) || "",
         }));
@@ -128,15 +127,17 @@ export const getSheetContent = async ({
 
         return compact(concat(regularEvents, testEvents));
       } catch (error) {
-        captureException(error, { extra: { response } });
+        captureException(error, {
+          extra: { userEventSheetResponse, googleSheetsBatchGetParams },
+        });
         console.error(
           "Failed to parse Google Sheets data:",
           error,
-          response.data
+          userEventSheetResponse.data
         );
         throw new Error(
           `Failed to parse Google Sheets data: ${error}. Response: ${JSON.stringify(
-            response.data || "No data"
+            userEventSheetResponse.data || "No data"
           )}`
         );
       }
