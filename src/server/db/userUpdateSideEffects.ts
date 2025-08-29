@@ -1,8 +1,8 @@
 import { captureException, captureMessage } from "@sentry/nextjs";
 import { fromPairs, map } from "lodash";
 
-import { createClient } from "../../libs/supabase/client";
 import { calculateSHA256Hash } from "../../utils/sha265";
+import { createClient } from "../../utils/supabase/client";
 import {
   generateSupabaseEventId,
   generateSupabaseUserId,
