@@ -1,19 +1,12 @@
-import { Auth, calendar_v3, google } from "googleapis";
+import { captureException } from "@sentry/nextjs";
+import { Auth, google } from "googleapis";
+import { castArray, compact, concat, head, map, size, zip } from "lodash";
 import { z } from "zod";
 import { env } from "../env/server.mjs";
 import { nowISO } from "../utils/dates";
-import { captureException } from "@sentry/nextjs";
-import {
-  castArray,
-  compact,
-  concat,
-  head,
-  map,
-  size,
-  zip,
-} from "lodash";
 import { doAsyncOperationWithRetry } from "./common/doAsyncOperationWithRetry";
 import { RequestQueue } from "./common/RequestQueue";
+import { testEvents } from "./testEvents";
 
 // Global request queue instance
 const sheetsRequestQueue = new RequestQueue();
@@ -72,71 +65,72 @@ const gsheetDataSchema = z.object({
   ]),
 });
 
-export interface UserEvent {
+export interface UserEventType {
   title: string;
   email: string;
   isTest?: boolean;
 }
 
-export const getSheetContent = async ({
+const userEventQueryRanges = [
+  "user_event_event_title",
+  "user_event_user_email",
+];
+
+export const getUserEventTypeAssignments = async ({
   retry = true,
   maxRetries = 3,
 }: {
   retry?: boolean;
   maxRetries?: number;
-} = {}): Promise<UserEvent[] | undefined> => {
+} = {}): Promise<UserEventType[] | undefined> => {
   return await doAsyncOperationWithRetry(
     async () => {
-      const response = await sheetsRequestQueue.add(() =>
-        sheets.spreadsheets.values.batchGet({
-          spreadsheetId: isTestEnvironment() ? env.TEST_SHEET_ID : env.SHEET_ID,
-          ranges: ["user_event_event_title", "user_event_user_email"],
-        })
+      // Get the titles and emails from the "User Events" sheet
+      // This sheet assigns user emails to event types they need to attend
+      const googleSheetsBatchGetParams = {
+        spreadsheetId: isTestEnvironment() ? env.TEST_SHEET_ID : env.SHEET_ID,
+        ranges: ["user_event_event_title", "user_event_user_email"],
+      };
+      const userEventSheetResponse = await sheetsRequestQueue.add(() =>
+        sheets.spreadsheets.values.batchGet(googleSheetsBatchGetParams)
       );
 
       try {
-        const data = gsheetDataSchema.parse(response.data);
-        const events = data.valueRanges[0].values;
-        const emails = data.valueRanges[1].values;
-        if (size(events) !== size(emails)) {
+        const userEventData = gsheetDataSchema.parse(
+          userEventSheetResponse.data
+        );
+        const eventTypes = userEventData.valueRanges?.[0]?.values;
+        const emails = userEventData.valueRanges?.[1]?.values;
+        if (size(eventTypes) !== size(emails)) {
           throw new Error(
-            `Mismatch in number of events (${size(events)}) and emails (${size(
-              emails
-            )}). Response: ${JSON.stringify(response.data || "No data")}`
+            `Mismatch in number of events (${size(
+              eventTypes
+            )}) and emails (${size(emails)}).
+            Check the ranges: ${userEventQueryRanges}
+            Response: ${JSON.stringify(
+              userEventSheetResponse.data || "No data"
+            )}`
           );
         }
-        const pairs = zip(events, emails) || [];
-        const regularEvents = map(pairs, ([title, email], i) => ({
+        const rowPairs = zip(eventTypes, emails) || [];
+        const regularEvents = map(rowPairs, ([title, email]) => ({
           title: head(castArray(title)) || "",
           email: head(castArray(email)) || "",
         }));
 
-        const testEvents: UserEvent[] = isTestEnvironment()
-          ? [
-              {
-                title: "Test Event",
-                isTest: true,
-                email: "hellscore.it@gmail.com",
-              },
-              {
-                title: "Test Event 2",
-                isTest: true,
-                email: "hellscore.it@gmail.com",
-              },
-            ]
-          : [];
-
-        return compact(concat(regularEvents, testEvents));
+        return compact(regularEvents);
       } catch (error) {
-        captureException(error, { extra: { response } });
+        captureException(error, {
+          extra: { userEventSheetResponse, googleSheetsBatchGetParams },
+        });
         console.error(
           "Failed to parse Google Sheets data:",
           error,
-          response.data
+          userEventSheetResponse.data
         );
         throw new Error(
           `Failed to parse Google Sheets data: ${error}. Response: ${JSON.stringify(
-            response.data || "No data"
+            userEventSheetResponse.data || "No data"
           )}`
         );
       }
@@ -145,79 +139,12 @@ export const getSheetContent = async ({
   );
 };
 
-interface EventResponse extends calendar_v3.Schema$Event {
-  isTest?: boolean;
-}
+const hellscoreCalendarId =
+  "6bo68oo6iujc4obpo3fvanpd24@group.calendar.google.com";
 
-// recurringEventId
-export const getHellscoreEvents = async (): Promise<EventResponse[]> => {
-  if (isTestEnvironment()) {
-    const testEvents: EventResponse[] = [
-      {
-        id: "1",
-        start: {
-          dateTime: new Date(
-            new Date().getTime() + 60 * 60 * 1000
-          ).toISOString(),
-          timeZone: "Europe/Berlin",
-        },
-        end: {
-          dateTime: new Date(
-            new Date().getTime() + 2 * 60 * 60 * 1000
-          ).toISOString(),
-          timeZone: "Europe/Berlin",
-        },
-        summary: "חזרה Hellscore",
-        description: "This is a test event",
-        location: "Test Location",
-        status: "confirmed",
-        isTest: true,
-      },
-      {
-        id: "2",
-        start: {
-          dateTime: new Date(
-            new Date().getTime() + 60 * 60 * 1000 + 24 * 60 * 60 * 1000
-          ).toISOString(),
-          timeZone: "Europe/Berlin",
-        },
-        end: {
-          dateTime: new Date(
-            new Date().getTime() + 2 * 60 * 60 * 1000 + 24 * 60 * 60 * 1000
-          ).toISOString(),
-          timeZone: "Europe/Berlin",
-        },
-        summary: "חזרה פיראטית",
-        description: "This is a test event",
-        location: "Test Location",
-        status: "confirmed",
-        isTest: true,
-      },
-      {
-        id: "3",
-        start: {
-          dateTime: new Date(
-            new Date().getTime() + 60 * 60 * 1000 + 48 * 60 * 60 * 1000
-          ).toISOString(),
-          timeZone: "Europe/Berlin",
-        },
-        end: {
-          dateTime: new Date(
-            new Date().getTime() + 2 * 60 * 60 * 1000 + 48 * 60 * 60 * 1000
-          ).toISOString(),
-          timeZone: "Europe/Berlin",
-        },
-        summary: "חזרת אנסמבל",
-        description: "This is a test event",
-        location: "Test Location",
-        status: "confirmed",
-        isTest: true,
-      },
-    ];
-    return testEvents;
-  }
+export const getHellscoreEvents = async () => {
   const response = await calendars.events.list({
-    calendarId: "6bo68oo6iujc4obpo3fvanpd24@group.calendar.google.com",
+    calendarId: hellscoreCalendarId,
     maxAttendees: 1,
     maxResults: 20,
     orderBy: "startTime",
@@ -226,9 +153,11 @@ export const getHellscoreEvents = async (): Promise<EventResponse[]> => {
   });
   const items = response.data.items;
   if (!items) {
-    throw new Error("No items in Hellscore calendar???");
+    throw new Error(
+      `No items in Hellscore calendar??? Calendar ID: ${hellscoreCalendarId}`
+    );
   }
 
   console.debug("Returning Hellscore events:", size(items), "items");
-  return items;
+  return isTestEnvironment() ? concat(items, testEvents) : items;
 };
