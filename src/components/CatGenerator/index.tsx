@@ -1,4 +1,3 @@
-import { filter, includes, map } from "lodash";
 import { Badge } from "../ui/badge";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
@@ -11,7 +10,7 @@ import {
 } from "../ui/select";
 import { Separator } from "../ui/separator";
 import { Slider } from "../ui/slider";
-import { colorSchemeDetails, type accessories, type CatConfig } from "./types";
+import type { CatConfig } from "./types";
 
 interface CatGeneratorProps {
   config: CatConfig;
@@ -33,11 +32,11 @@ export const CatGenerator = ({ config, onChange }: CatGeneratorProps) => {
     updateConfig(key, values[0] as CatConfig[K]);
   };
 
-  const toggleAccessory = (accessory: (typeof accessories)[number]) => {
-    const newAccessories = includes(config.accessories, accessory)
-      ? filter(config.accessories, (a) => a !== accessory)
+  const toggleAccessory = (accessory: string) => {
+    const accessories = config.accessories.includes(accessory)
+      ? config.accessories.filter((a) => a !== accessory)
       : [...config.accessories, accessory];
-    updateConfig("accessories", newAccessories);
+    updateConfig("accessories", accessories);
   };
 
   return (
@@ -221,11 +220,10 @@ export const CatGenerator = ({ config, onChange }: CatGeneratorProps) => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {map(colorSchemeDetails, (details, key) => (
-                <SelectItem key={key} value={key}>
-                  {details.title}
-                </SelectItem>
-              ))}
+              <SelectItem value="classic">🎭 Classic Hell</SelectItem>
+              <SelectItem value="fire">🔥 Fire Lord</SelectItem>
+              <SelectItem value="shadow">🌑 Shadow Demon</SelectItem>
+              <SelectItem value="ember">✨ Ember Spirit</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -266,6 +264,16 @@ export const CatGenerator = ({ config, onChange }: CatGeneratorProps) => {
             />
             <Label htmlFor="collar" className="text-sm">
               🎵 Hellscore Collar
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="spikes"
+              checked={config.accessories.includes("spikes")}
+              onCheckedChange={() => toggleAccessory("spikes")}
+            />
+            <Label htmlFor="spikes" className="text-sm">
+              ⚡ Spike Collar
             </Label>
           </div>
           <div className="flex items-center space-x-2">

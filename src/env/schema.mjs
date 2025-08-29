@@ -23,30 +23,6 @@ export const serverSchema = z.object({
   TEST_EVENTS: z.string().optional(),
   MAX_CONCURRENT_GOOGLE_SHEET_REQUESTS: z.coerce.number().optional().default(3),
   DELAY_BETWEEN_GOOGLE_SHEET_REQUESTS: z.coerce.number().optional().default(100),
-  POSTGRES_DATABASE: z.string(),
-  POSTGRES_HOST: z.string(),
-  POSTGRES_PASSWORD: z.string(),
-  POSTGRES_PRISMA_URL: z.string().url(),
-  POSTGRES_URL: z.string().url(),
-  POSTGRES_URL_NON_POOLING: z.string().url(),
-  POSTGRES_USER: z.string(),
-  SENTRY_AUTH_TOKEN: z.string(),
-  SUPABASE_ANON_KEY: z.string(),
-  SUPABASE_JWT_SECRET: z.string(),
-  SUPABASE_SECRET_KEY: z.string(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string(),
-  SUPABASE_URL: z.string().url(),
-  VERCEL_OIDC_TOKEN: z.string(),
-
-  ADMIN_EMAILS: z.preprocess(
-    (emails) => {
-      if (typeof emails === "string") {
-        return emails.split(",").map((email) => email.trim());
-      }
-      return emails;
-    },
-    z.array(z.string().email()).optional().default([])
-  ),
 });
 
 /**
@@ -55,8 +31,7 @@ export const serverSchema = z.object({
  * To expose them to the client, prefix them with `NEXT_PUBLIC_`.
  */
 export const clientSchema = z.object({
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string(),
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
+  // NEXT_PUBLIC_BAR: z.string(),
 });
 
 /**
@@ -66,6 +41,5 @@ export const clientSchema = z.object({
  * @type {{ [k in keyof z.infer<typeof clientSchema>]: z.infer<typeof clientSchema>[k] | undefined }}
  */
 export const clientEnv = {
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  // NEXT_PUBLIC_BAR: process.env.NEXT_PUBLIC_BAR,
 };

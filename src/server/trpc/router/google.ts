@@ -1,17 +1,13 @@
-import { captureException } from "@sentry/nextjs";
 import { TRPCError } from "@trpc/server";
+import { captureException } from "@sentry/nextjs";
 
-import { filter, includes, map } from "lodash";
+import { router, protectedProcedure } from "../trpc";
+import { getSheetContent, writeResponseRow } from "../../googleApis";
 import {
   attendanceSchema,
   sanitizeText,
 } from "../../../utils/attendanceSchema";
-import { performUpdateCallbacksSerially } from "../../db/userUpdateSideEffects";
-import {
-  getUserEventTypeAssignments,
-  writeResponseRow,
-} from "../../googleApis";
-import { protectedProcedure, router } from "../trpc";
+import { some } from "lodash";
 
 export const googleRouter = router({
   submitAttendance: protectedProcedure
@@ -27,12 +23,9 @@ export const googleRouter = router({
         }
 
         // Retry logic for authorization check via Google Sheets API
-        let userEventTypes;
+        let userEvents;
         try {
-          userEventTypes = await getUserEventTypeAssignments({
-            retry: true,
-            maxRetries: 3,
-          });
+          userEvents = await getSheetContent({ retry: true, maxRetries: 3 });
         } catch (error) {
           console.error(
             "Failed to fetch sheet content for authorization check:",
@@ -45,38 +38,21 @@ export const googleRouter = router({
           });
         }
 
-        const requiredAttendees = map(
-          filter(userEventTypes, { title: eventTitle }),
-          "email"
-        );
-
-        if (!includes(requiredAttendees, userEmail)) {
+        if (!some(userEvents, { title: eventTitle, email: userEmail })) {
           const errorMessage = `User ${userEmail} is not authorized to submit attendance for event "${eventTitle}".`;
           const error = new TRPCError({
             code: "UNAUTHORIZED",
             message: errorMessage,
           });
           captureException(error, {
-            extra: { userEmail, requiredAttendees, eventTitle },
+            extra: { userEmail, userEvents, eventTitle },
           });
           throw error;
         }
+
         // Double sanitize text inputs as a safety measure
         const sanitizedWhyNot = sanitizeText(whyNot);
         const sanitizedComments = sanitizeText(comments);
-
-        // Update event, user response and streaks
-        // No need to await, since the google sheets is currently the source of truth
-        performUpdateCallbacksSerially({
-          userEmail,
-          eventTitle,
-          eventDate,
-          requiredAttendees,
-          going,
-          whyNot: sanitizedWhyNot,
-          wentLastTime,
-          comments: sanitizedComments,
-        });
 
         // Retry logic for writing attendance data
         try {
