@@ -19,7 +19,7 @@ import {
  * @param object.eventDate - The date of the event.
  * @param object.requiredAttendees - The attendees required for the event.
  */
-export const updateDbEventsStateForUserUpdate = async ({
+const updateDbEventsStateForUserUpdate = async ({
   userEmail,
   eventTitle,
   eventDate,
@@ -123,7 +123,7 @@ export const updateDbEventsStateForUserUpdate = async ({
   }
 };
 
-export const updateUserResponseAndStreaks = async ({
+const updateUserResponseAndStreaks = async ({
   userEmail,
   eventTitle,
   eventDate,
@@ -316,4 +316,32 @@ export const updateUserResponseAndStreaks = async ({
       });
     }
   }
+};
+
+export const performUpdateCallbacksSerially = async ({
+  userEmail,
+  eventTitle,
+  eventDate,
+  requiredAttendees,
+  going,
+  whyNot,
+  wentLastTime,
+  comments,
+}: Parameters<typeof updateDbEventsStateForUserUpdate>[0] &
+  Parameters<typeof updateUserResponseAndStreaks>[0]) => {
+  await updateDbEventsStateForUserUpdate({
+    userEmail,
+    eventTitle,
+    eventDate,
+    requiredAttendees,
+  });
+  await updateUserResponseAndStreaks({
+    userEmail,
+    eventTitle,
+    eventDate,
+    going,
+    whyNot,
+    wentLastTime,
+    comments,
+  });
 };

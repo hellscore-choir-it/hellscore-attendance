@@ -6,10 +6,7 @@ import {
   attendanceSchema,
   sanitizeText,
 } from "../../../utils/attendanceSchema";
-import {
-  updateDbEventsStateForUserUpdate,
-  updateUserResponseAndStreaks,
-} from "../../db/userUpdateSideEffects";
+import { performUpdateCallbacksSerially } from "../../db/userUpdateSideEffects";
 import {
   getUserEventTypeAssignments,
   writeResponseRow,
@@ -68,19 +65,13 @@ export const googleRouter = router({
         const sanitizedWhyNot = sanitizeText(whyNot);
         const sanitizedComments = sanitizeText(comments);
 
+        // Update event, user response and streaks
         // No need to await, since the google sheets is currently the source of truth
-        updateDbEventsStateForUserUpdate({
+        performUpdateCallbacksSerially({
           userEmail,
+          eventTitle,
+          eventDate,
           requiredAttendees,
-          eventTitle,
-          eventDate,
-        });
-
-        // Update user response and streaks
-        updateUserResponseAndStreaks({
-          userEmail,
-          eventTitle,
-          eventDate,
           going,
           whyNot: sanitizedWhyNot,
           wentLastTime,
