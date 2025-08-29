@@ -4,7 +4,11 @@ import { toast } from "sonner";
 
 import { CatGenerator } from "../components/CatGenerator";
 import { HellCat } from "../components/CatGenerator/HellCat";
-import type { CatConfig } from "../components/CatGenerator/types";
+import {
+  accessories,
+  colorSchemes,
+  type CatConfig,
+} from "../components/CatGenerator/types";
 import { Button } from "../components/ui/button";
 import {
   Card,
@@ -36,9 +40,10 @@ const Index = () => {
     const eyeColors = ["fire", "ember", "glow", "blood"];
     const flameIntensities = ["low", "medium", "high"];
     const poses = ["sitting", "standing", "crouching"];
-    const colorSchemes = ["classic", "fire", "shadow", "ember"];
     const markings = ["none", "stripes", "spots", "flames"];
     const expressions = ["neutral", "menacing", "playful", "sleepy"];
+
+    const numberForAccessory = Math.random();
 
     setCatConfig({
       hornStyle: hornStyles[
@@ -49,7 +54,14 @@ const Index = () => {
         Math.floor(Math.random() * flameIntensities.length)
       ] as any,
       pose: poses[Math.floor(Math.random() * poses.length)] as any,
-      accessories: Math.random() > 0.5 ? ["collar"] : [],
+      accessories:
+        numberForAccessory > 3 / 4
+          ? accessories.slice(0, 2)
+          : numberForAccessory > 2 / 4
+          ? accessories.slice(0, 1)
+          : numberForAccessory > 1 / 4
+          ? accessories.slice(1)
+          : [],
       colorScheme: colorSchemes[
         Math.floor(Math.random() * colorSchemes.length)
       ] as any,
