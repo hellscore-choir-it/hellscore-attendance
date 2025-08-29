@@ -1,4 +1,4 @@
-import { filter, find, forEach, map, startsWith } from "lodash";
+import { filter, find, map, startsWith } from "lodash";
 import type { InferGetStaticPropsType, NextPage } from "next";
 import { useSession } from "next-auth/react";
 
@@ -8,7 +8,6 @@ import {
   getHellscoreEvents,
   getUserEventTypeAssignments,
 } from "../server/googleApis";
-import { ISOToHuman } from "../utils/dates";
 
 const Home: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
   calendarData,
@@ -38,21 +37,20 @@ export const getStaticProps = async () => {
     getHellscoreEvents(),
     getUserEventTypeAssignments(),
   ]);
+
   const calendarData = filter(
     map(calendarDataRaw, (event) => {
       const title = find(userEvents, ({ title }) =>
-        startsWith(event.summary || "", title)
+        startsWith(event?.summary || "", title)
       )?.title;
-      const start = event.start?.dateTime;
+      if (!title) {
+        console.warn("No matching title found for event:", event?.summary);
+      }
+      const start = event?.start?.dateTime;
       return { title, start };
     }),
     hasTitleAndStart
   );
-  forEach(calendarData, (event) => {
-    if (event.start) {
-      event.start = ISOToHuman(event.start);
-    }
-  });
   return {
     props: { calendarData, userEvents },
     revalidate: 10,

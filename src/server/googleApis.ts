@@ -1,6 +1,6 @@
 import { captureException } from "@sentry/nextjs";
 import { Auth, google } from "googleapis";
-import { castArray, compact, head, map, size, zip } from "lodash";
+import { castArray, compact, concat, head, map, size, zip } from "lodash";
 import { z } from "zod";
 import { env } from "../env/server.mjs";
 import { nowISO } from "../utils/dates";
@@ -65,7 +65,7 @@ const gsheetDataSchema = z.object({
   ]),
 });
 
-export interface UserEvent {
+export interface UserEventType {
   title: string;
   email: string;
   isTest?: boolean;
@@ -82,7 +82,7 @@ export const getUserEventTypeAssignments = async ({
 }: {
   retry?: boolean;
   maxRetries?: number;
-} = {}): Promise<UserEvent[] | undefined> => {
+} = {}): Promise<UserEventType[] | undefined> => {
   return await doAsyncOperationWithRetry(
     async () => {
       // Get the titles and emails from the "User Events" sheet
@@ -143,9 +143,6 @@ const hellscoreCalendarId =
   "6bo68oo6iujc4obpo3fvanpd24@group.calendar.google.com";
 
 export const getHellscoreEvents = async () => {
-  if (isTestEnvironment()) {
-    return testEvents;
-  }
   const response = await calendars.events.list({
     calendarId: hellscoreCalendarId,
     maxAttendees: 1,
@@ -162,5 +159,5 @@ export const getHellscoreEvents = async () => {
   }
 
   console.debug("Returning Hellscore events:", size(items), "items");
-  return items;
+  return isTestEnvironment() ? concat(items, testEvents) : items;
 };

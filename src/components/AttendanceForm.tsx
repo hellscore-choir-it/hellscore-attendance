@@ -20,6 +20,7 @@ import { z } from "zod";
 
 import { getStaticProps } from "../pages/index";
 import { attendanceSchema, sanitizeText } from "../utils/attendanceSchema";
+import { ISOToHuman } from "../utils/dates";
 import { trpc } from "../utils/trpc";
 import { ErrorAccordion } from "./ErrorAccordion";
 
@@ -158,7 +159,7 @@ const AttendanceForm = ({
             (date) =>
               Boolean(date) && (
                 <option value={date as string} key={date}>
-                  {date}
+                  {ISOToHuman(date)}
                 </option>
               )
           )}
