@@ -4,7 +4,6 @@ import type { GetServerSidePropsContext } from "next";
 import { getServerSession, type DefaultSession } from "next-auth";
 
 import { authOptions as nextAuthOptions } from "../../pages/api/auth/[...nextauth]";
-import { calculateSHA256Hash } from "../../utils/sha265";
 
 export interface SessionWithHashedEmail extends DefaultSession {
   user: DefaultSession["user"] & {
@@ -22,9 +21,5 @@ export const getServerAuthSession = async (ctx: {
     ctx.res,
     nextAuthOptions
   );
-  if (baseSession?.user?.email) {
-    // const add a sha256 encoded email for database operations
-    baseSession.user.hashedEmail = calculateSHA256Hash(baseSession.user.email);
-  }
   return baseSession;
 };
