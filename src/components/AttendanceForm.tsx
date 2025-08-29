@@ -1,6 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { captureException } from "@sentry/nextjs";
-import { filter, first, includes, isString, map, size, uniq } from "lodash";
+import {
+  filter,
+  first,
+  includes,
+  isError,
+  isString,
+  map,
+  size,
+  uniq,
+} from "lodash";
 import { InferGetStaticPropsType } from "next";
 import { Session } from "next-auth";
 import { useRouter } from "next/router";
@@ -11,6 +20,7 @@ import { z } from "zod";
 
 import { getStaticProps } from "../pages/index";
 import { attendanceSchema, sanitizeText } from "../utils/attendanceSchema";
+import { ISOToHuman } from "../utils/dates";
 import { trpc } from "../utils/trpc";
 import { ErrorAccordion } from "./ErrorAccordion";
 
@@ -39,14 +49,7 @@ const AttendanceForm = ({
     schema: attendanceSchema,
   });
   const relevantTitles = useMemo(
-    () =>
-      map(
-        filter(
-          userEvents,
-          ({ isTest, email }) => isTest || email === session.user?.email
-        ),
-        "title"
-      ),
+    () => map(filter(userEvents, { email: session?.user?.email }), "title"),
     [userEvents, session]
   );
   const relevantEvents = useMemo(
@@ -59,13 +62,14 @@ const AttendanceForm = ({
     [calendarData, relevantTitles]
   );
   const sortedRelevantTitles = useMemo(
-    () => uniq(map(relevantEvents, ({ title }) => title)),
+    () => uniq(map(relevantEvents, "title")),
     [relevantEvents]
   );
   const relevantDates = map(
     filter(
       relevantEvents,
-      ({ title }) => title === (watch("eventTitle") || sortedRelevantTitles[0])
+      ({ title }) =>
+        title === (watch("eventTitle") || first(sortedRelevantTitles))
     ),
     "start"
   );
@@ -98,12 +102,11 @@ const AttendanceForm = ({
           router.push("/thank-you");
         } catch (error) {
           console.error("Error submitting attendance:", error);
-          const errorText =
-            error instanceof Error
-              ? error.message
-              : isString(error)
-              ? error
-              : "Unknown error occurred";
+          const errorText = isError(error)
+            ? error.message
+            : isString(error)
+            ? error
+            : "Unknown error occurred";
           const isUnknownUserError = includes(errorText, "UNAUTHORIZED");
 
           captureException(error, {
@@ -122,7 +125,7 @@ const AttendanceForm = ({
               details={
                 isUnknownUserError
                   ? "נראה שאין לך הרשאות לשלוח טופס זה. אנא פנה למנהל.ת המערכת."
-                  : error instanceof Error
+                  : isError(error)
                   ? error.message
                   : JSON.stringify(error)
               }
@@ -156,7 +159,7 @@ const AttendanceForm = ({
             (date) =>
               Boolean(date) && (
                 <option value={date as string} key={date}>
-                  {date}
+                  {ISOToHuman(date)}
                 </option>
               )
           )}

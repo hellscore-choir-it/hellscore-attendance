@@ -1,5 +1,6 @@
+import { includes } from "lodash";
 import { useMemo } from "react";
-import type { CatConfig } from "./types";
+import { colorSchemeDetails, type CatConfig } from "./types";
 
 interface HellCatProps {
   config: CatConfig;
@@ -7,14 +8,7 @@ interface HellCatProps {
 
 export const HellCat = ({ config }: HellCatProps) => {
   const catFeatures = useMemo(() => {
-    const colorSchemes = {
-      classic: { body: "#2d1b1b", accent: "#8b0000", eyes: "#ff4500" },
-      fire: { body: "#3d0000", accent: "#ff6600", eyes: "#ffff00" },
-      shadow: { body: "#1a1a1a", accent: "#4d0000", eyes: "#ff0000" },
-      ember: { body: "#331100", accent: "#cc3300", eyes: "#ff9900" },
-    };
-
-    const scheme = colorSchemes[config.colorScheme];
+    const scheme = colorSchemeDetails[config.colorScheme];
 
     return {
       body: scheme.body,
@@ -22,9 +16,9 @@ export const HellCat = ({ config }: HellCatProps) => {
       eyes: scheme.eyes,
       hornStyle: config.hornStyle,
       pose: config.pose,
-      bodyScale: 0.7 + config.bodySize / 200, // Scale factor based on body size
-      hornScale: 0.5 + config.hornSize / 200, // Scale factor for horns
-      tailScale: 0.5 + config.tailLength / 200, // Scale factor for tail
+      bodyScale: 0.7 + config.bodySize / 150, // Scale factor based on body size
+      hornScale: 0.05 + config.hornSize / 80, // Scale factor for horns
+      tailScale: 0.5 + config.tailLength / 100, // Scale factor for tail
       eyeGlowIntensity: config.eyeGlow / 100,
       wickednessLevel: config.wickedness / 100,
     };
@@ -177,6 +171,12 @@ export const HellCat = ({ config }: HellCatProps) => {
         : config.pose === "standing"
         ? 150
         : 170;
+    const frontLegRotation =
+      config.pose === "crouching" ? -30 : config.pose === "sitting" ? 35 : 0;
+
+    const tailRotation =
+      config.pose === "crouching" ? 30 : config.pose === "sitting" ? -30 : 0;
+
     const scale = catFeatures.bodyScale;
     const eyeShape = getEyeShape();
 
@@ -184,7 +184,9 @@ export const HellCat = ({ config }: HellCatProps) => {
       <g>
         {/* Tail - length based on tailLength */}
         <path
-          transform={`scale(1, 0.75) translate(-20, ${bodyY - 150})`}
+          transform={`scale(1, 0.75) translate(-20, ${
+            bodyY - 150
+          }), rotate(${tailRotation}, 280, 180)`}
           d={`M280,180 Q${320 + catFeatures.tailScale * 20},160 ${
             330 + catFeatures.tailScale * 30
           },200 Q${
@@ -194,6 +196,26 @@ export const HellCat = ({ config }: HellCatProps) => {
           stroke="#000"
           strokeWidth="2"
           className="animate-glow-pulse"
+        />
+
+        {/* Back Paws */}
+        <ellipse
+          cx="160"
+          cy={bodyY + 40}
+          rx={15 * scale}
+          ry={25 * scale}
+          fill={catFeatures.body}
+          stroke="#000"
+          strokeWidth="2"
+        />
+        <ellipse
+          cx="240"
+          cy={bodyY + 40}
+          rx={15 * scale}
+          ry={25 * scale}
+          fill={catFeatures.body}
+          stroke="#000"
+          strokeWidth="2"
         />
 
         {/* Body */}
@@ -207,6 +229,28 @@ export const HellCat = ({ config }: HellCatProps) => {
           strokeWidth="2"
         />
 
+        {renderMarkings()}
+
+        {/* Collar */}
+        {includes(config.accessories, "collar") && (
+          <g key="collar" transform="translate(0, 12)">
+            <path
+              d="M165,155 Q200,170 235,155"
+              fill="none"
+              stroke={catFeatures.accent}
+              strokeWidth="16"
+              strokeLinecap="round"
+            />
+            <circle
+              cx="200"
+              cy="162"
+              r="5"
+              fill={catFeatures.eyes}
+              className="animate-flicker"
+            />
+          </g>
+        )}
+
         {/* Head */}
         <circle
           cx="200"
@@ -216,6 +260,20 @@ export const HellCat = ({ config }: HellCatProps) => {
           stroke="#000"
           strokeWidth="2"
         />
+
+        {/** Crown */}
+        {config.accessories.includes("crown") && (
+          <g key="crown">
+            <path
+              d="M170,80 L180,60 L190,75 L200,55 L210,75 L220,60 L230,80 L200,85 Z"
+              fill={catFeatures.eyes}
+              stroke="#000"
+              strokeWidth="2"
+              className="animate-glow-pulse"
+            />
+            <circle cx="200" cy="70" r="3" fill={catFeatures.accent} />
+          </g>
+        )}
 
         {/* Ears */}
         <path
@@ -272,6 +330,7 @@ export const HellCat = ({ config }: HellCatProps) => {
           rx={eyeShape.rx}
           ry={eyeShape.ry}
           fill={catFeatures.eyes}
+          stroke="#000"
           className={
             catFeatures.eyeGlowIntensity > 0.5 ? "animate-flicker" : ""
           }
@@ -283,6 +342,7 @@ export const HellCat = ({ config }: HellCatProps) => {
           rx={eyeShape.rx}
           ry={eyeShape.ry}
           fill={catFeatures.eyes}
+          stroke="#000"
           className={
             catFeatures.eyeGlowIntensity > 0.5 ? "animate-flicker" : ""
           }
@@ -306,7 +366,11 @@ export const HellCat = ({ config }: HellCatProps) => {
         />
 
         {/* Nose */}
-        <path d="M200,125 L195,135 L205,135 Z" fill={catFeatures.accent} />
+        <path
+          d="M200,125 L195,135 L205,135 Z"
+          fill={catFeatures.accent}
+          stroke="#000"
+        />
 
         {/* Mouth */}
         <path d={getMouthCurve()} stroke="#000" strokeWidth="2" fill="none" />
@@ -317,125 +381,39 @@ export const HellCat = ({ config }: HellCatProps) => {
             150 + catFeatures.wickednessLevel * 5
           } L192,145 Z`}
           fill="#fff"
+          stroke="#666"
         />
         <path
           d={`M210,140 L208,145 L${212 + catFeatures.wickednessLevel * 2},${
             150 + catFeatures.wickednessLevel * 5
           } Z`}
           fill="#fff"
+          stroke="#666"
         />
 
-        {/* Paws */}
+        {/* Front Paws */}
         <ellipse
-          cx="160"
-          cy={bodyY + 40}
-          rx={15 * scale}
-          ry={25 * scale}
-          fill={catFeatures.body}
-          stroke="#000"
-          strokeWidth="2"
-        />
-        <ellipse
-          cx="190"
+          cx="170"
           cy={bodyY + 45}
           rx={15 * scale}
           ry={25 * scale}
           fill={catFeatures.body}
           stroke="#000"
           strokeWidth="2"
+          transform={`rotate(${-1 * frontLegRotation},170,${bodyY + 45})`}
         />
         <ellipse
-          cx="210"
+          cx="230"
           cy={bodyY + 45}
           rx={15 * scale}
           ry={25 * scale}
           fill={catFeatures.body}
           stroke="#000"
           strokeWidth="2"
-        />
-        <ellipse
-          cx="240"
-          cy={bodyY + 40}
-          rx={15 * scale}
-          ry={25 * scale}
-          fill={catFeatures.body}
-          stroke="#000"
-          strokeWidth="2"
+          transform={`rotate(${frontLegRotation},230,${bodyY + 45})`}
         />
       </g>
     );
-  };
-
-  const renderAccessories = () => {
-    const accessories = [];
-
-    // Collar
-    if (config.accessories.includes("collar")) {
-      accessories.push(
-        <g key="collar" transform="translate(0, 5)">
-          <path
-            d="M165,155 Q200,170 235,155"
-            fill="none"
-            stroke={catFeatures.accent}
-            strokeWidth="16"
-            strokeLinecap="round"
-          />
-          <circle
-            cx="200"
-            cy="162"
-            r="5"
-            fill={catFeatures.eyes}
-            className="animate-flicker"
-          />
-        </g>
-      );
-    }
-
-    // Spike Collar
-    if (config.accessories.includes("spikes")) {
-      accessories.push(
-        <g key="spikes">
-          <ellipse
-            cx="200"
-            cy="155"
-            rx="35"
-            ry="8"
-            fill="#333"
-            stroke="#000"
-            strokeWidth="2"
-          />
-          {Array.from({ length: 6 }, (_, i) => (
-            <path
-              key={i}
-              d={`M${175 + i * 10},155 L${178 + i * 10},145 L${
-                182 + i * 10
-              },155 Z`}
-              fill={catFeatures.accent}
-              stroke="#000"
-              strokeWidth="1"
-            />
-          ))}
-        </g>
-      );
-    }
-
-    // Crown
-    if (config.accessories.includes("crown")) {
-      accessories.push(
-        <g key="crown">
-          <path
-            d="M170,80 L180,60 L190,75 L200,55 L210,75 L220,60 L230,80 L200,85 Z"
-            fill={catFeatures.eyes}
-            stroke="#000"
-            strokeWidth="2"
-            className="animate-glow-pulse"
-          />
-          <circle cx="200" cy="70" r="3" fill={catFeatures.accent} />
-        </g>
-      );
-    }
-
-    return <g>{accessories}</g>;
   };
 
   return (
@@ -460,9 +438,7 @@ export const HellCat = ({ config }: HellCatProps) => {
         </defs>
 
         {renderCatBody()}
-        {renderMarkings()}
         {renderHorns()}
-        {renderAccessories()}
       </svg>
     </div>
   );

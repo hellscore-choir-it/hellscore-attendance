@@ -1,5 +1,6 @@
 import { clamp, size, times } from "lodash";
 import {
+  accessories,
   colorSchemes,
   expressions,
   eyeColors,
@@ -32,7 +33,14 @@ export const generateRandomCat = (numberForGeneration: number): CatConfig => {
         Math.floor(numberForGeneration * flameIntensities.length)
       ]!,
     pose: poses[Math.floor(numberForGeneration * poses.length)]!,
-    accessories: numberForGeneration > 0.5 ? ["collar"] : []!,
+    accessories:
+      numberForGeneration > 3 / 4
+        ? accessories.slice(0, 2)
+        : numberForGeneration > 2 / 4
+        ? accessories.slice(0, 1)
+        : numberForGeneration > 1 / 4
+        ? accessories.slice(1)
+        : [],
     colorScheme:
       colorSchemes[Math.floor(numberForGeneration * colorSchemes.length)]!,
     eyeGlow: Math.floor(numberForGeneration * 101),
