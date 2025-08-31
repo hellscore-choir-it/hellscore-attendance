@@ -242,6 +242,14 @@ const updateUserResponseAndStreaks = async ({
           ...(userEntry.data || {}),
           responseStreak: newStreak,
           maxStreak: Math.max(userEntry.data?.maxStreak || 0, newStreak),
+          streakResets: [
+            ...(userEntry.data?.streakResets || []),
+            {
+              date: currentDate,
+              missingEventId: lastEventOfTypeForUser?.id!,
+              streakAtReset: userEntry.data?.responseStreak || 0,
+            },
+          ],
           streakResetDate: didUserRespondToLastEvent
             ? userEntry?.data?.streakResetDate
             : currentDate,
@@ -286,6 +294,7 @@ const updateUserResponseAndStreaks = async ({
           responseStreak: 1,
           maxStreak: 1,
           streakResetDate: null,
+          streakResets: [],
           responses: {
             [supabaseEventId]: {
               going,
