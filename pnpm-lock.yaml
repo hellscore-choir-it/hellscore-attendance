@@ -99,7 +99,7 @@ importers:
         specifier: ^0.7.0
         version: 0.7.0(@supabase/supabase-js@2.56.0)
       '@tanstack/react-query':
-        specifier: ^4.10.0
+        specifier: ^4.40.1
         version: 4.40.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@trpc/client':
         specifier: 10.0.0-rc.0

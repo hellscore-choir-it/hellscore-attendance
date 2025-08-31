@@ -232,8 +232,6 @@ const updateUserResponseAndStreaks = async ({
       ? (userEntry.data?.responseStreak || 0) + 1
       : 0;
 
-    console.log({ skipUpdateStreak, newStreak, lastEventOfTypeForUser });
-
     const { error: updateError } = await supabase
       .from("user")
       .update<Partial<SupabaseUser>>({
@@ -264,7 +262,8 @@ const updateUserResponseAndStreaks = async ({
           },
         },
       })
-      .eq("id", userEntry.id);
+      .eq("id", userEntry.id)
+      .select();
 
     if (updateError) {
       console.error("Error updating user entry in Supabase:", updateError);
