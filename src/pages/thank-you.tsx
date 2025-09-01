@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextPage } from "next";
 import { useSession } from "next-auth/react";
-
 import { useState } from "react";
+
 import Layout from "../components/Layout";
 import { StreakTracker } from "../components/StreakTracker";
 
