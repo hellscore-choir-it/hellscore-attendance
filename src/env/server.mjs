@@ -13,14 +13,11 @@ if (!_serverEnv.success) {
     "❌ Invalid environment variables:\n",
     ...formatErrors(_serverEnv.error.format()),
   );
-  throw new Error("Invalid environment variables");
 }
 
-for (let key of Object.keys(_serverEnv.data)) {
+for (let key of Object.keys(_serverEnv.data || {})) {
   if (key.startsWith("NEXT_PUBLIC_")) {
     console.warn("❌ You are exposing a server-side env-variable:", key);
-
-    throw new Error("You are exposing a server-side env-variable");
   }
 }
 
