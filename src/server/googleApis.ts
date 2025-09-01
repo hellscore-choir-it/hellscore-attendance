@@ -15,7 +15,7 @@ const sheetsRequestQueue = new RequestQueue();
 // const isBuildEnvironment = () => process.env.NEXT_PHASE === 'PHASE_PRODUCTION_BUILD' || process.env.VERCEL_ENV === 'production';
 
 const auth = google.auth.fromJSON(
-  JSON.parse(env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS)
+  JSON.parse(env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS || "")
 ) as Auth.JWT & { scopes: string[] };
 
 auth.scopes = [
