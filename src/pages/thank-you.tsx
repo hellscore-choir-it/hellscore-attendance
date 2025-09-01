@@ -1,32 +1,31 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextPage } from "next";
-
 import { useSession } from "next-auth/react";
-import { HellCat } from "../components/CatGenerator/HellCat";
-import {
-  generateRandomCat,
-  hashSeed,
-} from "../components/CatGenerator/helpers";
+import { useState } from "react";
+
 import Layout from "../components/Layout";
+import { StreakTracker } from "../components/StreakTracker";
 
 const ThankYou: NextPage = () => {
+  const [queryClient] = useState(() => new QueryClient());
   const { data: session } = useSession();
-  const randomCat = generateRandomCat(
-    hashSeed(session?.user?.email || "default")
-  );
   return (
-    <Layout>
-      {session ? (
-        <>
-          <h2 className="text-center text-xl">תודה ❤️</h2>
-          <p className="mt-2 text-center text-sm">
-            הנה חתול שאול שנוצר במיוחד בשבילך!
-          </p>
-          <HellCat config={randomCat} />
-        </>
-      ) : (
-        <p>אנא התחבר/י 🙂</p>
-      )}
-    </Layout>
+    <QueryClientProvider client={queryClient}>
+      <Layout>
+        {session ? (
+          <>
+            <h2 className="mb-3 mt-10 text-center text-5xl">
+              תודה על הדיווח ❤️
+            </h2>
+            {session?.user?.email && (
+              <StreakTracker userEmail={session?.user?.email} />
+            )}
+          </>
+        ) : (
+          <p>אנא התחבר/י 🙂</p>
+        )}
+      </Layout>
+    </QueryClientProvider>
   );
 };
 

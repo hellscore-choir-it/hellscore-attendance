@@ -1,4 +1,4 @@
-import { clamp, size, times } from "lodash";
+import { castArray, clamp, map, size, times } from "lodash";
 import {
   accessories,
   colorSchemes,
@@ -23,34 +23,52 @@ export function hashSeed(str: string) {
   return hash / max32Bit;
 }
 
-export const generateRandomCat = (numberForGeneration: number): CatConfig => {
-  numberForGeneration = clamp(numberForGeneration, 0, 1);
+export const generateRandomCat = (
+  numberForGeneration: number | number[]
+): CatConfig => {
+  const hashesForGeneration = map(castArray(numberForGeneration), (num) =>
+    clamp(num, 0, 1)
+  );
+  // Create a generator function that returns numbers in a loop from hashesForGeneration
+  const getNextHash = function* () {
+    let currentIndex = 0;
+    while (true) {
+      yield hashesForGeneration[currentIndex] || 0;
+      currentIndex = (currentIndex + 1) % size(hashesForGeneration);
+    }
+  };
+  const hashGenerator = getNextHash();
   return {
-    hornStyle: hornStyles[Math.floor(numberForGeneration * hornStyles.length)]!,
-    eyeColor: eyeColors[Math.floor(numberForGeneration * eyeColors.length)]!,
+    hornStyle:
+      hornStyles[Math.floor(hashGenerator.next().value * size(hornStyles))]!,
+    eyeColor:
+      eyeColors[Math.floor(hashGenerator.next().value * size(eyeColors))]!,
     flameIntensity:
       flameIntensities[
-        Math.floor(numberForGeneration * flameIntensities.length)
+        Math.floor(hashGenerator.next().value * size(flameIntensities))
       ]!,
-    pose: poses[Math.floor(numberForGeneration * poses.length)]!,
+    pose: poses[Math.floor(hashGenerator.next().value * size(poses))]!,
     accessories:
-      numberForGeneration > 3 / 4
+      hashGenerator.next().value > 3 / 4
         ? accessories.slice(0, 2)
-        : numberForGeneration > 2 / 4
+        : hashGenerator.next().value > 2 / 4
         ? accessories.slice(0, 1)
-        : numberForGeneration > 1 / 4
+        : hashGenerator.next().value > 1 / 4
         ? accessories.slice(1)
         : [],
     colorScheme:
-      colorSchemes[Math.floor(numberForGeneration * colorSchemes.length)]!,
-    eyeGlow: Math.floor(numberForGeneration * 101),
-    hornSize: Math.floor(numberForGeneration * 101),
-    tailLength: Math.floor(numberForGeneration * 101),
-    bodySize: Math.floor(numberForGeneration * 50) + 25, // 25-75 for reasonable sizes
-    flameHeight: Math.floor(numberForGeneration * 101),
-    wickedness: Math.floor(numberForGeneration * 101),
-    markings: markings[Math.floor(numberForGeneration * markings.length)]!,
+      colorSchemes[
+        Math.floor(hashGenerator.next().value * size(colorSchemes))
+      ]!,
+    eyeGlow: Math.floor(hashGenerator.next().value * 101),
+    hornSize: Math.floor(hashGenerator.next().value * 101),
+    tailLength: Math.floor(hashGenerator.next().value * 101),
+    bodySize: Math.floor(hashGenerator.next().value * 50) + 25, // 25-75 for reasonable sizes
+    flameHeight: Math.floor(hashGenerator.next().value * 101),
+    wickedness: Math.floor(hashGenerator.next().value * 101),
+    markings:
+      markings[Math.floor(hashGenerator.next().value * size(markings))]!,
     expression:
-      expressions[Math.floor(numberForGeneration * expressions.length)]!,
+      expressions[Math.floor(hashGenerator.next().value * size(expressions))]!,
   };
 };
