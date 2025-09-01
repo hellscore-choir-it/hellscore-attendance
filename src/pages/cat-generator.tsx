@@ -9,6 +9,7 @@ import {
   colorSchemes,
   type CatConfig,
 } from "../components/CatGenerator/types";
+import SessionBoundary from "../components/SessionBoundary";
 import { Button } from "../components/ui/button";
 import {
   Card,
@@ -105,72 +106,78 @@ const Index = () => {
   };
 
   return (
-    <div className="bg-gradient-shadow min-h-screen">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-12 text-center">
-          <h1 className="text-hell-fire animate-glow-pulse mb-4 text-6xl font-bold">
-            HELLSCORE
-          </h1>
-          <p className="text-hell-glow mb-2 text-2xl">Cat Mascot Generator</p>
-          <p className="text-muted-foreground mx-auto max-w-2xl">
-            Generate demonic feline mascots for your metal a cappella choir.
-            Perfect for attendance tracking rewards and positive reinforcement!
-          </p>
-        </div>
+    <SessionBoundary>
+      <div
+        style={{ direction: "ltr" }}
+        className="bg-gradient-shadow min-h-screen"
+      >
+        <div className="container mx-auto px-4 py-8">
+          {/* Header */}
+          <div className="mb-12 text-center">
+            <h1 className="text-hell-fire animate-glow-pulse mb-4 text-4xl font-bold">
+              Cat Mascot Generator
+            </h1>
+            <p className="text-muted-foreground mx-auto max-w-2xl">
+              Generate demonic feline mascots for your metal a cappella choir.
+              Perfect for attendance tracking rewards and positive
+              reinforcement!
+            </p>
+          </div>
 
-        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-2">
-          {/* Cat Preview */}
-          <Card className="bg-card/50 border-hell-fire/30 backdrop-blur">
-            <CardHeader>
-              <CardTitle className="text-hell-fire flex items-center gap-2">
-                <Zap className="h-5 w-5" />
-                Your Hellish Mascot
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center gap-6">
-              <div className="bg-hell-shadow/30 w-full max-w-md rounded-lg p-8">
-                <HellCat config={catConfig} />
-              </div>
+          <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+            {/* Cat Preview */}
+            <Card className="bg-card/50 border-hell-fire/30 backdrop-blur">
+              <CardHeader>
+                <CardTitle className="text-hell-glow flex items-center gap-2">
+                  <Zap className="h-5 w-5" />
+                  Your Hellish Mascot
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center gap-6">
+                <div className="bg-hell-shadow/30 w-full max-w-md rounded-lg p-8">
+                  <HellCat config={catConfig} />
+                </div>
 
-              <div className="flex gap-4">
-                <Button
-                  onClick={generateRandomCat}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  <Zap className="mr-2 h-4 w-4" />
-                  Generate New Cat
-                </Button>
-                <Button onClick={exportSVG} variant="secondary">
-                  <Download className="mr-2 h-4 w-4" />
-                  Export SVG
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="flex gap-4">
+                  <Button
+                    size="sm"
+                    onClick={generateRandomCat}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    <Zap className="mr-2 h-4 w-4" />
+                    Random
+                  </Button>
+                  <Button size="sm" onClick={exportSVG} variant="secondary">
+                    <Download className="mr-2 h-4 w-4" />
+                    Export SVG
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Controls */}
-          <Card className="bg-card/50 border-hell-ember/30 backdrop-blur">
-            <CardHeader>
-              <CardTitle className="text-hell-ember">
-                Customize Your Demon
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CatGenerator config={catConfig} onChange={setCatConfig} />
-            </CardContent>
-          </Card>
-        </div>
+            {/* Controls */}
+            <Card className="bg-card/50 border-hell-ember/30 text-center align-middle backdrop-blur">
+              <CardHeader>
+                <CardTitle className="text-hell-glow ">
+                  Customize Your Demon
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CatGenerator config={catConfig} onChange={setCatConfig} />
+              </CardContent>
+            </Card>
+          </div>
 
-        {/* Footer */}
-        <div className="text-muted-foreground mt-16 text-center">
-          <p>Created for Hellscore Metal A Cappella Choir</p>
-          <p className="mt-2 text-sm">
-            May your attendance streaks burn eternal 🔥
-          </p>
+          {/* Footer */}
+          <div className="text-muted-foreground mt-6 text-center">
+            <p>Created for Hellscore Metal A Cappella Choir</p>
+            <p className="mt-2 text-sm">
+              May your attendance streaks burn eternal 🔥
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+    </SessionBoundary>
   );
 };
 

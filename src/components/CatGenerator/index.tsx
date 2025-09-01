@@ -50,7 +50,7 @@ export const CatGenerator = ({ config, onChange }: CatGeneratorProps) => {
 
         {/* Horn Style */}
         <div className="space-y-2">
-          <Label className="text-hell-fire">Horn Style</Label>
+          <Label>Horn Style</Label>
           <Select
             value={config.hornStyle}
             onValueChange={(value: any) => updateConfig("hornStyle", value)}
@@ -70,7 +70,7 @@ export const CatGenerator = ({ config, onChange }: CatGeneratorProps) => {
         {/* Horn Size Slider */}
         {config.hornStyle !== "none" && (
           <div className="space-y-2">
-            <Label className="text-hell-ember">
+            <Label>
               Horn Size: <Badge variant="secondary">{config.hornSize}%</Badge>
             </Label>
             <Slider
@@ -85,7 +85,7 @@ export const CatGenerator = ({ config, onChange }: CatGeneratorProps) => {
 
         {/* Expression */}
         <div className="space-y-2">
-          <Label className="text-hell-blood">Expression</Label>
+          <Label>Expression</Label>
           <Select
             value={config.expression}
             onValueChange={(value: any) => updateConfig("expression", value)}
@@ -107,13 +107,13 @@ export const CatGenerator = ({ config, onChange }: CatGeneratorProps) => {
 
       {/* Eyes & Glow */}
       <div className="space-y-4">
-        <h3 className="text-hell-glow flex items-center gap-2 text-lg font-semibold">
+        <h3 className="text-hell-fire flex items-center gap-2 text-lg font-semibold">
           👁️ Eyes & Glow
         </h3>
 
         {/* Eye Color */}
         <div className="space-y-2">
-          <Label className="text-hell-ember">Eye Color</Label>
+          <Label>Eye Color</Label>
           <Select
             value={config.eyeColor}
             onValueChange={(value: any) => updateConfig("eyeColor", value)}
@@ -132,7 +132,7 @@ export const CatGenerator = ({ config, onChange }: CatGeneratorProps) => {
 
         {/* Eye Glow Intensity */}
         <div className="space-y-2">
-          <Label className="text-hell-glow">
+          <Label>
             Eye Glow Intensity:{" "}
             <Badge variant="secondary">{config.eyeGlow}%</Badge>
           </Label>
@@ -150,13 +150,13 @@ export const CatGenerator = ({ config, onChange }: CatGeneratorProps) => {
 
       {/* Body & Pose */}
       <div className="space-y-4">
-        <h3 className="text-hell-ember flex items-center gap-2 text-lg font-semibold">
+        <h3 className="text-hell-fire flex items-center gap-2 text-lg font-semibold">
           🐱 Body & Pose
         </h3>
 
         {/* Pose */}
         <div className="space-y-2">
-          <Label className="text-hell-blood">Pose</Label>
+          <Label>Pose</Label>
           <Select
             value={config.pose}
             onValueChange={(value: any) => updateConfig("pose", value)}
@@ -174,7 +174,7 @@ export const CatGenerator = ({ config, onChange }: CatGeneratorProps) => {
 
         {/* Body Size */}
         <div className="space-y-2">
-          <Label className="text-hell-ember">
+          <Label>
             Body Size: <Badge variant="secondary">{config.bodySize}%</Badge>
           </Label>
           <Slider
@@ -189,7 +189,7 @@ export const CatGenerator = ({ config, onChange }: CatGeneratorProps) => {
 
         {/* Tail Length */}
         <div className="space-y-2">
-          <Label className="text-hell-fire">
+          <Label>
             Tail Length: <Badge variant="secondary">{config.tailLength}%</Badge>
           </Label>
           <Slider
@@ -206,13 +206,13 @@ export const CatGenerator = ({ config, onChange }: CatGeneratorProps) => {
 
       {/* Appearance */}
       <div className="space-y-4">
-        <h3 className="text-hell-ember flex items-center gap-2 text-lg font-semibold">
+        <h3 className="text-hell-fire flex items-center gap-2 text-lg font-semibold">
           🎨 Appearance
         </h3>
 
         {/* Color Scheme */}
         <div className="space-y-2">
-          <Label className="text-hell-fire">Color Scheme</Label>
+          <Label>Color Scheme</Label>
           <Select
             value={config.colorScheme}
             onValueChange={(value: any) => updateConfig("colorScheme", value)}
@@ -232,7 +232,7 @@ export const CatGenerator = ({ config, onChange }: CatGeneratorProps) => {
 
         {/* Body Markings */}
         <div className="space-y-2">
-          <Label className="text-hell-glow">Body Markings</Label>
+          <Label>Body Markings</Label>
           <Select
             value={config.markings}
             onValueChange={(value: any) => updateConfig("markings", value)}

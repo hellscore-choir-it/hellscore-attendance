@@ -29,10 +29,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❤️‍🔥</text></svg>"
         />
       </Head>
-      <div
-        className="mx-auto flex h-full max-w-screen-sm flex-col p-4"
-        dir="rtl"
-      >
+      <div className="flex h-full flex-col p-4" dir="rtl">
         <header className="flex flex-shrink-0 content-center justify-between gap-3 border-b pb-1 align-middle">
           <h1
             className="text-hell-fire animate-glow-pulse text-2xl font-bold leading-normal"
@@ -52,8 +49,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             {session ? "התנתק/י" : "התחבר/י"}
           </button>
         </header>
-        <main className="flex-1 overflow-auto pt-6">{children}</main>
-        <footer className="mt-10 flex flex-shrink-0 flex-col border-t pt-6 text-center text-sm text-gray-500">
+        <main className="flex-1 overflow-auto py-3">{children}</main>
+        <footer className="flex flex-shrink-0 flex-col border-t pt-6 text-center text-sm text-gray-500">
           <div className="mb-3">
             {map(bottomLinks, (linkDetails, index) => (
               <React.Fragment key={linkDetails.route}>
