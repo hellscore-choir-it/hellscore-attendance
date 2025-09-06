@@ -190,3 +190,8 @@ All colors MUST be HSL.
 .animate-flame-dance {
   animation: flame-dance 2s ease-in-out infinite;
 }
+
+body {
+  height: 100vh;
+  overflow: hidden;
+}
