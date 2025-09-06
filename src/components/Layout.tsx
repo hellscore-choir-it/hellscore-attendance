@@ -20,7 +20,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   ];
 
   return (
-    <div className="flex h-screen max-h-screen flex-col">
+    <div className="flex max-h-screen min-h-screen flex-col">
       <Head>
         <title>Hellscore Attendance</title>
         <meta name="description" content="Hellscore attendance" />
@@ -50,7 +50,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </button>
         </header>
         <main className="flex-1 overflow-auto py-3">{children}</main>
-        <footer className="flex flex-shrink-0 flex-col border-t pt-6 text-center text-sm text-gray-500">
+        <footer
+          className="flex flex-shrink-0 flex-col border-t pt-6 text-center text-sm text-gray-500"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
           <div className="mb-3">
             {map(bottomLinks, (linkDetails, index) => (
               <React.Fragment key={linkDetails.route}>
