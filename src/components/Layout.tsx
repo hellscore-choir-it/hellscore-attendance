@@ -23,7 +23,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     <div
       className="flex flex-col"
       dir="rtl"
-      style={{ maxHeight: "calc(100vh - env(safe-area-inset-bottom))" }}
+      style={{
+        maxHeight:
+          "calc(100vh - env(safe-area-inset-bottom) - env(safe-area-inset-top))",
+      }}
     >
       <Head>
         <title>Hellscore Attendance</title>
