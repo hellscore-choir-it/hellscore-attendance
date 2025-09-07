@@ -17,6 +17,10 @@ export const getUserDbData = async (userEmail: string, signal: AbortSignal) => {
     .maybeSingle<SupabaseUser>();
 
   if (userEntryError) {
+    // Check the error is not a signal abort error, in which case we don't want to log it
+    if (userEntryError.name === "AbortError") {
+      throw userEntryError;
+    }
     captureException(userEntryError, { extra: { userEmail } });
     throw userEntryError;
   }
