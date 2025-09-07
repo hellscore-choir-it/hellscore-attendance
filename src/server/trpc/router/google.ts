@@ -85,7 +85,10 @@ export const googleRouter = router({
               userEmail,
               Date.now().toString(),
               eventTitle,
-              eventDate,
+              // To stay compatible with previous date format in sheet
+              `${new Date(eventDate).toDateString()} ${new Date(
+                eventDate
+              ).toLocaleTimeString()}`,
               going ? "TRUE" : "FALSE",
               sanitizedWhyNot,
               wentLastTime ? "TRUE" : "FALSE",
