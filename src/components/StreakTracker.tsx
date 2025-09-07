@@ -1,11 +1,11 @@
 import { useUserDbData } from "../server/db/useUserStreak";
 import { HellCat } from "./CatGenerator/HellCat";
-import { generateRandomCat, hashSeed } from "./CatGenerator/helpers";
+import { generateRandomCat } from "./CatGenerator/helpers";
 
 export const StreakTracker: React.FC<{ userEmail: string }> = ({
   userEmail,
 }) => {
-  const randomCat = generateRandomCat(hashSeed(userEmail || "default"));
+  const randomCat = generateRandomCat(userEmail || "default");
   const { data: userData, isLoading } = useUserDbData(userEmail);
   return (
     <>
