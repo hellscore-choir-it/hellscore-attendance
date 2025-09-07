@@ -20,13 +20,17 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   ];
 
   return (
-    <div className="flex max-h-screen min-h-screen flex-col" dir="rtl">
+    <div
+      className="flex flex-col"
+      dir="rtl"
+      style={{ maxHeight: "calc(100vh - env(safe-area-inset-bottom))" }}
+    >
       <Head>
         <title>Hellscore Attendance</title>
         <meta name="description" content="Hellscore attendance" />
         <meta
           name="viewport"
-          content="width=device-width, initial-scale=1, viewport-fit=contain"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
         />
         <link
           rel="icon"
