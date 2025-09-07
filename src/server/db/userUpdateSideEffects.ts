@@ -206,13 +206,16 @@ const updateUserResponseAndStreaks = async ({
 
   // Update user response
   if (userEntry) {
+    const failedToCheckForLastEvent = Boolean(lastEventError);
+    const failedToGetCurrentEvent = !currentEvent;
+    const userAlreadyRespondedToCurrentEvent = Boolean(
+      currentEvent?.data?.requiredParticipantsSentResponse?.[supabaseUserId]
+    );
+
     const skipUpdateStreak =
-      // Failed to check for previous event
-      Boolean(lastEventError) ||
-      // Failed to get current event
-      !currentEvent ||
-      // User already responded to current event
-      currentEvent.data?.requiredParticipantsSentResponse?.[supabaseUserId];
+      failedToCheckForLastEvent ||
+      failedToGetCurrentEvent ||
+      userAlreadyRespondedToCurrentEvent;
     if (!skipUpdateStreak && !didUserRespondToLastEvent) {
       captureMessage("User did not respond to last event, resetting streak", {
         extra: {
@@ -232,6 +235,8 @@ const updateUserResponseAndStreaks = async ({
       ? (userEntry.data?.responseStreak || 0) + 1
       : 0;
 
+    const didReset = newStreak === 0;
+
     const { error: updateError } = await supabase
       .from("user")
       .update<Partial<SupabaseUser>>({
@@ -240,17 +245,27 @@ const updateUserResponseAndStreaks = async ({
           ...(userEntry.data || {}),
           responseStreak: newStreak,
           maxStreak: Math.max(userEntry.data?.maxStreak || 0, newStreak),
-          streakResets: [
-            ...(userEntry.data?.streakResets || []),
+          streakUpdates: [
+            ...(userEntry.data?.streakUpdates || []),
             {
               date: currentDate,
               missingEventId: lastEventOfTypeForUser?.id!,
-              streakAtReset: userEntry.data?.responseStreak || 0,
+              previousStreak: userEntry.data?.responseStreak || 0,
+              newStreak,
+              reason: failedToCheckForLastEvent
+                ? "Failed to check for last event"
+                : failedToGetCurrentEvent
+                ? "Failed to get current event"
+                : userAlreadyRespondedToCurrentEvent
+                ? "User already responded to current event"
+                : didUserRespondToLastEvent
+                ? "User responded to event"
+                : "User did not respond to event",
             },
           ],
-          streakResetDate: didUserRespondToLastEvent
-            ? userEntry?.data?.streakResetDate
-            : currentDate,
+          streakResetDate: didReset
+            ? currentDate
+            : userEntry?.data?.streakResetDate,
           responses: {
             ...(userEntry.data?.responses || {}),
             [supabaseEventId]: {
@@ -293,7 +308,7 @@ const updateUserResponseAndStreaks = async ({
           responseStreak: 1,
           maxStreak: 1,
           streakResetDate: null,
-          streakResets: [],
+          streakUpdates: [],
           responses: {
             [supabaseEventId]: {
               going,

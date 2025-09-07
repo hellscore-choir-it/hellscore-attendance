@@ -46,10 +46,12 @@ export interface SupabaseUser {
     responses: Record<string, UserEventResponse>;
     responseStreak: number;
     maxStreak: number;
-    streakResets: Array<{
+    streakUpdates: Array<{
       date: string;
-      missingEventId: string;
-      streakAtReset: number;
+      missingEventId?: string;
+      previousStreak?: number;
+      newStreak?: number;
+      reason: string;
     }>;
     streakResetDate?: string | null;
   };
