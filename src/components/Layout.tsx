@@ -20,17 +20,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   ];
 
   return (
-    <div
-      className="flex max-h-screen min-h-screen flex-col"
-      dir="rtl"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-    >
+    <div className="flex max-h-screen min-h-screen flex-col" dir="rtl">
       <Head>
         <title>Hellscore Attendance</title>
         <meta name="description" content="Hellscore attendance" />
         <meta
           name="viewport"
-          content="width=device-width, initial-scale=1, viewport-fit=cover"
+          content="width=device-width, initial-scale=1, viewport-fit=contain"
         />
         <link
           rel="icon"
