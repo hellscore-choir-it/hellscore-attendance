@@ -21,11 +21,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div
-      className="flex flex-col"
+      className="flex max-h-screen flex-col"
       dir="rtl"
       style={{
-        maxHeight:
-          "calc(100vh - env(safe-area-inset-bottom) - env(safe-area-inset-top))",
+        paddingBottom: "env(safe-area-inset-bottom)",
+        paddingTop: "env(safe-area-inset-top)",
       }}
     >
       <Head>
