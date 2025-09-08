@@ -268,12 +268,16 @@ const updateUserResponseAndStreaks = async ({
             : userEntry?.data?.streakResetDate,
           responses: {
             ...(userEntry.data?.responses || {}),
-            [supabaseEventId]: {
-              going,
-              whyNot,
-              wentLastTime,
-              comments,
-            },
+            [supabaseEventId]: [
+              ...(userEntry.data?.responses[supabaseEventId] || []),
+              {
+                going,
+                whyNot,
+                wentLastTime,
+                comments,
+                responseTime: currentDate,
+              },
+            ],
           },
         },
       })
@@ -310,12 +314,15 @@ const updateUserResponseAndStreaks = async ({
           streakResetDate: null,
           streakUpdates: [],
           responses: {
-            [supabaseEventId]: {
-              going,
-              whyNot,
-              wentLastTime,
-              comments,
-            },
+            [supabaseEventId]: [
+              {
+                going,
+                whyNot,
+                wentLastTime,
+                comments,
+                responseTime: currentDate,
+              },
+            ],
           },
         },
       });
