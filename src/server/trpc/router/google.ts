@@ -23,7 +23,12 @@ export const googleRouter = router({
       }) => {
         const userEmail = ctx.session.user.email;
         if (!userEmail) {
-          throw new Error("user has no email");
+          const error = new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "User email is required to submit attendance.",
+          });
+          captureException(error, { extra: { userEmail, eventTitle } });
+          throw error;
         }
 
         // Retry logic for authorization check via Google Sheets API
