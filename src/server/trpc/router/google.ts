@@ -71,8 +71,7 @@ export const googleRouter = router({
         const sanitizedComments = sanitizeText(comments);
 
         // Update event, user response and streaks
-        // No need to await, since the google sheets is currently the source of truth
-        performUpdateCallbacksSerially({
+        const supabasePromise = performUpdateCallbacksSerially({
           userEmail,
           eventTitle,
           eventDate,
@@ -120,6 +119,27 @@ export const googleRouter = router({
             code: "INTERNAL_SERVER_ERROR",
             message: "Unable to submit attendance. Please try again.",
           });
+        }
+
+        try {
+          await supabasePromise;
+        } catch (error) {
+          console.error("Failed to update Supabase:", error);
+          captureException(error, {
+            extra: {
+              userEmail,
+              eventTitle,
+              eventDate,
+              going,
+              whyNot,
+              wentLastTime,
+              comments,
+              sanitizedWhyNot,
+              sanitizedComments,
+            },
+          });
+          // Note: Attendance submission in Google Sheets succeeded, so we won't throw an error,
+          // but we log the failure to update Supabase for further investigation.
         }
       }
     ),
