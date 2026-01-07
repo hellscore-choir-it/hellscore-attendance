@@ -37,19 +37,22 @@ export interface UserEventResponse {
   whyNot: string;
   wentLastTime: boolean;
   comments?: string;
+  responseTime: string;
 }
 export interface SupabaseUser {
   id: string;
   created_at: string;
   modified_at: string;
   data: {
-    responses: Record<string, UserEventResponse>;
+    responses: Record<string, UserEventResponse[]>;
     responseStreak: number;
     maxStreak: number;
-    streakResets: Array<{
+    streakUpdates: Array<{
       date: string;
-      missingEventId: string;
-      streakAtReset: number;
+      missingEventId?: string;
+      previousStreak?: number;
+      newStreak?: number;
+      reason: string;
     }>;
     streakResetDate?: string | null;
   };

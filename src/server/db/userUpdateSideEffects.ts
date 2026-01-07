@@ -1,5 +1,5 @@
 import { captureException, captureMessage } from "@sentry/nextjs";
-import { fromPairs, map } from "lodash";
+import { fromPairs, isBoolean, isEmpty, map } from "lodash";
 
 import { calculateSHA256Hash } from "../../utils/sha265";
 import { createClient } from "../../utils/supabase/client";
@@ -49,23 +49,29 @@ const updateDbEventsStateForUserUpdate = async ({
   const eventType = eventTitle; // Currently the event type is the same as the title, but this may change in the future
   if (!supabaseEvent) {
     // Add event to Supabase
+    const insertData = {
+      title: eventTitle,
+      type: eventType,
+      date: eventDate,
+      requiredParticipantsSentResponse: fromPairs(
+        map(requiredAttendees, (email) => [
+          generateSupabaseUserId(email),
+          userEmail === email,
+        ])
+      ),
+    };
+    console.debug("Inserting new event into Supabase:", {
+      supabaseEventId,
+      insertData,
+      currentDate,
+    });
     const { error: insertError } = await supabase
       .from("event")
       .insert<SupabaseEvent>({
         id: supabaseEventId,
         created_at: currentDate,
         modified_at: currentDate,
-        data: {
-          title: eventTitle,
-          type: eventType,
-          date: eventDate,
-          requiredParticipantsSentResponse: fromPairs(
-            map(requiredAttendees, (email) => [
-              generateSupabaseUserId(email),
-              userEmail === email,
-            ])
-          ),
-        },
+        data: insertData,
       });
     if (insertError) {
       console.error("Error adding event to Supabase:", insertError);
@@ -83,6 +89,27 @@ const updateDbEventsStateForUserUpdate = async ({
   } else {
     // Event already exists, update requiredParticipantsSentResponse
     // and required attendees based on current user events
+    const updateData = {
+      ...(supabaseEvent?.data || {}),
+      title: eventTitle,
+      type: eventType,
+      requiredParticipantsSentResponse: fromPairs(
+        map(requiredAttendees, (email) => [
+          calculateSHA256Hash(email),
+          userEmail === email ||
+            Boolean(
+              supabaseEvent?.data?.requiredParticipantsSentResponse?.[
+                calculateSHA256Hash(email)
+              ]
+            ),
+        ])
+      ),
+    };
+    console.debug("Updating existing event in Supabase:", {
+      supabaseEventId,
+      updateData,
+      currentDate,
+    });
     const { error: updateError } = await supabase
       .from("event")
       .update<Partial<SupabaseEvent>>({
@@ -104,7 +131,7 @@ const updateDbEventsStateForUserUpdate = async ({
           ),
         },
       })
-      .eq("id", supabaseEvent.id);
+      .eq("id", supabaseEventId);
 
     if (updateError) {
       console.error("Error updating event in Supabase:", updateError);
@@ -168,24 +195,11 @@ const updateUserResponseAndStreaks = async ({
     });
   }
 
-  const { data: currentEvent, error: currentEventError } = await supabase
-    .from("event")
-    .select("*")
-    .eq("id", supabaseEventId)
-    .maybeSingle<SupabaseEvent>();
-
-  if (currentEventError) {
-    console.error("Error fetching current event:", currentEventError);
-    captureException(currentEventError, {
-      extra: { userEmail, eventTitle, eventType, eventDate, supabaseUserId },
-    });
-  }
-
   const didUserRespondToLastEvent =
     // This is the user's first event
     !lastEventOfTypeForUser ||
     // The user has responded to the last event
-    Boolean(
+    isBoolean(
       lastEventOfTypeForUser?.data?.requiredParticipantsSentResponse?.[
         supabaseUserId
       ]
@@ -206,13 +220,13 @@ const updateUserResponseAndStreaks = async ({
 
   // Update user response
   if (userEntry) {
+    const failedToCheckForLastEvent = Boolean(lastEventError);
+    const userAlreadyRespondedToCurrentEvent = Boolean(
+      !isEmpty(userEntry.data?.responses?.[supabaseEventId])
+    );
+
     const skipUpdateStreak =
-      // Failed to check for previous event
-      Boolean(lastEventError) ||
-      // Failed to get current event
-      !currentEvent ||
-      // User already responded to current event
-      currentEvent.data?.requiredParticipantsSentResponse?.[supabaseUserId];
+      failedToCheckForLastEvent || userAlreadyRespondedToCurrentEvent;
     if (!skipUpdateStreak && !didUserRespondToLastEvent) {
       captureMessage("User did not respond to last event, resetting streak", {
         extra: {
@@ -232,37 +246,62 @@ const updateUserResponseAndStreaks = async ({
       ? (userEntry.data?.responseStreak || 0) + 1
       : 0;
 
+    const didReset = newStreak === 0;
+
+    const updateData = {
+      ...(userEntry.data || {}),
+      responseStreak: newStreak,
+      maxStreak: Math.max(userEntry.data?.maxStreak || 0, newStreak),
+      streakUpdates: [
+        ...(userEntry.data?.streakUpdates || []),
+        {
+          date: currentDate,
+          missingEventId: lastEventOfTypeForUser?.id!,
+          previousStreak: userEntry.data?.responseStreak || 0,
+          newStreak,
+          reason: failedToCheckForLastEvent
+            ? "Failed to check for last event"
+            : userAlreadyRespondedToCurrentEvent
+            ? "User already responded to current event"
+            : didUserRespondToLastEvent
+            ? "User responded to event"
+            : "User did not respond to event",
+        },
+      ],
+      streakResetDate: didReset
+        ? currentDate
+        : userEntry?.data?.streakResetDate,
+      responses: {
+        ...(userEntry.data?.responses || {}),
+        [supabaseEventId]: [
+          ...(userEntry.data?.responses[supabaseEventId] || []),
+          {
+            going,
+            whyNot,
+            wentLastTime,
+            comments,
+            responseTime: currentDate,
+          },
+        ],
+      },
+    };
+    console.debug("Updating existing user in Supabase:", {
+      supabaseUserId,
+      updateData,
+      currentDate,
+      supabaseEventId,
+      userAlreadyRespondedToCurrentEvent,
+      skipUpdateStreak,
+      didUserRespondToLastEvent,
+      lastEventOfTypeForUser,
+    });
     const { error: updateError } = await supabase
       .from("user")
       .update<Partial<SupabaseUser>>({
         modified_at: currentDate,
-        data: {
-          ...(userEntry.data || {}),
-          responseStreak: newStreak,
-          maxStreak: Math.max(userEntry.data?.maxStreak || 0, newStreak),
-          streakResets: [
-            ...(userEntry.data?.streakResets || []),
-            {
-              date: currentDate,
-              missingEventId: lastEventOfTypeForUser?.id!,
-              streakAtReset: userEntry.data?.responseStreak || 0,
-            },
-          ],
-          streakResetDate: didUserRespondToLastEvent
-            ? userEntry?.data?.streakResetDate
-            : currentDate,
-          responses: {
-            ...(userEntry.data?.responses || {}),
-            [supabaseEventId]: {
-              going,
-              whyNot,
-              wentLastTime,
-              comments,
-            },
-          },
-        },
+        data: updateData,
       })
-      .eq("id", userEntry.id)
+      .eq("id", supabaseUserId)
       .select();
 
     if (updateError) {
@@ -283,26 +322,51 @@ const updateUserResponseAndStreaks = async ({
     }
   } else {
     // Create a new user entry
+    const insertData = {
+      responseStreak: 1,
+      maxStreak: 1,
+      streakResetDate: null,
+      streakUpdates: [
+        {
+          date: currentDate,
+          reason: "First event response",
+          newStreak: 1,
+          previousStreak: 0,
+        },
+      ],
+      responses: {
+        [supabaseEventId]: [
+          {
+            going,
+            whyNot,
+            wentLastTime,
+            comments,
+            responseTime: currentDate,
+          },
+        ],
+      },
+    };
+    console.debug("Creating new user entry in Supabase:", {
+      supabaseUserId,
+      insertData,
+      currentDate,
+      supabaseEventId,
+      userEmail,
+      eventTitle,
+      eventType,
+      eventDate,
+      going,
+      whyNot,
+      wentLastTime,
+      comments,
+    });
     const { error: insertError } = await supabase
       .from("user")
       .insert<SupabaseUser>({
         id: supabaseUserId,
         created_at: currentDate,
         modified_at: currentDate,
-        data: {
-          responseStreak: 1,
-          maxStreak: 1,
-          streakResetDate: null,
-          streakResets: [],
-          responses: {
-            [supabaseEventId]: {
-              going,
-              whyNot,
-              wentLastTime,
-              comments,
-            },
-          },
-        },
+        data: insertData,
       });
 
     if (insertError) {

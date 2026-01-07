@@ -1,6 +1,7 @@
 import { captureException } from "@sentry/nextjs";
 import { useQuery } from "@tanstack/react-query";
 
+import { startsWith } from "lodash";
 import { createClient } from "../../utils/supabase/client";
 import { generateSupabaseUserId, type SupabaseUser } from "./schema";
 
@@ -17,7 +18,10 @@ export const getUserDbData = async (userEmail: string, signal: AbortSignal) => {
     .maybeSingle<SupabaseUser>();
 
   if (userEntryError) {
-    captureException(userEntryError, { extra: { userEmail } });
+    // Check the error is not a signal abort error, in which case we don't want to log it
+    if (!startsWith(userEntryError.message, "AbortError")) {
+      captureException(userEntryError, { extra: { userEmail } });
+    }
     throw userEntryError;
   }
 

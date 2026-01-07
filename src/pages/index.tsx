@@ -3,7 +3,7 @@ import type { InferGetStaticPropsType, NextPage } from "next";
 import { useSession } from "next-auth/react";
 
 import AttendanceForm from "../components/AttendanceForm";
-import Layout from "../components/Layout";
+import SessionBoundary from "../components/SessionBoundary";
 import {
   getHellscoreEvents,
   getUserEventTypeAssignments,
@@ -16,13 +16,9 @@ const Home: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
   const { data: session } = useSession();
 
   return (
-    <Layout>
-      {session ? (
-        <AttendanceForm {...{ calendarData, userEvents, session }} />
-      ) : (
-        <p>אנא התחבר/י כדי למלא את הטופס 🙂</p>
-      )}
-    </Layout>
+    <SessionBoundary>
+      {session && <AttendanceForm {...{ calendarData, userEvents, session }} />}
+    </SessionBoundary>
   );
 };
 

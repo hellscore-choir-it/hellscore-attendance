@@ -23,7 +23,12 @@ export const googleRouter = router({
       }) => {
         const userEmail = ctx.session.user.email;
         if (!userEmail) {
-          throw new Error("user has no email");
+          const error = new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "User email is required to submit attendance.",
+          });
+          captureException(error, { extra: { userEmail, eventTitle } });
+          throw error;
         }
 
         // Retry logic for authorization check via Google Sheets API
@@ -66,8 +71,7 @@ export const googleRouter = router({
         const sanitizedComments = sanitizeText(comments);
 
         // Update event, user response and streaks
-        // No need to await, since the google sheets is currently the source of truth
-        performUpdateCallbacksSerially({
+        const supabasePromise = performUpdateCallbacksSerially({
           userEmail,
           eventTitle,
           eventDate,
@@ -85,7 +89,10 @@ export const googleRouter = router({
               userEmail,
               Date.now().toString(),
               eventTitle,
-              eventDate,
+              // To stay compatible with previous date format in sheet
+              `${new Date(eventDate).toDateString()} ${new Date(
+                eventDate
+              ).toLocaleTimeString()}`,
               going ? "TRUE" : "FALSE",
               sanitizedWhyNot,
               wentLastTime ? "TRUE" : "FALSE",
@@ -112,6 +119,27 @@ export const googleRouter = router({
             code: "INTERNAL_SERVER_ERROR",
             message: "Unable to submit attendance. Please try again.",
           });
+        }
+
+        try {
+          await supabasePromise;
+        } catch (error) {
+          console.error("Failed to update Supabase:", error);
+          captureException(error, {
+            extra: {
+              userEmail,
+              eventTitle,
+              eventDate,
+              going,
+              whyNot,
+              wentLastTime,
+              comments,
+              sanitizedWhyNot,
+              sanitizedComments,
+            },
+          });
+          // Note: Attendance submission in Google Sheets succeeded, so we won't throw an error,
+          // but we log the failure to update Supabase for further investigation.
         }
       }
     ),
