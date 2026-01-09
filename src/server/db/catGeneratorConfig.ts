@@ -1,5 +1,5 @@
 import { captureException } from "@sentry/nextjs";
-import { isNil, map, some } from "lodash";
+import { isArray, isNil, map, some } from "lodash";
 
 export interface CatGeneratorConfig {
   killSwitch: boolean;
@@ -30,7 +30,7 @@ const sanitizeThreshold = (value: unknown, fallback: number) => {
 };
 
 const sanitizeAllowlist = (value: unknown) => {
-  if (!Array.isArray(value)) {
+  if (!isArray(value)) {
     return [];
   }
   return map(value, (email) => (typeof email === "string" ? email.trim() : "")).filter(
@@ -56,7 +56,7 @@ export const normalizeCatGeneratorConfig = (
   };
 };
 
-const getSupabaseClient = async () => {
+const loadSupabaseBrowserClient = async () => {
   const { createClient } = await import("../../utils/supabase/client");
   return createClient();
 };
@@ -65,7 +65,7 @@ export const fetchCatGeneratorConfig = async (
   signal?: AbortSignal
 ): Promise<CatGeneratorConfig> => {
   try {
-    const supabase = await getSupabaseClient();
+    const supabase = await loadSupabaseBrowserClient();
     const baseQuery = supabase.from(CONFIG_TABLE_NAME).select("*").limit(1);
     const query = signal ? baseQuery.abortSignal(signal) : baseQuery;
     const { data, error } = await query.maybeSingle<CatGeneratorConfig>();
