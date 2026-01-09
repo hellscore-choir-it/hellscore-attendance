@@ -86,7 +86,6 @@ const normalizeStreak = (streak?: number | null) => {
   if (typeof streak === "number" && Number.isFinite(streak) && streak >= 0) {
     return streak;
   }
-  if (streak === 0) return 0;
   return null;
 };
 
@@ -109,17 +108,17 @@ export const computeCatGeneratorEligibility = ({
   const normalizedStreak = normalizeStreak(streak);
   const allowlistMatch = isAllowlisted(normalizedConfig.allowlist, userEmail ?? undefined);
 
-  const gatingDisabled = normalizedConfig.killSwitch;
+  const isKillSwitchActive = normalizedConfig.killSwitch;
 
   const meets = (threshold: number) =>
-    !gatingDisabled &&
+    !isKillSwitchActive &&
     (allowlistMatch || (!isNil(normalizedStreak) && normalizedStreak >= threshold));
 
   return {
     streak: normalizedStreak,
     config: normalizedConfig,
     isAllowlisted: allowlistMatch,
-    isDisabledByKillSwitch: gatingDisabled,
+    isDisabledByKillSwitch: isKillSwitchActive,
     canAccess: meets(normalizedConfig.accessStreak),
     canCustomize: meets(normalizedConfig.customizeStreak),
     canExport: meets(normalizedConfig.exportStreak),
