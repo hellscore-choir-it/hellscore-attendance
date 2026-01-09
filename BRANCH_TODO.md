@@ -73,7 +73,7 @@ Initial allowlist:
   - Completion criteria: tests assert key form states and submission interactions for `AttendanceForm` without relying on network calls.
 - [x] Add/expand tests for current streak tracking rendering logic (no gating yet).
   - Completion criteria: tests cover `StreakTracker` rendering for representative streak values and loading/error states (mock only external data fetching).
-- [ ] Confirm test suite runs in CI/deployment checks.
+- [x] Confirm test suite runs in CI/deployment checks.
   - Completion criteria: CI config (or documented scripts) runs `pnpm test` and fails the build on test failures.
 
 ### 1) Config + foundations

@@ -1,28 +1,10 @@
 /**
  * @jest-environment jsdom
  */
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 
 import AttendanceForm from "../../components/AttendanceForm";
-
-jest.mock("next/router", () => ({
-  useRouter: () => ({ push: jest.fn() }),
-}));
-
-jest.mock("notistack", () => ({
-  useSnackbar: () => ({ enqueueSnackbar: jest.fn() }),
-}));
-
-jest.mock("../../utils/trpc", () => ({
-  trpc: {
-    google: {
-      submitAttendance: {
-        useMutation: () => ({ mutateAsync: jest.fn() }),
-      },
-    },
-  },
-}));
 
 const baseSession = {
   user: { email: "user@example.com" },
@@ -70,5 +52,47 @@ describe("AttendanceForm", () => {
     expect(
       screen.queryByText(/נשמח לשמוע למה לא תגיעו/i)
     ).not.toBeInTheDocument();
+  });
+
+  it("submits the form and navigates to thank-you", async () => {
+    const mockPush = jest.fn();
+    const mockMutate = jest.fn().mockResolvedValue({});
+    const routerMock = require("next/router");
+    routerMock.useRouter.mockReturnValue({ push: mockPush });
+
+    const trpcMock = require("../../utils/trpc");
+    trpcMock.__mock.mockMutate.mockResolvedValue({});
+    trpcMock.__mock.mockUseMutation.mockReturnValue({ mutateAsync: mockMutate });
+
+    render(
+      <AttendanceForm
+        calendarData={[{ title: "Rehearsal", start: "2025-01-01T20:00:00Z" }]}
+        userEvents={[{ title: "Rehearsal", email: "user@example.com" }]}
+        session={baseSession}
+      />
+    );
+
+    fireEvent.change(screen.getByRole("combobox", { name: "אירוע" }), {
+      target: { value: "Rehearsal" },
+    });
+    fireEvent.change(screen.getByRole("combobox", { name: "תאריך" }), {
+      target: { value: "2025-01-01T20:00:00Z" },
+    });
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: /האם את\/ה מגיע\/ה/ })
+    );
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: /האם הגעת פעם שעברה/ })
+    );
+    fireEvent.change(screen.getByRole("textbox", { name: /הערות נוספות/ }), {
+      target: { value: "See you there" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "שלח/י טופס 🚀" }));
+
+    await waitFor(() => {
+      expect(mockMutate).toHaveBeenCalled();
+      expect(mockPush).toHaveBeenCalledWith("/thank-you");
+    });
   });
 });
