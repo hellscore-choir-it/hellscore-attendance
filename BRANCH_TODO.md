@@ -69,9 +69,9 @@ Initial allowlist:
 
 ### 0) Baseline safety net (tests first)
 
-- [ ] Add/expand tests for current attendance submission UI behavior (no cat rollout changes yet).
+- [x] Add/expand tests for current attendance submission UI behavior (no cat rollout changes yet).
   - Completion criteria: tests assert key form states and submission interactions for `AttendanceForm` without relying on network calls.
-- [ ] Add/expand tests for current streak tracking rendering logic (no gating yet).
+- [x] Add/expand tests for current streak tracking rendering logic (no gating yet).
   - Completion criteria: tests cover `StreakTracker` rendering for representative streak values and loading/error states (mock only external data fetching).
 - [ ] Confirm test suite runs in CI/deployment checks.
   - Completion criteria: CI config (or documented scripts) runs `pnpm test` and fails the build on test failures.
