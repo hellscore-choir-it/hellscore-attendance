@@ -2,7 +2,7 @@ import { captureException } from "@sentry/nextjs";
 import { isArray, isNil, map, some } from "lodash";
 
 export interface CatGeneratorConfig {
-  killSwitch: boolean;
+  rolloutPaused: boolean;
   accessStreak: number;
   customizeStreak: number;
   exportStreak: number;
@@ -12,7 +12,7 @@ export interface CatGeneratorConfig {
 }
 
 export const DEFAULT_CAT_GENERATOR_CONFIG: CatGeneratorConfig = {
-  killSwitch: false,
+  rolloutPaused: false,
   accessStreak: 2,
   customizeStreak: 4,
   exportStreak: 5,
@@ -44,7 +44,7 @@ export const normalizeCatGeneratorConfig = (
   const base = DEFAULT_CAT_GENERATOR_CONFIG;
 
   return {
-    killSwitch: Boolean(config?.killSwitch),
+    rolloutPaused: Boolean(config?.rolloutPaused),
     accessStreak: sanitizeThreshold(config?.accessStreak, base.accessStreak),
     customizeStreak: sanitizeThreshold(config?.customizeStreak, base.customizeStreak),
     exportStreak: sanitizeThreshold(config?.exportStreak, base.exportStreak),
@@ -108,17 +108,17 @@ export const computeCatGeneratorEligibility = ({
   const normalizedStreak = normalizeStreak(streak);
   const allowlistMatch = isAllowlisted(normalizedConfig.allowlist, userEmail ?? undefined);
 
-  const isKillSwitchActive = normalizedConfig.killSwitch;
+  const isRolloutPaused = normalizedConfig.rolloutPaused;
 
   const meets = (threshold: number) =>
-    !isKillSwitchActive &&
+    !isRolloutPaused &&
     (allowlistMatch || (!isNil(normalizedStreak) && normalizedStreak >= threshold));
 
   return {
     streak: normalizedStreak,
     config: normalizedConfig,
     isAllowlisted: allowlistMatch,
-    isDisabledByKillSwitch: isKillSwitchActive,
+    isDisabledByKillSwitch: isRolloutPaused,
     canAccess: meets(normalizedConfig.accessStreak),
     canCustomize: meets(normalizedConfig.customizeStreak),
     canExport: meets(normalizedConfig.exportStreak),

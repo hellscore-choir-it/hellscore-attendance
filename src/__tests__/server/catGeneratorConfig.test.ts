@@ -17,8 +17,8 @@ describe("normalizeCatGeneratorConfig", () => {
       customizeStreak: DEFAULT_CAT_GENERATOR_CONFIG.customizeStreak,
       exportStreak: DEFAULT_CAT_GENERATOR_CONFIG.exportStreak,
       rareTraitsStreak: DEFAULT_CAT_GENERATOR_CONFIG.rareTraitsStreak,
+      rolloutPaused: false,
       allowlist: DEFAULT_CAT_GENERATOR_CONFIG.allowlist,
-      killSwitch: false,
     });
   });
 
@@ -29,7 +29,7 @@ describe("normalizeCatGeneratorConfig", () => {
       exportStreak: 7,
       rareTraitsStreak: 8,
       allowlist: ["a@example.com", "B@example.com"],
-      killSwitch: true,
+      rolloutPaused: true,
     });
 
     expect(result).toMatchObject({
@@ -38,17 +38,17 @@ describe("normalizeCatGeneratorConfig", () => {
       exportStreak: 7,
       rareTraitsStreak: 8,
       allowlist: ["a@example.com", "B@example.com"],
-      killSwitch: true,
+      rolloutPaused: true,
     });
   });
 });
 
 describe("computeCatGeneratorEligibility", () => {
-  it("returns false when kill switch is enabled", () => {
+  it("returns false when rollout is paused", () => {
     const eligibility = computeCatGeneratorEligibility({
       streak: 10,
       userEmail: "someone@example.com",
-      config: { ...DEFAULT_CAT_GENERATOR_CONFIG, killSwitch: true },
+      config: { ...DEFAULT_CAT_GENERATOR_CONFIG, rolloutPaused: true },
     });
 
     expect(eligibility.isDisabledByKillSwitch).toBe(true);
