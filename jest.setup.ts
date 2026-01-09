@@ -1,5 +1,5 @@
+/// <reference types="jest" />
 import "@testing-library/jest-dom";
-import { jest } from "@jest/globals";
 
 jest.mock("@sentry/nextjs", () => ({
   captureException: jest.fn(),
