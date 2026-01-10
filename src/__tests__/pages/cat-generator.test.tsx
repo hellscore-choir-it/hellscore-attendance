@@ -99,4 +99,27 @@ describe("cat-generator page gating", () => {
       expect(screen.getByText(/מחולל החתולים/i)).toBeInTheDocument()
     );
   });
+
+  it("renders and updates controls when interacting", async () => {
+    useUserDbDataMock.mockImplementation(() => ({
+      data: { data: { responseStreak: 5 } },
+    }));
+
+    const originalRandom = Math.random;
+    Math.random = jest.fn().mockReturnValue(0);
+
+    render(<CatGeneratorPage />, { wrapper });
+
+    const eyeGlowLabel = await screen.findByText(/Eye Glow Intensity:/i);
+    expect(eyeGlowLabel).toHaveTextContent("75%");
+
+    const randomButton = screen.getByRole("button", { name: /אקראי/i });
+    randomButton.click();
+
+    await waitFor(() =>
+      expect(screen.getByText(/Eye Glow Intensity:/i)).toHaveTextContent("0%")
+    );
+
+    Math.random = originalRandom;
+  });
 });

@@ -109,7 +109,7 @@ Initial allowlist:
   - Completion criteria: deterministic tests cover below/above threshold + allowlist.
 - [x] Translate cat generator page texts into Hebrew.
   - Completion criteria: all user-facing strings on `/cat-generator` are localized to Hebrew, consistent with other pages.
-- [ ] Add basic UI test coverage for cat generator controls.
+- [x] Add basic UI test coverage for cat generator controls.
   - Completion criteria: tests assert controls render and update preview state; ideally established before further gating changes to ensure stability.
 
 ### 5) Incremental feature unlocks inside cat generator
