@@ -8,29 +8,6 @@ import userEvent from "@testing-library/user-event";
 import CatGeneratorPage from "../../pages/cat-generator";
 import { type CatConfig } from "../../components/CatGenerator/types";
 
-class ResizeObserverMock {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-
-// @ts-expect-error jsdom lacks ResizeObserver
-global.ResizeObserver = ResizeObserverMock;
-
-// Radix Select expects pointer capture APIs in the environment
-if (!Element.prototype.hasPointerCapture) {
-  // @ts-expect-error test env shim
-  Element.prototype.hasPointerCapture = () => false;
-}
-if (!Element.prototype.releasePointerCapture) {
-  // @ts-expect-error test env shim
-  Element.prototype.releasePointerCapture = () => {};
-}
-if (!Element.prototype.scrollIntoView) {
-  // @ts-expect-error test env shim
-  Element.prototype.scrollIntoView = () => {};
-}
-
 jest.mock("next-auth/react", () => ({
   useSession: () => ({
     data: { user: { email: "user@example.com" } },

@@ -32,6 +32,29 @@ jest.mock("@sentry/nextjs", () => ({
   withScope: (fn: any) => fn({}),
 }));
 
+// Radix components expect these browser APIs in the environment
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+// @ts-expect-error jsdom lacks ResizeObserver
+global.ResizeObserver = ResizeObserverMock;
+
+if (!Element.prototype.hasPointerCapture) {
+  // @ts-expect-error test env shim
+  Element.prototype.hasPointerCapture = () => false;
+}
+if (!Element.prototype.releasePointerCapture) {
+  // @ts-expect-error test env shim
+  Element.prototype.releasePointerCapture = () => {};
+}
+if (!Element.prototype.scrollIntoView) {
+  // @ts-expect-error test env shim
+  Element.prototype.scrollIntoView = () => {};
+}
+
 jest.mock("./src/utils/supabase/client", () => ({
   createClient: () => ({
     from: () => ({
