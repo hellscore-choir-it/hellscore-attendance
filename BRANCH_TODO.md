@@ -101,8 +101,8 @@ Initial allowlist:
 
 ### 4) Route-level guard on `/cat-generator`
 
-- [ ] Add a client-side guard that enforces `CAT_GEN_ACCESS_STREAK`.
-  - Completion criteria: below threshold redirects back to `/thank-you` with a friendly message; above threshold loads page normally; shows a loading state while streak is unknown.
+- [x] Add a client-side guard that enforces `CAT_GEN_ACCESS_STREAK`.
+  - Completion criteria: below threshold redirects back to `/thank-you` with a friendly message; above threshold loads page normally; shows a loading state while streak is unknown. (Client-side lock screen implemented; still need redirect + loading polish.)
 - [ ] Add Supabase-based admin bypass check.
   - Completion criteria: allowlisted emails bypass gating; list is sourced from Supabase; no raw email stored in telemetry.
 - [ ] Add tests for guard redirect + allowlist bypass.

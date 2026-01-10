@@ -10,6 +10,10 @@ import {
   type CatConfig,
 } from "../components/CatGenerator/types";
 import SessionBoundary from "../components/SessionBoundary";
+import { computeCatGeneratorEligibility } from "../server/db/catGeneratorConfig";
+import { useUserDbData } from "../server/db/useUserStreak";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
 import { Button } from "../components/ui/button";
 import {
   Card,
@@ -19,6 +23,38 @@ import {
 } from "../components/ui/card";
 
 const Index = () => {
+  const { data: session } = useSession();
+  const userEmail = session?.user?.email ?? "";
+  const { data: userData } = useUserDbData(userEmail);
+  const eligibility = computeCatGeneratorEligibility({
+    streak: userData?.data?.responseStreak ?? null,
+    userEmail,
+    config: undefined,
+  });
+
+  if (!eligibility.canAccess) {
+    const remaining = eligibility.config.accessStreak - (eligibility.streak ?? 0);
+    return (
+      <SessionBoundary>
+        <div className="bg-gradient-shadow flex min-h-screen items-center justify-center px-6 text-center">
+          <div className="space-y-4">
+            <p className="text-lg text-gray-200">
+              {eligibility.streak === null
+                ? "בודקים את הרצף שלך..."
+                : `עוד ${Math.max(
+                    remaining,
+                    1
+                  )} דיווחים כדי לפתוח את מחולל החתולים 🐱‍👤`}
+            </p>
+            <Link href="/thank-you" className="text-hell-fire underline">
+              חזרה לעמוד התודה
+            </Link>
+          </div>
+        </div>
+      </SessionBoundary>
+    );
+  }
+
   const [catConfig, setCatConfig] = useState<CatConfig>({
     hornStyle: "curved",
     eyeColor: "fire",
