@@ -153,12 +153,11 @@ const Index = () => {
           {/* Header */}
           <div className="mb-12 text-center">
             <h1 className="text-hell-fire animate-glow-pulse mb-4 text-4xl font-bold">
-              Cat Mascot Generator
+              מחולל החתולים
             </h1>
             <p className="text-muted-foreground mx-auto max-w-2xl">
-              Generate demonic feline mascots for your metal a cappella choir.
-              Perfect for attendance tracking rewards and positive
-              reinforcement!
+              צרו קמע חתולי דמוני למקהלת המטאל א-קפלה. מושלם כפרס על דיווחי
+              נוכחות ועידוד חיובי!
             </p>
           </div>
 
@@ -168,7 +167,7 @@ const Index = () => {
               <CardHeader>
                 <CardTitle className="text-hell-glow flex items-center gap-2">
                   <Zap className="h-5 w-5" />
-                  Your Hellish Mascot
+                  הקמע החתולי שלך
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col items-center gap-6">
@@ -183,11 +182,11 @@ const Index = () => {
                     className="bg-primary hover:bg-primary/90"
                   >
                     <Zap className="mr-2 h-4 w-4" />
-                    Random
+                    אקראי
                   </Button>
                   <Button size="sm" onClick={exportSVG} variant="secondary">
                     <Download className="mr-2 h-4 w-4" />
-                    Export SVG
+                    ייצוא SVG
                   </Button>
                 </div>
               </CardContent>
@@ -197,7 +196,7 @@ const Index = () => {
             <Card className="bg-card/50 border-hell-ember/30 text-center align-middle backdrop-blur">
               <CardHeader>
                 <CardTitle className="text-hell-glow ">
-                  Customize Your Demon
+                  התאימו את השד שלכם
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -208,9 +207,9 @@ const Index = () => {
 
           {/* Footer */}
           <div className="text-muted-foreground mt-6 text-center">
-            <p>Created for Hellscore Metal A Cappella Choir</p>
+            <p>נוצר עבור מקהלת Hellscore מטאל א-קפלה</p>
             <p className="mt-2 text-sm">
-              May your attendance streaks burn eternal 🔥
+              מי ייתן ורצפי הנוכחות שלכם יבערו לנצח 🔥
             </p>
           </div>
         </div>

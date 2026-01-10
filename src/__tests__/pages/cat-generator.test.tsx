@@ -96,7 +96,7 @@ describe("cat-generator page gating", () => {
 
     render(<CatGeneratorPage />, { wrapper });
     await waitFor(() =>
-      expect(screen.getByText(/Cat Mascot Generator/i)).toBeInTheDocument()
+      expect(screen.getByText(/מחולל החתולים/i)).toBeInTheDocument()
     );
   });
 });
