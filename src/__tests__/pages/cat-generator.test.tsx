@@ -6,6 +6,15 @@ import { render, screen, waitFor } from "@testing-library/react";
 
 import CatGeneratorPage from "../../pages/cat-generator";
 
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+// @ts-expect-error jsdom lacks ResizeObserver
+global.ResizeObserver = ResizeObserverMock;
+
 jest.mock("next-auth/react", () => ({
   useSession: () => ({
     data: { user: { email: "user@example.com" } },
@@ -13,23 +22,8 @@ jest.mock("next-auth/react", () => ({
   }),
 }));
 
-jest.mock("../../components/SessionBoundary", () => ({
-  __esModule: true,
-  default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
-jest.mock("../../components/CatGenerator", () => ({
-  __esModule: true,
-  CatGenerator: () => <div>Cat Controls Stub</div>,
-}));
-
-jest.mock("../../components/CatGenerator/HellCat", () => ({
-  __esModule: true,
-  HellCat: () => <div>HellCat Stub</div>,
-}));
-
 jest.mock("sonner", () => ({
-  toast: { success: jest.fn(), error: jest.fn() },
+  toast: { success: jest.fn(), error: jest.fn(), message: jest.fn() },
 }));
 
 const useUserDbDataMock = jest.fn(() => ({
