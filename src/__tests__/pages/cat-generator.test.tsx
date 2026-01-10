@@ -2,18 +2,42 @@
  * @jest-environment jsdom
  */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 
 import CatGeneratorPage from "../../pages/cat-generator";
 
 jest.mock("next-auth/react", () => ({
-  useSession: () => ({ data: { user: { email: "user@example.com" } } }),
+  useSession: () => ({
+    data: { user: { email: "user@example.com" } },
+    status: "authenticated",
+  }),
+}));
+
+jest.mock("../../components/SessionBoundary", () => ({
+  __esModule: true,
+  default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+jest.mock("../../components/CatGenerator", () => ({
+  __esModule: true,
+  CatGenerator: () => <div>Cat Controls Stub</div>,
+}));
+
+jest.mock("../../components/CatGenerator/HellCat", () => ({
+  __esModule: true,
+  HellCat: () => <div>HellCat Stub</div>,
+}));
+
+jest.mock("sonner", () => ({
+  toast: { success: jest.fn(), error: jest.fn() },
+}));
+
+const useUserDbDataMock = jest.fn(() => ({
+  data: { data: { responseStreak: 0 } },
 }));
 
 jest.mock("../../server/db/useUserStreak", () => ({
-  useUserDbData: () => ({
-    data: { data: { responseStreak: 0 } },
-  }),
+  useUserDbData: (...args: any[]) => useUserDbDataMock(...args),
 }));
 
 jest.mock("../../server/db/catGeneratorConfig", () => {
@@ -25,6 +49,31 @@ jest.mock("../../server/db/catGeneratorConfig", () => {
       accessStreak: 2,
     },
     computeCatGeneratorEligibility: actual.computeCatGeneratorEligibility,
+    fetchCatGeneratorConfig: jest
+      .fn()
+      .mockResolvedValue({
+        ...actual.DEFAULT_CAT_GENERATOR_CONFIG,
+        accessStreak: 2,
+      }),
+  };
+});
+
+jest.mock("@tanstack/react-query", () => {
+  const actual = jest.requireActual("@tanstack/react-query");
+  return {
+    ...actual,
+    useQuery: jest.fn(() => ({
+      data: {
+        accessStreak: 2,
+        customizeStreak: 3,
+        exportStreak: 5,
+        rareTraitsStreak: 10,
+        rolloutPaused: false,
+        allowlist: [],
+      },
+      isLoading: false,
+      isError: false,
+    })),
   };
 });
 
@@ -33,10 +82,25 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 describe("cat-generator page gating", () => {
-  it("shows locked state when streak below threshold", () => {
+  afterEach(() => {
+    useUserDbDataMock.mockReset();
+  });
+
+  it("shows locked state when streak below threshold", async () => {
     render(<CatGeneratorPage />, { wrapper });
     expect(
-      screen.getByText(/עוד 2 דיווחים כדי לפתוח את מחולל החתולים/i)
+      await screen.findByText(/עוד 2 דיווחים כדי לפתוח את מחולל החתולים/i)
     ).toBeInTheDocument();
+  });
+
+  it("shows unlocked state when streak meets threshold", async () => {
+    useUserDbDataMock.mockImplementation(() => ({
+      data: { data: { responseStreak: 3 } },
+    }));
+
+    render(<CatGeneratorPage />, { wrapper });
+    await waitFor(() =>
+      expect(screen.getByText(/Cat Mascot Generator/i)).toBeInTheDocument()
+    );
   });
 });
