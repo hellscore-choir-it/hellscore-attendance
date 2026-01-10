@@ -58,24 +58,20 @@ jest.mock("../../server/db/catGeneratorConfig", () => {
   };
 });
 
-jest.mock("@tanstack/react-query", () => {
-  const actual = jest.requireActual("@tanstack/react-query");
-  return {
-    ...actual,
-    useQuery: jest.fn(() => ({
-      data: {
-        accessStreak: 2,
-        customizeStreak: 3,
-        exportStreak: 5,
-        rareTraitsStreak: 10,
-        rolloutPaused: false,
-        allowlist: [],
-      },
-      isLoading: false,
-      isError: false,
-    })),
-  };
-});
+jest.mock("../../hooks/useCatGeneratorConfigQuery", () => ({
+  useCatGeneratorConfigQuery: jest.fn(() => ({
+    data: {
+      accessStreak: 2,
+      customizeStreak: 3,
+      exportStreak: 5,
+      rareTraitsStreak: 10,
+      rolloutPaused: false,
+      allowlist: [],
+    },
+    isLoading: false,
+    isError: false,
+  })),
+}));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>
@@ -84,6 +80,12 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 describe("cat-generator page gating", () => {
   afterEach(() => {
     useUserDbDataMock.mockReset();
+    const { useCatGeneratorConfigQuery } = jest.requireMock(
+      "../../hooks/useCatGeneratorConfigQuery"
+    );
+    if (useCatGeneratorConfigQuery?.mockClear) {
+      useCatGeneratorConfigQuery.mockClear();
+    }
   });
 
   it("shows locked state when streak below threshold", async () => {

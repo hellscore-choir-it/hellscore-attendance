@@ -14,6 +14,7 @@ import { computeCatGeneratorEligibility } from "../server/db/catGeneratorConfig"
 import { useUserDbData } from "../server/db/useUserStreak";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useCatGeneratorConfigQuery } from "../hooks/useCatGeneratorConfigQuery";
 import { Button } from "../components/ui/button";
 import {
   Card,
@@ -26,10 +27,11 @@ const Index = () => {
   const { data: session } = useSession();
   const userEmail = session?.user?.email ?? "";
   const { data: userData } = useUserDbData(userEmail);
+  const { data: config, isLoading } = useCatGeneratorConfigQuery();
   const eligibility = computeCatGeneratorEligibility({
     streak: userData?.data?.responseStreak ?? null,
     userEmail,
-    config: undefined,
+    config: isLoading ? undefined : config,
   });
 
   if (!eligibility.canAccess) {
