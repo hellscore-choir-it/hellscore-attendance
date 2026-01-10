@@ -35,7 +35,7 @@ describe("thank-you page", () => {
   it("shows locked message when streak below threshold", async () => {
     render(<ThankYou />, { wrapper });
     expect(
-      await screen.findByText(/עוד 1 דיווחים כדי לפתוח את גנרטור החתולים/i)
+      await screen.findByText(/עוד 1 דיווחים כדי לפתוח את מחולל החתולים/i)
     ).toBeInTheDocument();
   });
 });

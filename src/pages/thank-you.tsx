@@ -50,7 +50,7 @@ const ThankYou: NextPage = () => {
                   href="/cat-generator"
                   className="btn bg-hell-fire text-white"
                 >
-                  לצפייה בגנרטור החתולים 🔥
+                  לצפייה במחולל החתולים 🔥
                 </Link>
               ) : (
                 <p className="text-sm text-gray-500">
@@ -59,7 +59,7 @@ const ThankYou: NextPage = () => {
                     : `עוד ${Math.max(
                         remaining,
                         1
-                      )} דיווחים כדי לפתוח את גנרטור החתולים 🐱‍👤`}
+                      )} דיווחים כדי לפתוח את מחולל החתולים 🐱‍👤`}
                 </p>
               )}
             </div>
