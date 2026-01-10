@@ -6,9 +6,11 @@ import {
 } from "../server/db/catGeneratorConfig";
 
 export const useCatGeneratorConfigQuery = () =>
-  useQuery({
-    queryKey: ["cat-generator-config"],
-    queryFn: fetchCatGeneratorConfig,
-    initialData: DEFAULT_CAT_GENERATOR_CONFIG,
-    staleTime: 5 * 60 * 1000,
-  });
+  useQuery(
+    ["cat-generator-config"],
+    fetchCatGeneratorConfig,
+    {
+      initialData: DEFAULT_CAT_GENERATOR_CONFIG,
+      staleTime: 5 * 60 * 1000,
+    },
+  );
