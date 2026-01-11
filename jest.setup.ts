@@ -39,8 +39,10 @@ class ResizeObserverMock {
   disconnect() {}
 }
 
-// @ts-expect-error jsdom lacks ResizeObserver
-global.ResizeObserver = ResizeObserverMock;
+if (!("ResizeObserver" in global)) {
+  // @ts-ignore
+  global.ResizeObserver = ResizeObserverMock;
+}
 
 if (!Element.prototype.hasPointerCapture) {
   // @ts-expect-error test env shim
