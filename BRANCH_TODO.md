@@ -78,7 +78,7 @@ Initial allowlist:
 
 ### 1) Config + foundations
 
-- [ ] Add Supabase config table(s) for the decided thresholds, rollout pause toggle, and admin allowlist. Move existing hardcoded / environment variable controlled constants to use this table. (Scaffolding added in `catGeneratorConfig.ts` to read the table with defaults; actual table provisioning still needed.)
+- [x] Add Supabase config table(s) for the decided thresholds, rollout pause toggle, and admin allowlist. Move existing hardcoded / environment variable controlled constants to use this table. (Scaffolding added in `catGeneratorConfig.ts` to read the table with defaults; actual table provisioning still needed.)
   - Completion criteria: a dedicated table exists in Supabase; defaults match the Decisions section; rollout pause can disable all cat-generator gating/CTAs; admin emails are sourced from Supabase (not env vars).
 - [x] Create a single helper for reading streak + eligibility safely. (Implemented `computeCatGeneratorEligibility` with defaults + tests.)
   - Completion criteria: helper handles loading/error/null; returns a normalized streak number + feature unlock booleans; unit tests cover edge cases.
