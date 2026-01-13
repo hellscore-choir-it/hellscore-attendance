@@ -40,21 +40,24 @@ class ResizeObserverMock {
 }
 
 if (!("ResizeObserver" in global)) {
-  // @ts-ignore
-  global.ResizeObserver = ResizeObserverMock;
+  (global as typeof globalThis & { ResizeObserver?: typeof ResizeObserver })["ResizeObserver"] =
+    ResizeObserverMock as unknown as typeof ResizeObserver;
 }
 
-if (!Element.prototype.hasPointerCapture) {
-  // @ts-expect-error test env shim
-  Element.prototype.hasPointerCapture = () => false;
+const elementProto = Element.prototype as unknown as {
+  hasPointerCapture?: (pointerId?: number) => boolean;
+  releasePointerCapture?: (pointerId?: number) => void;
+  scrollIntoView?: (arg?: boolean | ScrollIntoViewOptions) => void;
+};
+
+if (!elementProto.hasPointerCapture) {
+  elementProto.hasPointerCapture = () => false;
 }
-if (!Element.prototype.releasePointerCapture) {
-  // @ts-expect-error test env shim
-  Element.prototype.releasePointerCapture = () => {};
+if (!elementProto.releasePointerCapture) {
+  elementProto.releasePointerCapture = () => {};
 }
-if (!Element.prototype.scrollIntoView) {
-  // @ts-expect-error test env shim
-  Element.prototype.scrollIntoView = () => {};
+if (!elementProto.scrollIntoView) {
+  elementProto.scrollIntoView = () => {};
 }
 
 jest.mock("./src/utils/supabase/client", () => ({
