@@ -138,7 +138,7 @@ const Index = () => {
       ] as any,
     });
 
-    toast("New hellish feline generated! 🔥");
+    toast("נוצר חתול חדש מהשאול! 🔥");
   };
 
   const isCustomizationLocked = !eligibility.canCustomize;
@@ -148,7 +148,7 @@ const Index = () => {
     if (isExportLocked) return;
     const svgElement = document.querySelector("#hell-cat-svg") as SVGElement;
     if (!svgElement) {
-      toast.error("No cat to export!");
+      toast.error("אין חתול לייצוא!");
       return;
     }
 
@@ -166,13 +166,13 @@ const Index = () => {
     document.body.removeChild(downloadLink);
     URL.revokeObjectURL(svgUrl);
 
-    toast.success("Hellish mascot exported! 🎵");
+    toast.success("הקמע יוצא בהצלחה! 🎵");
   };
 
   return (
     <SessionBoundary>
       <div
-        style={{ direction: "ltr" }}
+        dir="rtl"
         className="bg-gradient-shadow min-h-screen"
       >
         <div className="container mx-auto px-4 py-8">

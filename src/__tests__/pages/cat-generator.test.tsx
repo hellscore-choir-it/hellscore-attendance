@@ -164,7 +164,7 @@ describe("cat-generator page gating", () => {
       )
     ).toBeInTheDocument();
 
-    const labelNode = screen.getByText("Horn Style");
+    const labelNode = screen.getByText("סגנון קרניים");
     const trigger = within(labelNode.parentElement as HTMLElement).getByRole(
       "combobox"
     );
@@ -206,14 +206,14 @@ describe("cat-generator page gating", () => {
       return slider;
     };
 
-    await changeSelect("Horn Style", "⚔️ Straight Horns");
-    await changeSelect("Expression", "😸 Playful");
-    await changeSelect("Eye Color", "🩸 Blood Red");
-    await changeSelect("Pose", "🚶 Standing");
-    await changeSelect("Color Scheme", "🔥 Fire Lord");
-    await changeSelect("Body Markings", "🔥 Flame Patterns");
+    await changeSelect("סגנון קרניים", "⚔️ קרניים ישרות");
+    await changeSelect("הבעה", "😸 שובב");
+    await changeSelect("צבע עיניים", "🩸 אדום דם");
+    await changeSelect("תנוחה", "🚶 עומד");
+    await changeSelect("ערכת צבעים", "🔥 אדון האש");
+    await changeSelect("סימני גוף", "🔥 דפוסי להבה");
 
-    await userEvent.click(screen.getByLabelText(/crown/i));
+    await userEvent.click(screen.getByLabelText(/כתר/i));
 
     const changeRange = async (label: string, steps: number) => {
       const slider = sliderByLabel(label);
@@ -224,10 +224,10 @@ describe("cat-generator page gating", () => {
       }
     };
 
-    await changeRange("Eye Glow", 5);
-    await changeRange("Horn Size", 5);
-    await changeRange("Tail Length", -5);
-    await changeRange("Body Size", 5);
+    await changeRange("עוצמת זוהר עיניים", 5);
+    await changeRange("גודל קרניים", 5);
+    await changeRange("אורך זנב", -5);
+    await changeRange("גודל גוף", 5);
 
     await waitFor(() => {
       const lastConfig =
@@ -319,14 +319,14 @@ describe("cat-generator page gating", () => {
       expect(screen.getByTestId("hellcat-mock")).toBeInTheDocument()
     );
 
-    const labelNode = screen.getByText("Color Scheme");
+    const labelNode = screen.getByText("ערכת צבעים");
     const trigger = within(labelNode.parentElement as HTMLElement).getByRole(
       "combobox"
     );
     await userEvent.click(trigger);
 
     expect(
-      screen.queryByRole("option", { name: /Golden Champion/i })
+      screen.queryByRole("option", { name: /אלוף הזהב/i })
     ).not.toBeInTheDocument();
   });
 
@@ -342,14 +342,14 @@ describe("cat-generator page gating", () => {
       expect(screen.getByTestId("hellcat-mock")).toBeInTheDocument()
     );
 
-    const labelNode = screen.getByText("Color Scheme");
+    const labelNode = screen.getByText("ערכת צבעים");
     const trigger = within(labelNode.parentElement as HTMLElement).getByRole(
       "combobox"
     );
     await userEvent.click(trigger);
 
     const option = await screen.findByRole("option", {
-      name: /Golden Champion/i,
+      name: /אלוף הזהב/i,
     });
     await userEvent.click(option);
 

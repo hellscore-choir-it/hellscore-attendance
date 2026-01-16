@@ -62,12 +62,12 @@ export const CatGenerator = ({
         {/* Basic Attributes */}
         <div className="space-y-4">
           <h3 className="text-hell-fire flex items-center gap-2 text-lg font-semibold">
-            👹 Basic Attributes
+            👹 מאפיינים בסיסיים
           </h3>
 
           {/* Horn Style */}
           <div className="space-y-2">
-            <Label>Horn Style</Label>
+            <Label>סגנון קרניים</Label>
             <Select
               value={config.hornStyle}
               onValueChange={(value: any) => updateConfig("hornStyle", value)}
@@ -77,10 +77,10 @@ export const CatGenerator = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="curved">🎯 Curved Horns</SelectItem>
-                <SelectItem value="straight">⚔️ Straight Horns</SelectItem>
-                <SelectItem value="twisted">🌪️ Twisted Horns</SelectItem>
-                <SelectItem value="none">😇 No Horns</SelectItem>
+                <SelectItem value="curved">🎯 קרניים מעוגלות</SelectItem>
+                <SelectItem value="straight">⚔️ קרניים ישרות</SelectItem>
+                <SelectItem value="twisted">🌪️ קרניים מסולסלות</SelectItem>
+                <SelectItem value="none">😇 בלי קרניים</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -89,7 +89,7 @@ export const CatGenerator = ({
           {config.hornStyle !== "none" && (
             <div className="space-y-2">
               <Label>
-                Horn Size: <Badge variant="secondary">{config.hornSize}%</Badge>
+                גודל קרניים: <Badge variant="secondary">{config.hornSize}%</Badge>
               </Label>
               <Slider
                 value={[config.hornSize]}
@@ -106,7 +106,7 @@ export const CatGenerator = ({
 
           {/* Expression */}
           <div className="space-y-2">
-            <Label>Expression</Label>
+            <Label>הבעה</Label>
             <Select
               value={config.expression}
               onValueChange={(value: any) => updateConfig("expression", value)}
@@ -116,10 +116,10 @@ export const CatGenerator = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="neutral">😐 Neutral</SelectItem>
-                <SelectItem value="menacing">😈 Menacing</SelectItem>
-                <SelectItem value="playful">😸 Playful</SelectItem>
-                <SelectItem value="sleepy">😴 Sleepy</SelectItem>
+                <SelectItem value="neutral">😐 ניטרלי</SelectItem>
+                <SelectItem value="menacing">😈 מאיים</SelectItem>
+                <SelectItem value="playful">😸 שובב</SelectItem>
+                <SelectItem value="sleepy">😴 מנומנם</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -130,12 +130,12 @@ export const CatGenerator = ({
         {/* Eyes & Glow */}
         <div className="space-y-4">
           <h3 className="text-hell-fire flex items-center gap-2 text-lg font-semibold">
-            👁️ Eyes & Glow
+            👁️ עיניים וזוהר
           </h3>
 
           {/* Eye Color */}
           <div className="space-y-2">
-            <Label>Eye Color</Label>
+            <Label>צבע עיניים</Label>
             <Select
               value={config.eyeColor}
               onValueChange={(value: any) => updateConfig("eyeColor", value)}
@@ -145,10 +145,10 @@ export const CatGenerator = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="fire">🔥 Fire Orange</SelectItem>
-                <SelectItem value="ember">✨ Ember Red</SelectItem>
-                <SelectItem value="glow">💛 Golden Glow</SelectItem>
-                <SelectItem value="blood">🩸 Blood Red</SelectItem>
+                <SelectItem value="fire">🔥 כתום אש</SelectItem>
+                <SelectItem value="ember">✨ אדום גחלים</SelectItem>
+                <SelectItem value="glow">💛 זוהר זהוב</SelectItem>
+                <SelectItem value="blood">🩸 אדום דם</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -156,7 +156,7 @@ export const CatGenerator = ({
           {/* Eye Glow Intensity */}
           <div className="space-y-2">
             <Label>
-              Eye Glow Intensity:{" "}
+              עוצמת זוהר עיניים:{" "}
               <Badge variant="secondary">{config.eyeGlow}%</Badge>
             </Label>
             <Slider
@@ -175,12 +175,12 @@ export const CatGenerator = ({
         {/* Body & Pose */}
         <div className="space-y-4">
           <h3 className="text-hell-fire flex items-center gap-2 text-lg font-semibold">
-            🐱 Body & Pose
+            🐱 גוף ותנוחה
           </h3>
 
           {/* Pose */}
           <div className="space-y-2">
-            <Label>Pose</Label>
+            <Label>תנוחה</Label>
             <Select
               value={config.pose}
               onValueChange={(value: any) => updateConfig("pose", value)}
@@ -190,9 +190,9 @@ export const CatGenerator = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="sitting">🪑 Sitting</SelectItem>
-                <SelectItem value="standing">🚶 Standing</SelectItem>
-                <SelectItem value="crouching">🐾 Crouching</SelectItem>
+                <SelectItem value="sitting">🪑 יושב</SelectItem>
+                <SelectItem value="standing">🚶 עומד</SelectItem>
+                <SelectItem value="crouching">🐾 מתכופף</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -200,7 +200,7 @@ export const CatGenerator = ({
           {/* Body Size */}
           <div className="space-y-2">
             <Label>
-              Body Size: <Badge variant="secondary">{config.bodySize}%</Badge>
+              גודל גוף: <Badge variant="secondary">{config.bodySize}%</Badge>
             </Label>
             <Slider
               value={[config.bodySize]}
@@ -216,7 +216,7 @@ export const CatGenerator = ({
           {/* Tail Length */}
           <div className="space-y-2">
             <Label>
-              Tail Length:{" "}
+              אורך זנב:{" "}
               <Badge variant="secondary">{config.tailLength}%</Badge>
             </Label>
             <Slider
@@ -237,12 +237,12 @@ export const CatGenerator = ({
         {/* Appearance */}
         <div className="space-y-4">
           <h3 className="text-hell-fire flex items-center gap-2 text-lg font-semibold">
-            🎨 Appearance
+            🎨 מראה
           </h3>
 
           {/* Color Scheme */}
           <div className="space-y-2">
-            <Label>Color Scheme</Label>
+            <Label>ערכת צבעים</Label>
             <Select
               value={config.colorScheme}
               onValueChange={(value: any) => updateConfig("colorScheme", value)}
@@ -271,7 +271,7 @@ export const CatGenerator = ({
 
           {/* Body Markings */}
           <div className="space-y-2">
-            <Label>Body Markings</Label>
+            <Label>סימני גוף</Label>
             <Select
               value={config.markings}
               onValueChange={(value: any) => updateConfig("markings", value)}
@@ -281,10 +281,10 @@ export const CatGenerator = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">⚪ None</SelectItem>
-                <SelectItem value="stripes">🦓 Hell Stripes</SelectItem>
-                <SelectItem value="spots">🐆 Demon Spots</SelectItem>
-                <SelectItem value="flames">🔥 Flame Patterns</SelectItem>
+                <SelectItem value="none">⚪ ללא</SelectItem>
+                <SelectItem value="stripes">🦓 פסים מהשאול</SelectItem>
+                <SelectItem value="spots">🐆 נקודות שדים</SelectItem>
+                <SelectItem value="flames">🔥 דפוסי להבה</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -295,7 +295,7 @@ export const CatGenerator = ({
         {/* Accessories */}
         <div className="space-y-3">
           <h3 className="text-hell-fire flex items-center gap-2 text-lg font-semibold">
-            👑 Accessories
+            👑 אביזרים
           </h3>
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
@@ -306,7 +306,7 @@ export const CatGenerator = ({
                 disabled={disabled}
               />
               <Label htmlFor="collar" className="text-sm">
-                🎵 Hellscore Collar
+                🎵 קולר Hellscore
               </Label>
             </div>
             <div className="flex items-center space-x-2">
@@ -317,7 +317,7 @@ export const CatGenerator = ({
                 disabled={disabled}
               />
               <Label htmlFor="crown" className="text-sm">
-                👑 Hell Crown
+                👑 כתר מהשאול
               </Label>
             </div>
           </div>
