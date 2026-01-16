@@ -155,7 +155,72 @@ Initial allowlist:
 - [x] Update `thank-you` to reflect unlocked features as streak increases, and which milestone is next.
   - Completion criteria: dynamic messaging shows current unlocks and next milestone; tests cover messaging logic.
 
-### 6) Rollout controls + QA
+### 6) Browser testing (optional Cypress CT, minimal Playwright E2E)
+
+- [ ] Decide whether to add Cypress Component Testing (CT).
+
+  - Completion criteria: we have a documented approach that works reliably in CI.
+  - If CT integration is brittle in this Next/Vercel setup: skip CT and keep Jest-only + minimal E2E smoke.
+
+- [ ] If we do CT: add Cypress and wire scripts.
+  - Completion criteria: `pnpm cypress:open` and `pnpm cypress:run` work locally; CI can run `cypress:run` headlessly.
+  - Notes: keep tests stable/deterministic; avoid relying on real Google/Supabase/network.
+
+#### Step 6 guiding principles (recommended)
+
+- Jest remains the primary safety net for logic and most component behavior.
+- Cypress CT should be used sparingly for areas where a real browser catches issues that JSDOM/Jest might miss (Radix interactions, focus/keyboard, pointer behavior, RTL direction quirks).
+- E2E tests should be a minimal smoke layer (high ROI, low flake), and must avoid real Google auth and real production data.
+
+#### 6.A) Component test plan (do this before E2E)
+
+- [ ] If we do CT: decide Cypress Component Testing (CT) strategy for Next.js 16 + React 19.
+
+  - Completion criteria: we have a documented approach that works reliably in CI.
+  - Intended approach (preferred): Cypress Component Testing with the React adapter (bundler TBD) + explicit provider wrappers.
+  - Recommendation: do CT only for the smallest set of browser-sensitive interactions; do not try to re-test everything already covered by Jest.
+
+- [ ] If we do CT: create a single `mountWithProviders` helper for Cypress CT.
+
+  - Completion criteria: components can be mounted with consistent defaults and minimal per-test boilerplate.
+  - Wrapper responsibilities:
+    - React Query `QueryClientProvider` with fresh client per test
+    - Session wrapper (NextAuth) that can set session state to logged-in / logged-out
+    - Router mock / stubs for `push`/`replace`
+    - Toast stubs (Sonner/Notistack) so tests assert “toast called” without rendering toasts
+
+- [ ] If we do CT: define the minimum deterministic CT coverage (no network).
+
+  - Completion criteria: tests cover the following interaction surfaces without flaking:
+    - `CatGenerator` (highest ROI): can change selects/sliders and updates preview props; RTL sliders increase right→left; rare palettes hidden/shown by prop
+    - Optional (only if value is proven): `AttendanceForm` basic interaction smoke in real browser (still no real TRPC/network)
+    - Optional (likely redundant): `StreakTracker` unless we see browser-only behavior or CSS/layout direction issues
+  - Notes:
+    - Mock TRPC at the boundary: intercept calls or stub the hook layer; do not hit real backend.
+    - Prefer `data-testid` for brittle UI controls (Radix selects/sliders) if needed to avoid label-text coupling.
+
+- [ ] If we do CT: add CT specs to CI.
+  - Completion criteria: CT specs run headlessly in CI and are deterministic.
+
+#### 6.B) E2E tests (minimal smoke)
+
+- [ ] Add Playwright E2E smoke tests for the major pages (preferred over Cypress for E2E).
+
+  - Completion criteria: basic smoke tests assert page loads + key UI is present for:
+    - `/` (attendance form renders)
+    - `/thank-you` (streak tracker + CTA state)
+    - `/cat-generator` (guard behavior + core UI)
+    - `/catalog` and `/cat-generator` if they’re considered “major” in this rollout
+  - Notes:
+    - Keep E2E scope minimal (smoke + 1–2 critical flows).
+    - Rationale: Playwright is typically easier to run in CI for Next.js/Vercel apps, has strong multi-browser support, and tends to be less brittle for navigation/network orchestration.
+    - Prefer a mocked auth/session approach (test-only cookie/header or test helper gated to test mode) rather than real NextAuth/Google.
+    - Avoid using real Supabase/Google/network in E2E; use stubs/mocks or test fixtures.
+
+- [ ] When we adopt Playwright for E2E, wire Playwright scripts in `package.json`.
+  - Completion criteria: `pnpm pw:install`, `pnpm pw:test`, and optional `pnpm pw:ui` work locally; CI runs `pw:test` headlessly.
+
+### 7) Rollout controls + QA
 
 - [ ] Start disabled in production via kill switch; enable for allowlist first.
   - Completion criteria: kill switch off prevents CTA + route access for non-allowlist; allowlist bypass still works for testing.
