@@ -13,7 +13,10 @@ const BodySchema = z.object({
 
 type Body = z.infer<typeof BodySchema>;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== "POST") {
     res.setHeader("allow", "POST");
     return res.status(405).end();

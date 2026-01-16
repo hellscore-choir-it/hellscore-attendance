@@ -1,7 +1,11 @@
-import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+} from "@tanstack/react-query";
 import { NextPage } from "next";
-import Link from "next/link";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import Layout from "../components/Layout";
@@ -32,8 +36,7 @@ const ThankYou: NextPage = () => {
     config: catConfig,
   });
 
-  const remaining =
-    eligibility.config.accessStreak - (eligibility.streak ?? 0);
+  const remaining = eligibility.config.accessStreak - (eligibility.streak ?? 0);
 
   useEffect(() => {
     if (!userEmail) return;
@@ -60,7 +63,7 @@ const ThankYou: NextPage = () => {
               {eligibility.canAccess ? (
                 <Link
                   href="/cat-generator"
-                  className="btn bg-hell-fire text-white"
+                  className="bg-hell-fire btn text-white"
                   onClick={() => {
                     void logCatTelemetry({
                       eventName: "cta_click",

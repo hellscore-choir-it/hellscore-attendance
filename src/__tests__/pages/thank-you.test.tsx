@@ -44,7 +44,9 @@ jest.mock("../../server/db/catGeneratorConfig", () => {
 });
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>
+  <QueryClientProvider client={new QueryClient()}>
+    {children}
+  </QueryClientProvider>
 );
 
 const ThankYou = require("../../pages/thank-you").default;

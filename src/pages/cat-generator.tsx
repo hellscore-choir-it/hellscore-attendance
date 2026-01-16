@@ -1,7 +1,10 @@
 import { Download, Zap } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { useRouter } from "next/router";
 import { CatGenerator } from "../components/CatGenerator";
 import { HellCat } from "../components/CatGenerator/HellCat";
 import {
@@ -10,11 +13,6 @@ import {
   type CatConfig,
 } from "../components/CatGenerator/types";
 import SessionBoundary from "../components/SessionBoundary";
-import { computeCatGeneratorEligibility } from "../server/db/catGeneratorConfig";
-import { useUserDbData } from "../server/db/useUserStreak";
-import { useSession } from "next-auth/react";
-import Link from "next/link";
-import { useCatGeneratorConfigQuery } from "../hooks/useCatGeneratorConfigQuery";
 import { Button } from "../components/ui/button";
 import {
   Card,
@@ -22,20 +20,36 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
-
+import { useCatGeneratorConfigQuery } from "../hooks/useCatGeneratorConfigQuery";
+import { computeCatGeneratorEligibility } from "../server/db/catGeneratorConfig";
+import { useUserDbData } from "../server/db/useUserStreak";
 const Index = () => {
   const { data: session } = useSession();
+  const router = useRouter();
   const userEmail = session?.user?.email ?? "";
-  const { data: userData } = useUserDbData(userEmail);
-  const { data: config, isLoading } = useCatGeneratorConfigQuery();
+  const { data: userData, isLoading: isUserLoading } = useUserDbData(userEmail);
+  const { data: config, isLoading: isConfigLoading } =
+    useCatGeneratorConfigQuery();
+
+  const streak = isUserLoading ? null : userData?.data?.responseStreak ?? 0;
   const eligibility = computeCatGeneratorEligibility({
-    streak: userData?.data?.responseStreak ?? null,
+    streak,
     userEmail,
-    config: isLoading ? undefined : config,
+    config: isConfigLoading ? undefined : config,
   });
 
+  useEffect(() => {
+    // Only redirect once we know the streak/config and have determined the user is ineligible.
+    if (isConfigLoading) return;
+    if (eligibility.streak === null) return;
+    if (eligibility.canAccess) return;
+
+    void router.replace("/thank-you");
+  }, [eligibility.canAccess, eligibility.streak, isConfigLoading, router]);
+
   if (!eligibility.canAccess) {
-    const remaining = eligibility.config.accessStreak - (eligibility.streak ?? 0);
+    const remaining =
+      eligibility.config.accessStreak - (eligibility.streak ?? 0);
     return (
       <SessionBoundary>
         <div className="bg-gradient-shadow flex min-h-screen items-center justify-center px-6 text-center">
@@ -43,11 +57,18 @@ const Index = () => {
             <p className="text-lg text-gray-200">
               {eligibility.streak === null
                 ? "בודקים את הרצף שלך..."
-                : `עוד ${Math.max(
-                    remaining,
-                    1
-                  )} דיווחים כדי לפתוח את מחולל החתולים 🐱‍👤`}
+                : isConfigLoading
+                ? "בודקים את ההרשאות שלך..."
+                : "מחולל החתולים עדיין נעול — מעבירים אותך לעמוד התודה..."}
             </p>
+            {!isConfigLoading && eligibility.streak !== null && (
+              <p className="text-sm text-gray-300">
+                {`עוד ${Math.max(
+                  remaining,
+                  1
+                )} דיווחים כדי לפתוח את מחולל החתולים 🐱‍👤`}
+              </p>
+            )}
             <Link href="/thank-you" className="text-hell-fire underline">
               חזרה לעמוד התודה
             </Link>

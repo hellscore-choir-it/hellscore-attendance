@@ -58,6 +58,21 @@ describe("computeCatGeneratorEligibility", () => {
     expect(eligibility.canUseRareTraits).toBe(false);
   });
 
+  it("allows allowlisted users even when rollout is paused", () => {
+    const eligibility = computeCatGeneratorEligibility({
+      streak: 0,
+      userEmail: "vehpus@gmail.com",
+      config: { ...DEFAULT_CAT_GENERATOR_CONFIG, rolloutPaused: true },
+    });
+
+    expect(eligibility.isAllowlisted).toBe(true);
+    expect(eligibility.isDisabledByKillSwitch).toBe(false);
+    expect(eligibility.canAccess).toBe(true);
+    expect(eligibility.canCustomize).toBe(true);
+    expect(eligibility.canExport).toBe(true);
+    expect(eligibility.canUseRareTraits).toBe(true);
+  });
+
   it("allows allowlisted users regardless of streak", () => {
     const eligibility = computeCatGeneratorEligibility({
       streak: null,

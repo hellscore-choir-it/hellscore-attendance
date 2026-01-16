@@ -2,11 +2,23 @@
  * @jest-environment jsdom
  */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import CatGeneratorPage from "../../pages/cat-generator";
 import { type CatConfig } from "../../components/CatGenerator/types";
+import CatGeneratorPage from "../../pages/cat-generator";
+
+const replaceMock = jest.fn();
+
+jest.mock("next/router", () => ({
+  useRouter: () => ({ replace: replaceMock }),
+}));
 
 jest.mock("next-auth/react", () => ({
   useSession: () => ({
@@ -44,12 +56,10 @@ jest.mock("../../server/db/catGeneratorConfig", () => {
       accessStreak: 2,
     },
     computeCatGeneratorEligibility: actual.computeCatGeneratorEligibility,
-    fetchCatGeneratorConfig: jest
-      .fn()
-      .mockResolvedValue({
-        ...actual.DEFAULT_CAT_GENERATOR_CONFIG,
-        accessStreak: 2,
-      }),
+    fetchCatGeneratorConfig: jest.fn().mockResolvedValue({
+      ...actual.DEFAULT_CAT_GENERATOR_CONFIG,
+      accessStreak: 2,
+    }),
   };
 });
 
@@ -69,13 +79,16 @@ jest.mock("../../hooks/useCatGeneratorConfigQuery", () => ({
 }));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>
+  <QueryClientProvider client={new QueryClient()}>
+    {children}
+  </QueryClientProvider>
 );
 
 describe("cat-generator page gating", () => {
   afterEach(() => {
     useUserDbDataMock.mockReset();
     receivedHellCatConfigs.length = 0;
+    replaceMock.mockReset();
     const { useCatGeneratorConfigQuery } = jest.requireMock(
       "../../hooks/useCatGeneratorConfigQuery"
     );
@@ -89,6 +102,41 @@ describe("cat-generator page gating", () => {
     expect(
       await screen.findByText(/עוד 2 דיווחים כדי לפתוח את מחולל החתולים/i)
     ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(replaceMock).toHaveBeenCalledWith("/thank-you");
+    });
+  });
+
+  it("allows allowlisted user even if rollout is paused", async () => {
+    const { useCatGeneratorConfigQuery } = jest.requireMock(
+      "../../hooks/useCatGeneratorConfigQuery"
+    );
+
+    useUserDbDataMock.mockImplementation(() => ({
+      data: { data: { responseStreak: 0 } },
+    }));
+
+    useCatGeneratorConfigQuery.mockReturnValue({
+      data: {
+        accessStreak: 999,
+        customizeStreak: 999,
+        exportStreak: 999,
+        rareTraitsStreak: 999,
+        rolloutPaused: true,
+        allowlist: ["user@example.com"],
+      },
+      isLoading: false,
+      isError: false,
+    });
+
+    render(<CatGeneratorPage />, { wrapper });
+
+    await waitFor(() =>
+      expect(screen.getByText(/מחולל החתולים/i)).toBeInTheDocument()
+    );
+
+    expect(replaceMock).not.toHaveBeenCalled();
   });
 
   it("shows unlocked state when streak meets threshold", async () => {
@@ -109,19 +157,27 @@ describe("cat-generator page gating", () => {
 
     render(<CatGeneratorPage />, { wrapper });
 
-    await waitFor(() => expect(screen.getByTestId("hellcat-mock")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByTestId("hellcat-mock")).toBeInTheDocument()
+    );
 
     const changeSelect = async (label: string, optionText: string | RegExp) => {
       const labelNode = screen.getByText(label);
-      const trigger = within(labelNode.parentElement as HTMLElement).getByRole("combobox");
+      const trigger = within(labelNode.parentElement as HTMLElement).getByRole(
+        "combobox"
+      );
       await userEvent.click(trigger);
       const option = await screen.findByRole("option", { name: optionText });
       await userEvent.click(option);
     };
 
     const sliderByLabel = (labelSubstring: string) => {
-      const labelNode = screen.getByText((content) => content.includes(labelSubstring));
-      const slider = within(labelNode.parentElement as HTMLElement).getByRole("slider");
+      const labelNode = screen.getByText((content) =>
+        content.includes(labelSubstring)
+      );
+      const slider = within(labelNode.parentElement as HTMLElement).getByRole(
+        "slider"
+      );
       return slider;
     };
 
@@ -149,7 +205,8 @@ describe("cat-generator page gating", () => {
     await changeRange("Body Size", 5);
 
     await waitFor(() => {
-      const lastConfig = receivedHellCatConfigs[receivedHellCatConfigs.length - 1];
+      const lastConfig =
+        receivedHellCatConfigs[receivedHellCatConfigs.length - 1];
       expect(lastConfig).toBeDefined();
       expect(lastConfig).toMatchObject({
         hornStyle: "straight",

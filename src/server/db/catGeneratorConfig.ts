@@ -33,9 +33,9 @@ const sanitizeAllowlist = (value: unknown) => {
   if (!isArray(value)) {
     return [];
   }
-  return map(value, (email) => (typeof email === "string" ? email.trim() : "")).filter(
-    (email) => email.length > 0
-  );
+  return map(value, (email) =>
+    typeof email === "string" ? email.trim() : ""
+  ).filter((email) => email.length > 0);
 };
 
 export const normalizeCatGeneratorConfig = (
@@ -46,9 +46,15 @@ export const normalizeCatGeneratorConfig = (
   return {
     rolloutPaused: Boolean(config?.rolloutPaused),
     accessStreak: sanitizeThreshold(config?.accessStreak, base.accessStreak),
-    customizeStreak: sanitizeThreshold(config?.customizeStreak, base.customizeStreak),
+    customizeStreak: sanitizeThreshold(
+      config?.customizeStreak,
+      base.customizeStreak
+    ),
     exportStreak: sanitizeThreshold(config?.exportStreak, base.exportStreak),
-    rareTraitsStreak: sanitizeThreshold(config?.rareTraitsStreak, base.rareTraitsStreak),
+    rareTraitsStreak: sanitizeThreshold(
+      config?.rareTraitsStreak,
+      base.rareTraitsStreak
+    ),
     allowlist: sanitizeAllowlist(config?.allowlist).length
       ? sanitizeAllowlist(config?.allowlist)
       : base.allowlist,
@@ -106,19 +112,24 @@ export const computeCatGeneratorEligibility = ({
 }) => {
   const normalizedConfig = normalizeCatGeneratorConfig(config);
   const normalizedStreak = normalizeStreak(streak);
-  const allowlistMatch = isAllowlisted(normalizedConfig.allowlist, userEmail ?? undefined);
+  const allowlistMatch = isAllowlisted(
+    normalizedConfig.allowlist,
+    userEmail ?? undefined
+  );
 
   const isRolloutPaused = normalizedConfig.rolloutPaused;
 
   const meets = (threshold: number) =>
-    !isRolloutPaused &&
-    (allowlistMatch || (!isNil(normalizedStreak) && normalizedStreak >= threshold));
+    allowlistMatch ||
+    (!isRolloutPaused &&
+      !isNil(normalizedStreak) &&
+      normalizedStreak >= threshold);
 
   return {
     streak: normalizedStreak,
     config: normalizedConfig,
     isAllowlisted: allowlistMatch,
-    isDisabledByKillSwitch: isRolloutPaused,
+    isDisabledByKillSwitch: isRolloutPaused && !allowlistMatch,
     canAccess: meets(normalizedConfig.accessStreak),
     canCustomize: meets(normalizedConfig.customizeStreak),
     canExport: meets(normalizedConfig.exportStreak),
