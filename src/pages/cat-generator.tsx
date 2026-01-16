@@ -240,6 +240,7 @@ const Index = () => {
                   config={catConfig}
                   onChange={setCatConfig}
                   disabled={isCustomizationLocked}
+                  rareTraitsEnabled={eligibility.canUseRareTraits}
                 />
               </CardContent>
             </Card>

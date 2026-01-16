@@ -150,7 +150,7 @@ Initial allowlist:
   - Completion criteria: controls become interactive; tests cover locked vs unlocked behavior.
 - [x] Phase C (>= export): enable SVG export (and optionally simple PNG/JPEG/copy support).
   - Completion criteria: export UI is disabled below threshold; export works above threshold; tests cover gating and output generation for SVG.
-- [ ] Phase D (>= rare traits): unlock rare palettes/traits.
+- [x] Phase D (>= rare traits): unlock rare palettes/traits.
   - Completion criteria: rare options are hidden/disabled below threshold; enabled above; tests cover unlock behavior.
 - [ ] Update `thank-you` to reflect unlocked features as streak increases, and which milestone is next.
   - Completion criteria: dynamic messaging shows current unlocks and next milestone; tests cover messaging logic.

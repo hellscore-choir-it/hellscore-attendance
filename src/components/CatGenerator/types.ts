@@ -75,6 +75,10 @@ export const colorSchemeDetails = {
   },
 } as const;
 
+// "Rare traits" currently map to a subset of color palettes.
+// (Gated by `rareTraitsStreak` via `eligibility.canUseRareTraits`.)
+export const rareColorSchemes = ["gold", "sapphire", "lunar", "abyss"] as const;
+
 export const accessories = ["collar", "crown"] as const;
 
 export interface CatConfig {

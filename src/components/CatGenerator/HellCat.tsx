@@ -262,7 +262,7 @@ export const HellCat = ({ config }: HellCatProps) => {
         />
 
         {/** Crown */}
-        {config.accessories.includes("crown") && (
+        {includes(config.accessories, "crown") && (
           <g key="crown">
             <path
               d="M170,80 L180,60 L190,75 L200,55 L210,75 L220,60 L230,80 L200,85 Z"

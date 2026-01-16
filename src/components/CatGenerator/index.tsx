@@ -11,18 +11,25 @@ import {
 } from "../ui/select";
 import { Separator } from "../ui/separator";
 import { Slider } from "../ui/slider";
-import { colorSchemeDetails, type accessories, type CatConfig } from "./types";
+import {
+  colorSchemeDetails,
+  rareColorSchemes,
+  type accessories,
+  type CatConfig,
+} from "./types";
 
 interface CatGeneratorProps {
   config: CatConfig;
   onChange: (config: CatConfig) => void;
   disabled?: boolean;
+  rareTraitsEnabled?: boolean;
 }
 
 export const CatGenerator = ({
   config,
   onChange,
   disabled = false,
+  rareTraitsEnabled = true,
 }: CatGeneratorProps) => {
   const updateConfig = <K extends keyof CatConfig>(
     key: K,
@@ -245,11 +252,19 @@ export const CatGenerator = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {map(colorSchemeDetails, (details, key) => (
-                  <SelectItem key={key} value={key}>
-                    {details.title}
-                  </SelectItem>
-                ))}
+                {map(colorSchemeDetails, (details, key) => {
+                  const isRare = includes(
+                    rareColorSchemes as readonly string[],
+                    key
+                  );
+                  if (isRare && !rareTraitsEnabled) return null;
+
+                  return (
+                    <SelectItem key={key} value={key}>
+                      {details.title}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
@@ -286,7 +301,7 @@ export const CatGenerator = ({
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="collar"
-                checked={config.accessories.includes("collar")}
+                checked={includes(config.accessories, "collar")}
                 onCheckedChange={() => toggleAccessory("collar")}
                 disabled={disabled}
               />
@@ -297,7 +312,7 @@ export const CatGenerator = ({
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="crown"
-                checked={config.accessories.includes("crown")}
+                checked={includes(config.accessories, "crown")}
                 onCheckedChange={() => toggleAccessory("crown")}
                 disabled={disabled}
               />

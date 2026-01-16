@@ -306,4 +306,58 @@ describe("cat-generator page gating", () => {
       (URL as any).revokeObjectURL = originalRevokeObjectURL;
     }
   });
+
+  it("hides rare palettes until rare traits threshold is met", async () => {
+    useUserDbDataMock.mockImplementation(() => ({
+      // rareTraitsStreak=10 (from mocked config). Use 9 to prove locked.
+      data: { data: { responseStreak: 9 } },
+    }));
+
+    render(<CatGeneratorPage />, { wrapper });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("hellcat-mock")).toBeInTheDocument()
+    );
+
+    const labelNode = screen.getByText("Color Scheme");
+    const trigger = within(labelNode.parentElement as HTMLElement).getByRole(
+      "combobox"
+    );
+    await userEvent.click(trigger);
+
+    expect(
+      screen.queryByRole("option", { name: /Golden Champion/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("allows selecting rare palettes when rare traits threshold is met", async () => {
+    useUserDbDataMock.mockImplementation(() => ({
+      // rareTraitsStreak=10 (from mocked config). Use the boundary for Phase D.
+      data: { data: { responseStreak: 10 } },
+    }));
+
+    render(<CatGeneratorPage />, { wrapper });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("hellcat-mock")).toBeInTheDocument()
+    );
+
+    const labelNode = screen.getByText("Color Scheme");
+    const trigger = within(labelNode.parentElement as HTMLElement).getByRole(
+      "combobox"
+    );
+    await userEvent.click(trigger);
+
+    const option = await screen.findByRole("option", {
+      name: /Golden Champion/i,
+    });
+    await userEvent.click(option);
+
+    await waitFor(() => {
+      const lastConfig =
+        receivedHellCatConfigs[receivedHellCatConfigs.length - 1];
+      expect(lastConfig).toBeDefined();
+      expect(lastConfig).toMatchObject({ colorScheme: "gold" });
+    });
+  });
 });
