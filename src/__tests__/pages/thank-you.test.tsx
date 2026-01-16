@@ -21,7 +21,7 @@ const useUserDbDataMock = jest.fn(() => ({
 }));
 
 jest.mock("../../server/db/useUserStreak", () => ({
-  useUserDbData: (...args: any[]) => useUserDbDataMock(...args),
+  useUserDbData: (..._args: any[]) => useUserDbDataMock(),
 }));
 
 jest.mock("../../utils/catTelemetry", () => ({

@@ -9,7 +9,6 @@ describe("normalizeCatGeneratorConfig", () => {
     const result = normalizeCatGeneratorConfig({
       accessStreak: -1,
       allowlist: [],
-      killSwitch: false,
     });
 
     expect(result).toMatchObject({

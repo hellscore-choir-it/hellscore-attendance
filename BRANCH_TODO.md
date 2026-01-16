@@ -76,7 +76,7 @@ Initial allowlist:
 - [x] Confirm test suite runs in CI/deployment checks.
   - Completion criteria: CI config (or documented scripts) runs `pnpm test` and fails the build on test failures.
 
-### 0.5) Supabase schema migrations pipeline (prereq for applying new migrations)
+### 0.5) Supabase schema migrations pipeline (prerequisite for applying new migrations)
 
 - [x] Decide and document the migration mechanism.
   - Completion criteria: repo has a single “source of truth” for schema changes (SQL files under `supabase/migrations/`), and contributors know how to apply them locally + remotely.
