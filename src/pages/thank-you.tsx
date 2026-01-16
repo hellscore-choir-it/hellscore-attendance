@@ -38,6 +38,22 @@ const ThankYou: NextPage = () => {
 
   const remaining = eligibility.config.accessStreak - (eligibility.streak ?? 0);
 
+  const nextMilestone = !eligibility.canCustomize
+    ? { label: "התאמה אישית", threshold: eligibility.config.customizeStreak }
+    : !eligibility.canExport
+    ? { label: "ייצוא SVG", threshold: eligibility.config.exportStreak }
+    : !eligibility.canUseRareTraits
+    ? { label: "פלטות נדירות", threshold: eligibility.config.rareTraitsStreak }
+    : null;
+
+  const unlockedLabel = eligibility.canUseRareTraits
+    ? "כל הפיצ'רים פתוחים 🎉"
+    : eligibility.canExport
+    ? "פתחת ייצוא SVG"
+    : eligibility.canCustomize
+    ? "פתחת התאמה אישית"
+    : "פתחת צפייה בקמע";
+
   useEffect(() => {
     if (!userEmail) return;
     if (!eligibility.canAccess) return;
@@ -61,18 +77,33 @@ const ThankYou: NextPage = () => {
             )}
             <div className="mt-6 text-center">
               {eligibility.canAccess ? (
-                <Link
-                  href="/cat-generator"
-                  className="bg-hell-fire btn text-white"
-                  onClick={() => {
-                    void logCatTelemetry({
-                      eventName: "cta_click",
-                      page: "thank-you",
-                    });
-                  }}
-                >
-                  לצפייה במחולל החתולים 🔥
-                </Link>
+                <div className="space-y-2">
+                  <Link
+                    href="/cat-generator"
+                    className="bg-hell-fire btn text-white"
+                    onClick={() => {
+                      void logCatTelemetry({
+                        eventName: "cta_click",
+                        page: "thank-you",
+                      });
+                    }}
+                  >
+                    לצפייה במחולל החתולים 🔥
+                  </Link>
+
+                  <p className="text-sm text-gray-500">{unlockedLabel}</p>
+
+                  {nextMilestone && (
+                    <p className="text-sm text-gray-500">
+                      {eligibility.streak === null
+                        ? `השלב הבא: ${nextMilestone.label} ברצף של ${nextMilestone.threshold} דיווחים.`
+                        : `השלב הבא: ${nextMilestone.label} — עוד ${Math.max(
+                            nextMilestone.threshold - eligibility.streak,
+                            1
+                          )} דיווחים (ברצף של ${nextMilestone.threshold}).`}
+                    </p>
+                  )}
+                </div>
               ) : (
                 <p className="text-sm text-gray-500">
                   {eligibility.streak === null

@@ -81,11 +81,60 @@ describe("thank-you page", () => {
       page: "thank-you",
     });
 
+    // Messaging reflects current unlocks + next milestone.
+    expect(screen.getByText(/פתחת צפייה בקמע/i)).toBeInTheDocument();
+    expect(screen.getByText(/השלב הבא: התאמה אישית/i)).toBeInTheDocument();
+
     // Click should log a separate event.
     await userEvent.click(cta);
     expect(logCatTelemetryMock).toHaveBeenCalledWith({
       eventName: "cta_click",
       page: "thank-you",
     });
+  });
+
+  it("shows next milestone as export after customization unlock", async () => {
+    useUserDbDataMock.mockReturnValue({
+      data: { data: { responseStreak: 4 } },
+    });
+
+    render(<ThankYou />, { wrapper });
+
+    await screen.findByRole("button", {
+      name: /לצפייה במחולל החתולים/i,
+    });
+
+    expect(screen.getByText(/פתחת התאמה אישית/i)).toBeInTheDocument();
+    expect(screen.getByText(/השלב הבא: ייצוא SVG/i)).toBeInTheDocument();
+  });
+
+  it("shows next milestone as rare palettes after export unlock", async () => {
+    useUserDbDataMock.mockReturnValue({
+      data: { data: { responseStreak: 5 } },
+    });
+
+    render(<ThankYou />, { wrapper });
+
+    await screen.findByRole("button", {
+      name: /לצפייה במחולל החתולים/i,
+    });
+
+    expect(screen.getByText(/פתחת ייצוא SVG/i)).toBeInTheDocument();
+    expect(screen.getByText(/השלב הבא: פלטות נדירות/i)).toBeInTheDocument();
+  });
+
+  it("shows all-unlocked message after rare traits unlock", async () => {
+    useUserDbDataMock.mockReturnValue({
+      data: { data: { responseStreak: 7 } },
+    });
+
+    render(<ThankYou />, { wrapper });
+
+    await screen.findByRole("button", {
+      name: /לצפייה במחולל החתולים/i,
+    });
+
+    expect(screen.getByText(/כל הפיצ'רים פתוחים/i)).toBeInTheDocument();
+    expect(screen.queryByText(/השלב הבא:/i)).not.toBeInTheDocument();
   });
 });
