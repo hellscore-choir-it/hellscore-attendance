@@ -218,7 +218,9 @@ describe("cat-generator page gating", () => {
     const changeRange = async (label: string, steps: number) => {
       const slider = sliderByLabel(label);
       slider.focus();
-      const key = steps >= 0 ? "ArrowRight" : "ArrowLeft";
+      // In RTL (this page renders with dir="rtl"), Radix Slider is inverted so
+      // values increase right-to-left. That means ArrowLeft increases.
+      const key = steps >= 0 ? "ArrowLeft" : "ArrowRight";
       for (let i = 0; i < Math.abs(steps); i++) {
         fireEvent.keyDown(slider, { key });
       }

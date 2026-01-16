@@ -39,6 +39,23 @@ const Index = () => {
     config: isConfigLoading ? undefined : config,
   });
 
+  const [catConfig, setCatConfig] = useState<CatConfig>({
+    hornStyle: "curved",
+    eyeColor: "fire",
+    flameIntensity: "medium",
+    pose: "sitting",
+    accessories: ["collar"],
+    colorScheme: "classic",
+    eyeGlow: 75,
+    hornSize: 60,
+    tailLength: 70,
+    bodySize: 50,
+    flameHeight: 50,
+    wickedness: 60,
+    markings: "none",
+    expression: "neutral",
+  });
+
   useEffect(() => {
     // Only redirect once we know the streak/config and have determined the user is ineligible.
     if (isConfigLoading) return;
@@ -78,23 +95,6 @@ const Index = () => {
       </SessionBoundary>
     );
   }
-
-  const [catConfig, setCatConfig] = useState<CatConfig>({
-    hornStyle: "curved",
-    eyeColor: "fire",
-    flameIntensity: "medium",
-    pose: "sitting",
-    accessories: ["collar"],
-    colorScheme: "classic",
-    eyeGlow: 75,
-    hornSize: 60,
-    tailLength: 70,
-    bodySize: 50,
-    flameHeight: 50,
-    wickedness: 60,
-    markings: "none",
-    expression: "neutral",
-  });
 
   const generateRandomCat = () => {
     const hornStyles = ["curved", "straight", "twisted", "none"];
@@ -171,10 +171,7 @@ const Index = () => {
 
   return (
     <SessionBoundary>
-      <div
-        dir="rtl"
-        className="bg-gradient-shadow min-h-screen"
-      >
+      <div dir="rtl" className="bg-gradient-shadow min-h-screen">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-12 text-center">
@@ -241,6 +238,7 @@ const Index = () => {
                   onChange={setCatConfig}
                   disabled={isCustomizationLocked}
                   rareTraitsEnabled={eligibility.canUseRareTraits}
+                  dir="rtl"
                 />
               </CardContent>
             </Card>

@@ -23,6 +23,7 @@ interface CatGeneratorProps {
   onChange: (config: CatConfig) => void;
   disabled?: boolean;
   rareTraitsEnabled?: boolean;
+  dir?: "ltr" | "rtl";
 }
 
 export const CatGenerator = ({
@@ -30,6 +31,7 @@ export const CatGenerator = ({
   onChange,
   disabled = false,
   rareTraitsEnabled = true,
+  dir,
 }: CatGeneratorProps) => {
   const updateConfig = <K extends keyof CatConfig>(
     key: K,
@@ -89,9 +91,11 @@ export const CatGenerator = ({
           {config.hornStyle !== "none" && (
             <div className="space-y-2">
               <Label>
-                גודל קרניים: <Badge variant="secondary">{config.hornSize}%</Badge>
+                גודל קרניים:{" "}
+                <Badge variant="secondary">{config.hornSize}%</Badge>
               </Label>
               <Slider
+                dir={dir}
                 value={[config.hornSize]}
                 onValueChange={(values) =>
                   updateSliderValue("hornSize", values)
@@ -160,6 +164,7 @@ export const CatGenerator = ({
               <Badge variant="secondary">{config.eyeGlow}%</Badge>
             </Label>
             <Slider
+              dir={dir}
               value={[config.eyeGlow]}
               onValueChange={(values) => updateSliderValue("eyeGlow", values)}
               max={100}
@@ -203,6 +208,7 @@ export const CatGenerator = ({
               גודל גוף: <Badge variant="secondary">{config.bodySize}%</Badge>
             </Label>
             <Slider
+              dir={dir}
               value={[config.bodySize]}
               onValueChange={(values) => updateSliderValue("bodySize", values)}
               min={25}
@@ -216,10 +222,10 @@ export const CatGenerator = ({
           {/* Tail Length */}
           <div className="space-y-2">
             <Label>
-              אורך זנב:{" "}
-              <Badge variant="secondary">{config.tailLength}%</Badge>
+              אורך זנב: <Badge variant="secondary">{config.tailLength}%</Badge>
             </Label>
             <Slider
+              dir={dir}
               value={[config.tailLength]}
               onValueChange={(values) =>
                 updateSliderValue("tailLength", values)
