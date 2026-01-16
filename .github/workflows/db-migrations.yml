@@ -1,0 +1,97 @@
+name: DB Migrations
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  pr-merge-gate-migrations-up-to-date:
+    name: PR gate (migrations up-to-date)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fail if branch is missing migrations from main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --depth=1
+
+          main_list=/tmp/migrations_main.txt
+          head_list=/tmp/migrations_head.txt
+
+          git ls-tree -r --name-only origin/main supabase/migrations | sort > "$main_list"
+          git ls-tree -r --name-only HEAD supabase/migrations | sort > "$head_list"
+
+          missing=$(comm -23 "$main_list" "$head_list" || true)
+          if [[ -n "$missing" ]]; then
+            echo "Missing migrations from main:" >&2
+            echo "$missing" >&2
+            echo "Rebase/merge main before merging this PR." >&2
+            exit 1
+          fi
+
+  pr-migrations-apply-check:
+    name: Apply migrations (ephemeral Postgres)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Postgres client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Run migration check
+        run: |
+          chmod +x scripts/db/check-migrations.sh
+          ./scripts/db/check-migrations.sh
+
+  prod-migrate:
+    name: Apply migrations to production (main)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: prod-db-migrations
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Apply migrations via Supabase CLI
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${SUPABASE_DB_URL:-}" ]]; then
+            echo "Missing required secret SUPABASE_DB_URL" >&2
+            exit 1
+          fi
+
+          # Uses Supabase's migration ledger table (supabase_migrations.schema_migrations).
+          # Note: Supabase CLI expects db URLs to be RFC 3986 percent-encoded if they contain special characters.
+          npx supabase@latest --yes db push --db-url "$SUPABASE_DB_URL"

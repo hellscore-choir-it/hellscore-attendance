@@ -81,20 +81,17 @@ Initial allowlist:
 - [x] Decide and document the migration mechanism.
   - Completion criteria: repo has a single “source of truth” for schema changes (SQL files under `supabase/migrations/`), and contributors know how to apply them locally + remotely.
   - Decision (this branch): use Supabase CLI migrations as the runner
-- [ ] Add a migration correctness test that runs locally + in CI (no production DB access).
+- [x] Add a migration correctness test that runs locally + in CI (no production DB access).
   - Completion criteria: on every PR/branch, CI provisions an ephemeral database and applies all migrations successfully, failing if any migration is invalid.
-  - Local dev command (expected): `supabase start` then `supabase db reset`.
-  - CI approach A (preferred): Supabase CLI local emulator (Docker)
-    - Install Supabase CLI in CI (or use a prebuilt action).
-    - Run `supabase start` (spins up Postgres + Supabase services in Docker).
-    - Run `supabase db reset` (recreates DB from migrations; fails on invalid SQL/order).
-    - Optional sanity query: assert required tables exist (e.g. `cat_generator_config`).
-  - CI approach B (fallback): plain Postgres service container
+  - Local dev command (implemented): `pnpm db:migrations:check` (uses Docker + Postgres container).
+  - CI approach (implemented): plain Postgres service container
     - Start `postgres:16` as a GitHub Actions service.
-    - Run migrations in filename-sorted order, e.g. `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/001-...sql`.
-    - Note: this bypasses Supabase’s migration ledger table; it still validates SQL correctness + ordering.
+    - Run the same migration check script with `DATABASE_URL` set.
+    - Note: this validates SQL correctness + ordering; it does not exercise Supabase’s full local stack.
+  - Optional future upgrade: run against the Supabase local emulator (`supabase start` + `supabase db reset`) to get closer fidelity.
   - Notes: this is the main safety net on the free tier (no staging/preview DB required).
 - [ ] Add a PR merge gate: block merging if the branch is missing newer migrations from `main`.
+- [x] Add a PR merge gate: block merging if the branch is missing newer migrations from `main`.
   - Completion criteria: PR checks fail when `main` contains migration files under `supabase/migrations/` that are not present in the PR branch (forces rebase/merge from `main` before landing).
   - Intended behavior: prevents “migration drift” where two branches both add migrations, and the later-merged branch accidentally runs with an out-of-date view of the migration sequence.
   - Concrete check (example logic):
@@ -102,7 +99,7 @@ Initial allowlist:
     - Compare the set of migration filenames on `origin/main` vs `HEAD`:
       - `comm -23 <(git ls-tree -r --name-only origin/main supabase/migrations | sort) <(git ls-tree -r --name-only HEAD supabase/migrations | sort)`
       - If output is non-empty, fail the check with a message: “Rebase/merge main; your branch is missing migrations: …”.
-- [ ] Add CI automation to apply migrations to the production Supabase project on merge to `main`.
+- [x] Add CI automation to apply migrations to the production Supabase project on merge to `main`.
   - Completion criteria: a GitHub Action runs automatically on `push` to `main` and applies pending migrations to production using secrets.
   - Constraint: PR checks must not use production credentials.
   - Concrete approach (Supabase CLI):
