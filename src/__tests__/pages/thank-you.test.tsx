@@ -7,10 +7,6 @@ import userEvent from "@testing-library/user-event";
 
 const logCatTelemetryMock = jest.fn();
 
-jest.mock("next-auth/react", () => ({
-  useSession: () => ({ data: { user: { email: "user@example.com" } } }),
-}));
-
 jest.mock("next/link", () => ({
   __esModule: true,
   default: ({ onClick, children, ...rest }: any) => (

@@ -146,7 +146,7 @@ Initial allowlist:
 
 - [x] Phase A (>= access): show generated cat preview but lock customization controls.
   - Completion criteria: controls are disabled/read-only; UI communicates why and required streak.
-- [ ] Phase B (>= customize): unlock customization controls.
+- [x] Phase B (>= customize): unlock customization controls.
   - Completion criteria: controls become interactive; tests cover locked vs unlocked behavior.
 - [ ] Phase C (>= export): enable SVG export (and optionally simple PNG/JPEG/copy support).
   - Completion criteria: export UI is disabled below threshold; export works above threshold; tests cover gating and output generation for SVG.

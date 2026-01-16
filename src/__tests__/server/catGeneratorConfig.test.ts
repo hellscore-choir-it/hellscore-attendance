@@ -87,12 +87,18 @@ describe("computeCatGeneratorEligibility", () => {
     expect(eligibility.canUseRareTraits).toBe(true);
   });
 
-  it("unlocks phases according to streak thresholds", () => {
+  it("unlocks feature capabilities at thresholds (access/customize/export/rare traits)", () => {
     const eligibility = computeCatGeneratorEligibility({
       streak: 4,
       userEmail: "other@example.com",
       config: DEFAULT_CAT_GENERATOR_CONFIG,
     });
+
+    // Rollout "phases" (per BRANCH_TODO) map directly to these capabilities:
+    // - Access phase:      streak >= accessStreak      => canAccess
+    // - Customize phase:   streak >= customizeStreak   => canCustomize
+    // - Export phase:      streak >= exportStreak      => canExport
+    // - Rare traits phase: streak >= rareTraitsStreak  => canUseRareTraits
 
     expect(eligibility.canAccess).toBe(true); // >=2
     expect(eligibility.canCustomize).toBe(true); // >=4

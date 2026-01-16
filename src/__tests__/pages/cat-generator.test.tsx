@@ -14,22 +14,16 @@ import userEvent from "@testing-library/user-event";
 import { type CatConfig } from "../../components/CatGenerator/types";
 import CatGeneratorPage from "../../pages/cat-generator";
 
-const replaceMock = jest.fn();
+/**
+ * Rollout "phases" (per BRANCH_TODO) are just streak-threshold feature gates:
+ * - Access phase:      streak >= accessStreak      => user can access the page
+ * - Customize phase:   streak >= customizeStreak   => customization controls are interactive
+ * - Export phase:      streak >= exportStreak      => SVG export is enabled
+ * - Rare traits phase: streak >= rareTraitsStreak  => rare traits are enabled
+ */
 
-jest.mock("next/router", () => ({
-  useRouter: () => ({ replace: replaceMock }),
-}));
-
-jest.mock("next-auth/react", () => ({
-  useSession: () => ({
-    data: { user: { email: "user@example.com" } },
-    status: "authenticated",
-  }),
-}));
-
-jest.mock("sonner", () => ({
-  toast: { success: jest.fn(), error: jest.fn(), message: jest.fn() },
-}));
+const getMockRouter = () =>
+  (jest.requireMock("next/router") as any).__mockRouter;
 
 const receivedHellCatConfigs: CatConfig[] = [];
 jest.mock("../../components/CatGenerator/HellCat", () => ({
@@ -88,7 +82,9 @@ describe("cat-generator page gating", () => {
   afterEach(() => {
     useUserDbDataMock.mockReset();
     receivedHellCatConfigs.length = 0;
-    replaceMock.mockReset();
+    const router = getMockRouter();
+    router.replace.mockReset();
+    router.push.mockReset();
     const { useCatGeneratorConfigQuery } = jest.requireMock(
       "../../hooks/useCatGeneratorConfigQuery"
     );
@@ -104,7 +100,7 @@ describe("cat-generator page gating", () => {
     ).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(replaceMock).toHaveBeenCalledWith("/thank-you");
+      expect(getMockRouter().replace).toHaveBeenCalledWith("/thank-you");
     });
   });
 
@@ -136,7 +132,7 @@ describe("cat-generator page gating", () => {
       expect(screen.getByText(/מחולל החתולים/i)).toBeInTheDocument()
     );
 
-    expect(replaceMock).not.toHaveBeenCalled();
+    expect(getMockRouter().replace).not.toHaveBeenCalled();
   });
 
   it("shows unlocked state when streak meets threshold", async () => {
@@ -179,7 +175,9 @@ describe("cat-generator page gating", () => {
 
   it("renders and updates controls when interacting", async () => {
     useUserDbDataMock.mockImplementation(() => ({
-      data: { data: { responseStreak: 5 } },
+      // customizeStreak=3 (from mocked config). Use the boundary to prove
+      // the Customize phase unlock (streak >= customizeStreak).
+      data: { data: { responseStreak: 3 } },
     }));
 
     render(<CatGeneratorPage />, { wrapper });

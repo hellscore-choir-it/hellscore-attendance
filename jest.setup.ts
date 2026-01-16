@@ -1,9 +1,89 @@
 /// <reference types="jest" />
 import "@testing-library/jest-dom";
 
-jest.mock("next/router", () => ({
-  useRouter: jest.fn(() => ({ push: jest.fn() })),
+// Global Next.js router mock.
+// Tests can inspect/override via `jest.requireMock("next/router").__mockRouter`.
+jest.mock("next/router", () => {
+  const mockRouter = {
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+    route: "/",
+    pathname: "/",
+    query: {},
+    asPath: "/",
+    isFallback: false,
+    events: {
+      on: jest.fn(),
+      off: jest.fn(),
+      emit: jest.fn(),
+    },
+  };
+
+  const useRouter = jest.fn(() => mockRouter);
+
+  return {
+    useRouter,
+    __mockRouter: mockRouter,
+  };
+});
+
+// Global NextAuth session mock.
+// Tests can override via `jest.requireMock("next-auth/react").__setMockSession(...)`.
+jest.mock("next-auth/react", () => {
+  const defaultSession = {
+    data: { user: { email: "user@example.com" } },
+    status: "authenticated",
+  };
+
+  let mockSession = defaultSession;
+
+  const useSession = jest.fn(() => mockSession);
+
+  return {
+    useSession,
+    __getMockSession: () => mockSession,
+    __setMockSession: (next: any) => {
+      mockSession = next;
+    },
+    __resetMockSession: () => {
+      mockSession = defaultSession;
+    },
+  };
+});
+
+// Global toast mock (used by the cat generator UI).
+// Tests can inspect via `jest.requireMock("sonner").toast`.
+jest.mock("sonner", () => ({
+  toast: { success: jest.fn(), error: jest.fn(), message: jest.fn() },
 }));
+
+afterEach(() => {
+  const routerModule = jest.requireMock("next/router") as any;
+  const router = routerModule.__mockRouter;
+
+  router.push.mockReset();
+  router.replace.mockReset();
+  router.prefetch.mockReset();
+  router.events.on.mockReset();
+  router.events.off.mockReset();
+  router.events.emit.mockReset();
+
+  if (routerModule.useRouter?.mockImplementation) {
+    routerModule.useRouter.mockImplementation(() => router);
+  }
+  if (routerModule.useRouter?.mockClear) {
+    routerModule.useRouter.mockClear();
+  }
+
+  const authModule = jest.requireMock("next-auth/react") as any;
+  if (authModule.__resetMockSession) {
+    authModule.__resetMockSession();
+  }
+  if (authModule.useSession?.mockClear) {
+    authModule.useSession.mockClear();
+  }
+});
 
 jest.mock("notistack", () => ({
   useSnackbar: () => ({ enqueueSnackbar: jest.fn() }),
@@ -40,8 +120,9 @@ class ResizeObserverMock {
 }
 
 if (!("ResizeObserver" in global)) {
-  (global as typeof globalThis & { ResizeObserver?: typeof ResizeObserver })["ResizeObserver"] =
-    ResizeObserverMock as unknown as typeof ResizeObserver;
+  (global as typeof globalThis & { ResizeObserver?: typeof ResizeObserver })[
+    "ResizeObserver"
+  ] = ResizeObserverMock as unknown as typeof ResizeObserver;
 }
 
 const elementProto = Element.prototype as unknown as {
