@@ -248,7 +248,6 @@ const Index = () => {
 
           {/* Footer */}
           <div className="text-muted-foreground mt-6 text-center">
-            <p>נוצר עבור מקהלת Hellscore מטאל א-קפלה</p>
             <p className="mt-2 text-sm">
               מי ייתן ורצפי הנוכחות שלכם יבערו לנצח 🔥
             </p>
