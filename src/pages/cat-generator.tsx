@@ -142,8 +142,10 @@ const Index = () => {
   };
 
   const isCustomizationLocked = !eligibility.canCustomize;
+  const isExportLocked = !eligibility.canExport;
 
   const exportSVG = () => {
+    if (isExportLocked) return;
     const svgElement = document.querySelector("#hell-cat-svg") as SVGElement;
     if (!svgElement) {
       toast.error("No cat to export!");
@@ -208,7 +210,12 @@ const Index = () => {
                     <Zap className="mr-2 h-4 w-4" />
                     אקראי
                   </Button>
-                  <Button size="sm" onClick={exportSVG} variant="secondary">
+                  <Button
+                    size="sm"
+                    onClick={exportSVG}
+                    variant="secondary"
+                    disabled={isExportLocked}
+                  >
                     <Download className="mr-2 h-4 w-4" />
                     ייצוא SVG
                   </Button>

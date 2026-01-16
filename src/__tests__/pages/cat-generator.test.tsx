@@ -250,4 +250,60 @@ describe("cat-generator page gating", () => {
       expect(lastConfig!.bodySize).not.toBeNull();
     });
   });
+
+  it("disables SVG export until export threshold is met", async () => {
+    useUserDbDataMock.mockImplementation(() => ({
+      // customizeStreak=3, exportStreak=5 (from mocked config).
+      data: { data: { responseStreak: 3 } },
+    }));
+
+    render(<CatGeneratorPage />, { wrapper });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("hellcat-mock")).toBeInTheDocument()
+    );
+
+    const exportButton = screen.getByRole("button", { name: /ייצוא SVG/i });
+    expect(exportButton).toBeDisabled();
+  });
+
+  it("exports SVG when export threshold is met", async () => {
+    useUserDbDataMock.mockImplementation(() => ({
+      // exportStreak=5 (from mocked config). Use the boundary for Phase C.
+      data: { data: { responseStreak: 5 } },
+    }));
+
+    const originalCreateObjectURL = (URL as any).createObjectURL;
+    const originalRevokeObjectURL = (URL as any).revokeObjectURL;
+
+    const createObjectURLMock = jest.fn(() => "blob:mock");
+    const revokeObjectURLMock = jest.fn();
+    (URL as any).createObjectURL = createObjectURLMock;
+    (URL as any).revokeObjectURL = revokeObjectURLMock;
+
+    const anchorClickSpy = jest
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => {});
+
+    try {
+      render(<CatGeneratorPage />, { wrapper });
+
+      await waitFor(() =>
+        expect(screen.getByTestId("hellcat-mock")).toBeInTheDocument()
+      );
+
+      const exportButton = screen.getByRole("button", { name: /ייצוא SVG/i });
+      expect(exportButton).not.toBeDisabled();
+
+      await userEvent.click(exportButton);
+
+      expect(createObjectURLMock).toHaveBeenCalledTimes(1);
+      expect(anchorClickSpy).toHaveBeenCalledTimes(1);
+      expect(revokeObjectURLMock).toHaveBeenCalledWith("blob:mock");
+    } finally {
+      anchorClickSpy.mockRestore();
+      (URL as any).createObjectURL = originalCreateObjectURL;
+      (URL as any).revokeObjectURL = originalRevokeObjectURL;
+    }
+  });
 });

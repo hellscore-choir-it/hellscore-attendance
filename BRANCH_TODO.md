@@ -148,7 +148,7 @@ Initial allowlist:
   - Completion criteria: controls are disabled/read-only; UI communicates why and required streak.
 - [x] Phase B (>= customize): unlock customization controls.
   - Completion criteria: controls become interactive; tests cover locked vs unlocked behavior.
-- [ ] Phase C (>= export): enable SVG export (and optionally simple PNG/JPEG/copy support).
+- [x] Phase C (>= export): enable SVG export (and optionally simple PNG/JPEG/copy support).
   - Completion criteria: export UI is disabled below threshold; export works above threshold; tests cover gating and output generation for SVG.
 - [ ] Phase D (>= rare traits): unlock rare palettes/traits.
   - Completion criteria: rare options are hidden/disabled below threshold; enabled above; tests cover unlock behavior.
