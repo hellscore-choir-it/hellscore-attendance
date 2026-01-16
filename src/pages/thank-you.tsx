@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-quer
 import { NextPage } from "next";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Layout from "../components/Layout";
 import { StreakTracker } from "../components/StreakTracker";
@@ -11,11 +11,13 @@ import {
   fetchCatGeneratorConfig,
 } from "../server/db/catGeneratorConfig";
 import { useUserDbData } from "../server/db/useUserStreak";
+import { logCatTelemetry } from "../utils/catTelemetry";
 
 const ThankYou: NextPage = () => {
   const [queryClient] = useState(() => new QueryClient());
   const { data: session } = useSession();
   const userEmail = session?.user?.email;
+  const didLogImpressionRef = useRef(false);
 
   const { data: userData } = useUserDbData(userEmail || "");
   const { data: catConfig } = useQuery({
@@ -33,6 +35,16 @@ const ThankYou: NextPage = () => {
   const remaining =
     eligibility.config.accessStreak - (eligibility.streak ?? 0);
 
+  useEffect(() => {
+    if (!userEmail) return;
+    if (!eligibility.canAccess) return;
+    if (eligibility.streak === null) return;
+    if (didLogImpressionRef.current) return;
+
+    didLogImpressionRef.current = true;
+    void logCatTelemetry({ eventName: "cta_impression", page: "thank-you" });
+  }, [eligibility.canAccess, eligibility.streak, userEmail]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Layout>
@@ -49,6 +61,12 @@ const ThankYou: NextPage = () => {
                 <Link
                   href="/cat-generator"
                   className="btn bg-hell-fire text-white"
+                  onClick={() => {
+                    void logCatTelemetry({
+                      eventName: "cta_click",
+                      page: "thank-you",
+                    });
+                  }}
                 >
                   לצפייה במחולל החתולים 🔥
                 </Link>
