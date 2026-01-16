@@ -17,6 +17,7 @@ import { Button } from "../components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
@@ -140,6 +141,8 @@ const Index = () => {
     toast("New hellish feline generated! 🔥");
   };
 
+  const isCustomizationLocked = !eligibility.canCustomize;
+
   const exportSVG = () => {
     const svgElement = document.querySelector("#hell-cat-svg") as SVGElement;
     if (!svgElement) {
@@ -219,9 +222,18 @@ const Index = () => {
                 <CardTitle className="text-hell-glow ">
                   התאימו את השד שלכם
                 </CardTitle>
+                {isCustomizationLocked && (
+                  <CardDescription>
+                    {`התאמה אישית נפתחת ברצף של ${eligibility.config.customizeStreak} דיווחים.`}
+                  </CardDescription>
+                )}
               </CardHeader>
               <CardContent>
-                <CatGenerator config={catConfig} onChange={setCatConfig} />
+                <CatGenerator
+                  config={catConfig}
+                  onChange={setCatConfig}
+                  disabled={isCustomizationLocked}
+                />
               </CardContent>
             </Card>
           </div>

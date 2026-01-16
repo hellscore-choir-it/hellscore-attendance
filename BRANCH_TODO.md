@@ -123,10 +123,10 @@ Initial allowlist:
 ### 3) Thank-you page CTA (entry point)
 
 - [x] Add CTA to `/thank-you` (and only there) gated by `CAT_GEN_ACCESS_STREAK`.
-  - Completion criteria: when eligible, CTA links to `/cat-generator`; when ineligible, show “X more reports to unlock cats” once streak is known. (Implemented with eligibility helper + basic test; telemetry still pending.)
-- [ ] Log CTA impression + click events.
+  - Completion criteria: when eligible, CTA links to `/cat-generator`; when ineligible, show “X more reports to unlock cats” once streak is known.
+- [x] Log CTA impression + click events.
   - Completion criteria: telemetry events fire exactly once per page view for impression (no spam on rerender) and once per click.
-- [ ] Add tests for CTA visibility + copy + telemetry behavior.
+- [x] Add tests for CTA visibility + copy + telemetry behavior.
   - Completion criteria: tests cover eligible/ineligible/loading/error states; telemetry write mocked only at the boundary.
 
 ### 4) Route-level guard on `/cat-generator`
@@ -144,7 +144,7 @@ Initial allowlist:
 
 ### 5) Incremental feature unlocks inside cat generator
 
-- [ ] Phase A (>= access): show generated cat preview but lock customization controls.
+- [x] Phase A (>= access): show generated cat preview but lock customization controls.
   - Completion criteria: controls are disabled/read-only; UI communicates why and required streak.
 - [ ] Phase B (>= customize): unlock customization controls.
   - Completion criteria: controls become interactive; tests cover locked vs unlocked behavior.

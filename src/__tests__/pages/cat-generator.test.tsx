@@ -117,7 +117,7 @@ describe("cat-generator page gating", () => {
       data: { data: { responseStreak: 0 } },
     }));
 
-    useCatGeneratorConfigQuery.mockReturnValue({
+    useCatGeneratorConfigQuery.mockReturnValueOnce({
       data: {
         accessStreak: 999,
         customizeStreak: 999,
@@ -148,6 +148,33 @@ describe("cat-generator page gating", () => {
     await waitFor(() =>
       expect(screen.getByText(/מחולל החתולים/i)).toBeInTheDocument()
     );
+  });
+
+  it("locks customization controls until customize threshold is met", async () => {
+    // accessStreak=2, customizeStreak=3 (from mocked config). Streak=2 can access, cannot customize.
+    useUserDbDataMock.mockImplementation(() => ({
+      data: { data: { responseStreak: 2 } },
+    }));
+
+    render(<CatGeneratorPage />, { wrapper });
+
+    await waitFor(() =>
+      expect(screen.getByText(/מחולל החתולים/i)).toBeInTheDocument()
+    );
+
+    expect(
+      screen.getByText((content) =>
+        content.includes("התאמה אישית נפתחת ברצף של")
+      )
+    ).toBeInTheDocument();
+
+    const labelNode = screen.getByText("Horn Style");
+    const trigger = within(labelNode.parentElement as HTMLElement).getByRole(
+      "combobox"
+    );
+
+    // Locked controls are rendered non-interactive via inline pointer-events.
+    await expect(userEvent.click(trigger)).rejects.toThrow();
   });
 
   it("renders and updates controls when interacting", async () => {
