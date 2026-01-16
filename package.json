@@ -10,7 +10,12 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "typecheck": "tsc --noEmit",
-    "db:migrations:check": "bash scripts/db/check-migrations.sh"
+    "db:migrations:check": "bash scripts/db/check-migrations.sh",
+    "db:migrations:test:docker": "bash scripts/db/docker-migrations-test.sh",
+    "db:local:up": "bash scripts/db/local-postgres.sh up",
+    "db:local:down": "bash scripts/db/local-postgres.sh down",
+    "db:local:status": "bash scripts/db/local-postgres.sh status",
+    "db:local:url": "bash scripts/db/local-postgres.sh url"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -36,9 +36,63 @@ apply_with_host_psql() {
   echo "OK: migrations applied cleanly"
 }
 
+apply_with_docker_psql_client() {
+  if [[ -z "${DATABASE_URL:-}" ]]; then
+    echo "DATABASE_URL is required when using dockerized psql" >&2
+    exit 1
+  fi
+
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "docker not found; install Docker Desktop" >&2
+    exit 1
+  fi
+
+  # If DATABASE_URL points to a DB published on the host (e.g. localhost:5432),
+  # a container can't reach it via localhost. On Mac/Windows, host.docker.internal
+  # is the conventional hostname; for Linux, we add a host-gateway mapping.
+  local docker_database_url="$DATABASE_URL"
+  docker_database_url="${docker_database_url//localhost/host.docker.internal}"
+  docker_database_url="${docker_database_url//127.0.0.1/host.docker.internal}"
+  docker_database_url="${docker_database_url//\[::1\]/host.docker.internal}"
+
+  echo "Using dockerized psql against DATABASE_URL (local Docker/CI-like mode)"
+
+  docker run --rm -i \
+    --add-host=host.docker.internal:host-gateway \
+    postgres:16 \
+    psql "$docker_database_url" -v ON_ERROR_STOP=1 -c "create extension if not exists pgcrypto;" \
+    >/dev/null
+
+  while IFS= read -r file; do
+    echo "Applying migration: $file"
+    docker run --rm -i \
+      --add-host=host.docker.internal:host-gateway \
+      postgres:16 \
+      psql "$docker_database_url" -v ON_ERROR_STOP=1 \
+      < "$file" \
+      >/dev/null
+  done < <(ls -1 "$MIGRATIONS_DIR"/*.sql | sort)
+
+  docker run --rm -i \
+    --add-host=host.docker.internal:host-gateway \
+    postgres:16 \
+    psql "$docker_database_url" -v ON_ERROR_STOP=1 -c "select 1 from information_schema.tables where table_schema='public' and table_name='cat_generator_config';" \
+    >/dev/null
+
+  docker run --rm -i \
+    --add-host=host.docker.internal:host-gateway \
+    postgres:16 \
+    psql "$docker_database_url" -v ON_ERROR_STOP=1 -c "select 1 from public.cat_generator_config where id='00000000-0000-0000-0000-000000000000';" \
+    >/dev/null
+
+  echo "OK: migrations applied cleanly"
+}
+
 apply_with_docker_postgres() {
   local container="hellscore-migrations-check"
   local image="postgres:16"
+  local publish_port="${MIGRATIONS_DOCKER_PUBLISH_PORT:-0}"
+  local host_port="${MIGRATIONS_DOCKER_PORT:-54329}"
 
   if ! command -v docker >/dev/null 2>&1; then
     echo "docker not found; install Docker Desktop (or set DATABASE_URL + install psql)" >&2
@@ -51,13 +105,23 @@ apply_with_docker_postgres() {
   fi
 
   echo "Starting ephemeral Postgres container ($image) for migration check"
-  docker run -d --rm \
+  if [[ "$publish_port" == "1" ]]; then
+    echo "Publishing container port to localhost:$host_port (MIGRATIONS_DOCKER_PUBLISH_PORT=1)"
+    docker run -d --rm \
+      --name "$container" \
+      -e POSTGRES_PASSWORD=postgres \
+      -e POSTGRES_USER=postgres \
+      -e POSTGRES_DB=postgres \
+      -p "$host_port":5432 \
+      "$image" >/dev/null
+  else
+    docker run -d --rm \
     --name "$container" \
     -e POSTGRES_PASSWORD=postgres \
     -e POSTGRES_USER=postgres \
     -e POSTGRES_DB=postgres \
-    -p 54329:5432 \
     "$image" >/dev/null
+  fi
 
   cleanup() {
     docker rm -f "$container" >/dev/null 2>&1 || true
@@ -91,8 +155,12 @@ apply_with_docker_postgres() {
   echo "OK: migrations applied cleanly"
 }
 
-if command -v psql >/dev/null 2>&1 && [[ -n "${DATABASE_URL:-}" ]]; then
-  apply_with_host_psql
+if [[ -n "${DATABASE_URL:-}" ]]; then
+  if command -v psql >/dev/null 2>&1; then
+    apply_with_host_psql
+  else
+    apply_with_docker_psql_client
+  fi
 else
   apply_with_docker_postgres
 fi

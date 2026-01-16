@@ -23,6 +23,20 @@ Local run requirements:
 - **Docker Desktop installed** (required)
   - The script will spin up an ephemeral `postgres:16` container and run migrations inside it.
 
+If you prefer a **persistent local Docker Postgres** (closer to how CI runs), you can:
+
+```bash
+pnpm db:local:up
+eval "$(pnpm -s db:local:url)"
+pnpm db:migrations:check
+```
+
+When you’re done:
+
+```bash
+pnpm db:local:down
+```
+
 In CI, the workflow uses a Postgres service + `psql` and does not touch production.
 
 ### Full local Supabase stack (optional)
