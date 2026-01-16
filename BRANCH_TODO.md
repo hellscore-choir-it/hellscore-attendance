@@ -22,7 +22,7 @@
 
 ### System toggles/constants (Supabase-configurable)
 
-Store system-level toggles/constants in a **dedicated Supabase table** (not environment variables), so they can be tuned without redeploy.
+Store system-level toggles/constants in `public.app_config` (key -> jsonb value, app-controlled schema; not environment variables), so they can be tuned without redeploy.
 
 This includes:
 
@@ -32,10 +32,12 @@ This includes:
 
 Intended default values for this rollout:
 
-- `CAT_GEN_ACCESS_STREAK=2`
-- `CAT_GEN_CUSTOMIZE_STREAK=4`
-- `CAT_GEN_EXPORT_STREAK=5`
-- `CAT_GEN_RARE_TRAITS_STREAK=7`
+- `catGenerator.rolloutPaused=false`
+- `catGenerator.accessStreak=2`
+- `catGenerator.customizeStreak=4`
+- `catGenerator.exportStreak=5`
+- `catGenerator.rareTraitsStreak=7`
+- `catGenerator.allowlist=["vehpus@gmail.com","hellscorechoir.it@gmail.com"]`
 
 ### Telemetry sink + dashboard
 
@@ -45,7 +47,7 @@ Intended default values for this rollout:
 
 ### Admin allowlist / bypass (Supabase-stored)
 
-Allow specific users (admins/testers) to bypass streak checks during rollout using the same Supabase config table as the system toggles/constants.
+Allow specific users (admins/testers) to bypass streak checks during rollout using `public.app_config` (key `catGenerator.allowlist`).
 
 Initial allowlist:
 
@@ -54,8 +56,8 @@ Initial allowlist:
 
 ### Downloads / export timing
 
-- Enable **client-side SVG export** only once the user meets `CAT_GEN_EXPORT_STREAK`.
-- If simple to implement, also support at least one of: PNG download, JPEG download, copy-to-clipboard (still gated behind `CAT_GEN_EXPORT_STREAK`).
+- Enable **client-side SVG export** only once the user meets `catGenerator.exportStreak`.
+- If simple to implement, also support at least one of: PNG download, JPEG download, copy-to-clipboard (still gated behind `catGenerator.exportStreak`).
 
 ## Testing expectations (must follow)
 
@@ -104,11 +106,11 @@ Initial allowlist:
     - In the workflow: `npx supabase@latest --yes db push --db-url "$SUPABASE_DB_URL"`.
     - Ensure it runs only on `push` to the default branch.
 - [ ] Apply pending migrations (`003` and `004`) to the production DB via the default-branch-only pipeline.
-  - Completion criteria: the `public.cat_generator_config` table + seed row exist in production, and the app reads config values from Supabase without falling back to defaults.
+  - Completion criteria: the `public.app_config` table + `catGenerator.*` seeded entries exist in production, and the app reads config values from Supabase without falling back to defaults.
 
 ### 1) Config + foundations
 
-- [x] Add Supabase config table(s) for the decided thresholds, rollout pause toggle, and admin allowlist. Move existing hardcoded / environment variable controlled constants to use this table. (Scaffolding added in `catGeneratorConfig.ts` to read the table with defaults; actual table provisioning still needed.)
+- [x] Add Supabase app config table (`public.app_config`) for the decided thresholds, rollout pause toggle, and admin allowlist. Move existing hardcoded / environment variable controlled constants to use this table. (Config reads `catGenerator.*` keys from `public.app_config` with defaults; production provisioning still depends on applying migration `003`.)
   - Completion criteria: a dedicated table exists in Supabase; defaults match the Decisions section; rollout pause can disable all cat-generator gating/CTAs; admin emails are sourced from Supabase (not env vars).
 - [x] Create a single helper for reading streak + eligibility safely. (Implemented `computeCatGeneratorEligibility` with defaults + tests.)
   - Completion criteria: helper handles loading/error/null; returns a normalized streak number + feature unlock booleans; unit tests cover edge cases.
@@ -117,12 +119,13 @@ Initial allowlist:
 
 - [x] Add Supabase telemetry table(s) + minimal write path for events (impression/click).
   - Completion criteria: telemetry stores only anonymized user IDs (no raw email); schema documented; unit tests cover anonymization helper usage.
-- [ ] Add a Supabase dashboard specification (and/or saved chart definitions if supported in repo process).
+- [x] Add a Supabase dashboard specification (and/or saved chart definitions if supported in repo process).
   - Completion criteria: dashboard tracks impressions/clicks over time and can be segmented by event type; includes a view that helps correlate to attendance response rates.
+  - Spec: `supabase/dashboards/cat-generator-telemetry.md` (SQL queries + recommended chart layout)
 
 ### 3) Thank-you page CTA (entry point)
 
-- [x] Add CTA to `/thank-you` (and only there) gated by `CAT_GEN_ACCESS_STREAK`.
+- [x] Add CTA to `/thank-you` (and only there) gated by `catGenerator.accessStreak`.
   - Completion criteria: when eligible, CTA links to `/cat-generator`; when ineligible, show “X more reports to unlock cats” once streak is known.
 - [x] Log CTA impression + click events.
   - Completion criteria: telemetry events fire exactly once per page view for impression (no spam on rerender) and once per click.
@@ -131,7 +134,7 @@ Initial allowlist:
 
 ### 4) Route-level guard on `/cat-generator`
 
-- [x] Add a client-side guard that enforces `CAT_GEN_ACCESS_STREAK`.
+- [x] Add a client-side guard that enforces `catGenerator.accessStreak`.
   - Completion criteria: below threshold redirects back to `/thank-you` with a friendly message; above threshold loads page normally; shows a loading state while streak is unknown. (Redirect + loading state implemented.)
 - [x] Add Supabase-based admin bypass check.
   - Completion criteria: allowlisted emails bypass gating (even when kill switch is on); list is sourced from Supabase; no raw email stored in telemetry.
@@ -155,7 +158,15 @@ Initial allowlist:
 - [x] Update `thank-you` to reflect unlocked features as streak increases, and which milestone is next.
   - Completion criteria: dynamic messaging shows current unlocks and next milestone; tests cover messaging logic.
 
-### 6) Browser testing (optional Cypress CT, minimal Playwright E2E)
+### 6) In-app telemetry dashboard (allowlisted)
+
+- [ ] Implement an in-app telemetry dashboard page gated by a Supabase-stored allowlist.
+  - Completion criteria:
+    - Page is accessible only to users whose emails are in a DB-seeded allowlist (separate from cat-generator access).
+    - Shows at least: impressions/clicks over time + CTR summary (no PII; uses anonymized user IDs only).
+    - Add tests for allowlist gating + API behavior (mock Supabase/network at the boundary only).
+
+### 7) Browser testing (optional Cypress CT, minimal Playwright E2E)
 
 - [ ] Decide whether to add Cypress Component Testing (CT).
 
@@ -166,13 +177,13 @@ Initial allowlist:
   - Completion criteria: `pnpm cypress:open` and `pnpm cypress:run` work locally; CI can run `cypress:run` headlessly.
   - Notes: keep tests stable/deterministic; avoid relying on real Google/Supabase/network.
 
-#### Step 6 guiding principles (recommended)
+#### Step 7 guiding principles (recommended)
 
 - Jest remains the primary safety net for logic and most component behavior.
 - Cypress CT should be used sparingly for areas where a real browser catches issues that JSDOM/Jest might miss (Radix interactions, focus/keyboard, pointer behavior, RTL direction quirks).
 - E2E tests should be a minimal smoke layer (high ROI, low flake), and must avoid real Google auth and real production data.
 
-#### 6.A) Component test plan (do this before E2E)
+#### 7.A) Component test plan (do this before E2E)
 
 - [ ] If we do CT: decide Cypress Component Testing (CT) strategy for Next.js 16 + React 19.
 
@@ -202,7 +213,7 @@ Initial allowlist:
 - [ ] If we do CT: add CT specs to CI.
   - Completion criteria: CT specs run headlessly in CI and are deterministic.
 
-#### 6.B) E2E tests (minimal smoke)
+#### 7.B) E2E tests (minimal smoke)
 
 - [ ] Add Playwright E2E smoke tests for the major pages (preferred over Cypress for E2E).
 
@@ -220,7 +231,7 @@ Initial allowlist:
 - [ ] When we adopt Playwright for E2E, wire Playwright scripts in `package.json`.
   - Completion criteria: `pnpm pw:install`, `pnpm pw:test`, and optional `pnpm pw:ui` work locally; CI runs `pw:test` headlessly.
 
-### 7) Rollout controls + QA
+### 8) Rollout controls + QA
 
 - [ ] Start disabled in production via kill switch; enable for allowlist first.
   - Completion criteria: kill switch off prevents CTA + route access for non-allowlist; allowlist bypass still works for testing.

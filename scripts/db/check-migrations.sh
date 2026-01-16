@@ -30,8 +30,8 @@ apply_with_host_psql() {
   done < <(ls -1 "$MIGRATIONS_DIR"/*.sql | sort)
 
   # Minimal sanity checks for this branch's schema.
-  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "select 1 from information_schema.tables where table_schema='public' and table_name='cat_generator_config';"
-  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "select 1 from public.cat_generator_config where id='00000000-0000-0000-0000-000000000000';"
+  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "select 1 from information_schema.tables where table_schema='public' and table_name='app_config';"
+  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "select 1 from public.app_config where key='catGenerator.accessStreak';"
 
   echo "OK: migrations applied cleanly"
 }
@@ -76,13 +76,13 @@ apply_with_docker_psql_client() {
   docker run --rm -i \
     --add-host=host.docker.internal:host-gateway \
     postgres:16 \
-    psql "$docker_database_url" -v ON_ERROR_STOP=1 -c "select 1 from information_schema.tables where table_schema='public' and table_name='cat_generator_config';" \
+    psql "$docker_database_url" -v ON_ERROR_STOP=1 -c "select 1 from information_schema.tables where table_schema='public' and table_name='app_config';" \
     >/dev/null
 
   docker run --rm -i \
     --add-host=host.docker.internal:host-gateway \
     postgres:16 \
-    psql "$docker_database_url" -v ON_ERROR_STOP=1 -c "select 1 from public.cat_generator_config where id='00000000-0000-0000-0000-000000000000';" \
+    psql "$docker_database_url" -v ON_ERROR_STOP=1 -c "select 1 from public.app_config where key='catGenerator.accessStreak';" \
     >/dev/null
 
   echo "OK: migrations applied cleanly"
@@ -149,8 +149,8 @@ apply_with_docker_postgres() {
     cat "$file" | docker exec -i "$container" psql -U postgres -d postgres -v ON_ERROR_STOP=1 >/dev/null
   done < <(ls -1 "$MIGRATIONS_DIR"/*.sql | sort)
 
-  docker exec -i "$container" psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "select 1 from information_schema.tables where table_schema='public' and table_name='cat_generator_config';" >/dev/null
-  docker exec -i "$container" psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "select 1 from public.cat_generator_config where id='00000000-0000-0000-0000-000000000000';" >/dev/null
+  docker exec -i "$container" psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "select 1 from information_schema.tables where table_schema='public' and table_name='app_config';" >/dev/null
+  docker exec -i "$container" psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "select 1 from public.app_config where key='catGenerator.accessStreak';" >/dev/null
 
   echo "OK: migrations applied cleanly"
 }

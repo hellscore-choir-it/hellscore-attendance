@@ -20,7 +20,14 @@ export const DEFAULT_CAT_GENERATOR_CONFIG: CatGeneratorConfig = {
   allowlist: ["vehpus@gmail.com", "hellscorechoir.it@gmail.com"],
 };
 
-const CONFIG_TABLE_NAME = "cat_generator_config";
+const APP_CONFIG_TABLE_NAME = "app_config";
+const CAT_GENERATOR_PREFIX = "catGenerator.";
+
+type AppConfigRow = {
+  key: string;
+  value: unknown;
+  updated_at?: string;
+};
 
 const sanitizeThreshold = (value: unknown, fallback: number) => {
   if (typeof value === "number" && Number.isFinite(value) && value >= 0) {
@@ -72,16 +79,57 @@ export const fetchCatGeneratorConfig = async (
 ): Promise<CatGeneratorConfig> => {
   try {
     const supabase = await loadSupabaseBrowserClient();
-    const baseQuery = supabase.from(CONFIG_TABLE_NAME).select("*").limit(1);
+    const baseQuery = supabase
+      .from(APP_CONFIG_TABLE_NAME)
+      .select("key,value,updated_at")
+      .like("key", `${CAT_GENERATOR_PREFIX}%`);
     const query = signal ? baseQuery.abortSignal(signal) : baseQuery;
-    const { data, error } = await query.maybeSingle<CatGeneratorConfig>();
+    const { data, error } = await query.returns<AppConfigRow[]>();
 
     if (error) {
       captureException(error, { extra: { source: "catGeneratorConfig" } });
       return DEFAULT_CAT_GENERATOR_CONFIG;
     }
 
-    return normalizeCatGeneratorConfig(data);
+    const entries = new Map<string, { value: unknown; updated_at?: string }>();
+    for (const row of data ?? []) {
+      if (!row?.key?.startsWith(CAT_GENERATOR_PREFIX)) continue;
+      const shortKey = row.key.slice(CAT_GENERATOR_PREFIX.length);
+      entries.set(shortKey, { value: row.value, updated_at: row.updated_at });
+    }
+
+    const parsed: Partial<CatGeneratorConfig> = {
+      rolloutPaused:
+        typeof entries.get("rolloutPaused")?.value === "boolean"
+          ? (entries.get("rolloutPaused")?.value as boolean)
+          : undefined,
+      accessStreak:
+        typeof entries.get("accessStreak")?.value === "number"
+          ? (entries.get("accessStreak")?.value as number)
+          : undefined,
+      customizeStreak:
+        typeof entries.get("customizeStreak")?.value === "number"
+          ? (entries.get("customizeStreak")?.value as number)
+          : undefined,
+      exportStreak:
+        typeof entries.get("exportStreak")?.value === "number"
+          ? (entries.get("exportStreak")?.value as number)
+          : undefined,
+      rareTraitsStreak:
+        typeof entries.get("rareTraitsStreak")?.value === "number"
+          ? (entries.get("rareTraitsStreak")?.value as number)
+          : undefined,
+      allowlist: entries.get("allowlist")?.value as any,
+      updated_at:
+        entries.get("allowlist")?.updated_at ??
+        entries.get("rareTraitsStreak")?.updated_at ??
+        entries.get("exportStreak")?.updated_at ??
+        entries.get("customizeStreak")?.updated_at ??
+        entries.get("accessStreak")?.updated_at ??
+        entries.get("rolloutPaused")?.updated_at,
+    };
+
+    return normalizeCatGeneratorConfig(parsed);
   } catch (error) {
     captureException(error, { extra: { source: "catGeneratorConfig" } });
     return DEFAULT_CAT_GENERATOR_CONFIG;
