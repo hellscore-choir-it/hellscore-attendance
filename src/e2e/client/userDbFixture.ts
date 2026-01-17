@@ -7,8 +7,7 @@ export const getE2EUserDbData = (userEmail: string): SupabaseUser | null => {
   if (raw === "loading" || raw === "null") return null;
 
   const parsed = raw ? Number(raw) : 10;
-  const responseStreak =
-    Number.isFinite(parsed) && parsed >= 0 ? parsed : 10;
+  const responseStreak = Number.isFinite(parsed) && parsed >= 0 ? parsed : 10;
 
   const now = new Date().toISOString();
   return {

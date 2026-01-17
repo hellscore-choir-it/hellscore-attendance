@@ -2,9 +2,9 @@ import { captureException } from "@sentry/nextjs";
 import { useQuery } from "@tanstack/react-query";
 
 import { startsWith } from "lodash";
+import { isE2EClient } from "../../e2e/mode";
 import { createClient } from "../../utils/supabase/client";
 import { generateSupabaseUserId, type SupabaseUser } from "./schema";
-import { isE2EClient } from "../../e2e/mode";
 
 export const getUserDbData = async (userEmail: string, signal: AbortSignal) => {
   if (isE2EClient()) {

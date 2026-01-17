@@ -17,13 +17,13 @@ import {
   TableHeader,
   TableRow,
 } from "../../components/ui/table";
+import { isE2EServer } from "../../e2e/mode";
+import { getE2EEmailFromGSSPContext } from "../../e2e/server/query";
 import { getServerAuthSession } from "../../server/common/get-server-auth-session";
 import {
   fetchTelemetryDashboardAllowlist,
   isEmailAllowlisted,
 } from "../../server/db/telemetryDashboardConfig";
-import { isE2EServer } from "../../e2e/mode";
-import { getE2EEmailFromGSSPContext } from "../../e2e/server/query";
 
 type DashboardResponse = {
   totals: {

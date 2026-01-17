@@ -1,6 +1,6 @@
 import { useSession } from "next-auth/react";
-import { isE2EClient } from "../e2e/mode";
 import { useE2ESession } from "../e2e/client/useE2ESession";
+import { isE2EClient } from "../e2e/mode";
 
 /**
  * Wrapper around NextAuth `useSession` that supports a minimal E2E mode.

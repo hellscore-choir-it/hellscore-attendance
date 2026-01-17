@@ -10,9 +10,10 @@ import { getE2EEmailFromQuery } from "./queryParams";
  * Important: server rendering cannot see query params, so we return a stable
  * loading state until after hydration.
  */
-export const useE2ESession = <TSession extends Session = Session>(
-  base: { data: TSession | null; status: "authenticated" | "unauthenticated" | "loading" }
-) => {
+export const useE2ESession = <TSession extends Session = Session>(base: {
+  data: TSession | null;
+  status: "authenticated" | "unauthenticated" | "loading";
+}) => {
   const [isHydrated, setIsHydrated] = useState(false);
   useEffect(() => {
     setIsHydrated(true);

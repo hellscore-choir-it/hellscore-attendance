@@ -2,15 +2,15 @@ import { captureException } from "@sentry/nextjs";
 import { map, reduce, sortBy } from "lodash";
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { isE2EServer } from "../../../e2e/mode";
+import { getE2EEmailFromApiRequest } from "../../../e2e/server/query";
+import { getE2ETelemetryDashboardResponse } from "../../../e2e/server/telemetryDashboardFixture";
 import { getServerAuthSession } from "../../../server/common/get-server-auth-session";
 import {
   fetchTelemetryDashboardAllowlist,
   isEmailAllowlisted,
 } from "../../../server/db/telemetryDashboardConfig";
 import { createServiceRoleClient } from "../../../utils/supabase/serviceRoleClient";
-import { isE2EServer } from "../../../e2e/mode";
-import { getE2EEmailFromApiRequest } from "../../../e2e/server/query";
-import { getE2ETelemetryDashboardResponse } from "../../../e2e/server/telemetryDashboardFixture";
 
 type DayRow = {
   day: string; // YYYY-MM-DD

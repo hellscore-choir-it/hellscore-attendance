@@ -1,5 +1,4 @@
-import type { NextApiRequest } from "next";
-import type { GetServerSidePropsContext } from "next";
+import type { GetServerSidePropsContext, NextApiRequest } from "next";
 
 export const getE2EEmailFromApiRequest = (req: NextApiRequest) => {
   const raw = req.query.e2eEmail;
