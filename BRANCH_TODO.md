@@ -162,11 +162,16 @@ Initial allowlist:
 
 ### 6) In-app telemetry dashboard (allowlisted)
 
-- [ ] Implement an in-app telemetry dashboard page gated by a Supabase-stored allowlist.
+- [x] Implement an in-app telemetry dashboard page gated by a Supabase-stored allowlist.
   - Completion criteria:
     - Page is accessible only to users whose emails are in a DB-seeded allowlist (separate from cat-generator access).
     - Shows at least: impressions/clicks over time + CTR summary (no PII; uses anonymized user IDs only).
     - Add tests for allowlist gating + API behavior (mock Supabase/network at the boundary only).
+  - Implemented:
+    - Page: `src/pages/telemetry/cat-generator.tsx` (server-side allowlist gate)
+    - API: `src/pages/api/telemetry/cat-generator-dashboard.ts` (401/403/200)
+    - Config key: `telemetry.allowlist` (seeded via migration `005-20260117_in_app_telemetry_dashboard_allowlist.sql`)
+    - Tests: `src/__tests__/pages/telemetry-cat-generator.test.ts`, `src/__tests__/pages/api/telemetry/cat-generator-dashboard.test.ts`
 
 ### 7) Browser testing (optional Cypress CT, minimal Playwright E2E)
 

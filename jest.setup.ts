@@ -125,20 +125,23 @@ if (!("ResizeObserver" in global)) {
   ] = ResizeObserverMock as unknown as typeof ResizeObserver;
 }
 
-const elementProto = Element.prototype as unknown as {
-  hasPointerCapture?: (pointerId?: number) => boolean;
-  releasePointerCapture?: (pointerId?: number) => void;
-  scrollIntoView?: (arg?: boolean | ScrollIntoViewOptions) => void;
-};
+// In node testEnvironment, `Element` does not exist.
+if (typeof Element !== "undefined") {
+  const elementProto = Element.prototype as unknown as {
+    hasPointerCapture?: (pointerId?: number) => boolean;
+    releasePointerCapture?: (pointerId?: number) => void;
+    scrollIntoView?: (arg?: boolean | ScrollIntoViewOptions) => void;
+  };
 
-if (!elementProto.hasPointerCapture) {
-  elementProto.hasPointerCapture = () => false;
-}
-if (!elementProto.releasePointerCapture) {
-  elementProto.releasePointerCapture = () => {};
-}
-if (!elementProto.scrollIntoView) {
-  elementProto.scrollIntoView = () => {};
+  if (!elementProto.hasPointerCapture) {
+    elementProto.hasPointerCapture = () => false;
+  }
+  if (!elementProto.releasePointerCapture) {
+    elementProto.releasePointerCapture = () => {};
+  }
+  if (!elementProto.scrollIntoView) {
+    elementProto.scrollIntoView = () => {};
+  }
 }
 
 jest.mock("./src/utils/supabase/client", () => ({
