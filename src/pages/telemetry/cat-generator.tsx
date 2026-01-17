@@ -38,6 +38,25 @@ type DashboardResponse = {
 };
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  if (process.env.E2E_TEST_MODE === "true") {
+    const e2eEmailRaw = ctx.query.e2eEmail;
+    const e2eEmail =
+      typeof e2eEmailRaw === "string" && e2eEmailRaw.trim().length > 0
+        ? e2eEmailRaw.trim()
+        : null;
+
+    if (!e2eEmail) {
+      return {
+        redirect: {
+          destination: "/api/auth/signin",
+          permanent: false,
+        },
+      };
+    }
+
+    return { props: {} };
+  }
+
   const session = await getServerAuthSession({
     req: ctx.req,
     res: ctx.res,
@@ -75,7 +94,21 @@ const CatGeneratorTelemetryDashboardPage: NextPage = () => {
 
     const load = async () => {
       try {
-        const res = await fetch("/api/telemetry/cat-generator-dashboard");
+        const apiUrl = (() => {
+          if (process.env.NEXT_PUBLIC_E2E_TEST_MODE !== "true") {
+            return "/api/telemetry/cat-generator-dashboard";
+          }
+
+          const params = new URLSearchParams(window.location.search);
+          const e2eEmail = params.get("e2eEmail");
+          return e2eEmail
+            ? `/api/telemetry/cat-generator-dashboard?e2eEmail=${encodeURIComponent(
+                e2eEmail
+              )}`
+            : "/api/telemetry/cat-generator-dashboard";
+        })();
+
+        const res = await fetch(apiUrl);
         if (!res.ok) {
           setError(res.status === 403 ? "אין הרשאה" : "שגיאה בטעינת נתונים");
           return;

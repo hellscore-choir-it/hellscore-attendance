@@ -108,9 +108,11 @@ Initial allowlist:
     - In the workflow: `npx supabase@latest --yes db push --db-url "$SUPABASE_DB_URL"`.
     - Ensure it runs only on `push` to the default branch.
 - [ ] Apply pending migrations (`003` and `004`) to the production DB via the default-branch-only pipeline.
+
   - Completion criteria: the `public.app_config` table + `catGenerator.*` seeded entries exist in production, and the app reads config values from Supabase without falling back to defaults.
 
   Notes / how to apply:
+
   - Ensure GitHub Actions secret `SUPABASE_DB_URL` is set for this repo (production Supabase DB connection string).
   - Apply via one of:
     - Push to `main`/`master` (will trigger the `DB Migrations` workflow automatically), OR
@@ -185,7 +187,9 @@ Initial allowlist:
 
 ### 7) Browser testing (optional Cypress CT, minimal Playwright E2E)
 
-- [ ] Decide whether to add Cypress Component Testing (CT).
+- [x] Decide whether to add Cypress Component Testing (CT).
+
+  Decision (this branch): skip Cypress CT for now; add minimal Playwright E2E smoke instead.
 
   - Completion criteria: we have a documented approach that works reliably in CI.
   - If CT integration is brittle in this Next/Vercel setup: skip CT and keep Jest-only + minimal E2E smoke.
@@ -232,7 +236,7 @@ Initial allowlist:
 
 #### 7.B) E2E tests (minimal smoke)
 
-- [ ] Add Playwright E2E smoke tests for the major pages (preferred over Cypress for E2E).
+- [x] Add Playwright E2E smoke tests for the major pages (preferred over Cypress for E2E).
 
   - Completion criteria: basic smoke tests assert page loads + key UI is present for:
     - `/` (attendance form renders)
@@ -245,7 +249,12 @@ Initial allowlist:
     - Prefer a mocked auth/session approach (test-only cookie/header or test helper gated to test mode) rather than real NextAuth/Google.
     - Avoid using real Supabase/Google/network in E2E; use stubs/mocks or test fixtures.
 
-- [ ] When we adopt Playwright for E2E, wire Playwright scripts in `package.json`.
+- [x] When we adopt Playwright for E2E, wire Playwright scripts in `package.json`.
+
+  Implemented:
+
+  - Playwright config + smoke specs with a test-only `E2E_TEST_MODE` that avoids real Google/Supabase/NextAuth.
+  - CI runs `pnpm pw:test` in addition to Jest.
   - Completion criteria: `pnpm pw:install`, `pnpm pw:test`, and optional `pnpm pw:ui` work locally; CI runs `pw:test` headlessly.
 
 ### 8) Rollout controls + QA

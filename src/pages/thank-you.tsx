@@ -4,7 +4,6 @@ import {
   useQuery,
 } from "@tanstack/react-query";
 import { NextPage } from "next";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
@@ -16,10 +15,11 @@ import {
 } from "../server/db/catGeneratorConfig";
 import { useUserDbData } from "../server/db/useUserStreak";
 import { logCatTelemetry } from "../utils/catTelemetry";
+import { useAppSession } from "../utils/useAppSession";
 
 const ThankYou: NextPage = () => {
   const [queryClient] = useState(() => new QueryClient());
-  const { data: session } = useSession();
+  const { data: session } = useAppSession();
   const userEmail = session?.user?.email;
   const didLogImpressionRef = useRef(false);
 

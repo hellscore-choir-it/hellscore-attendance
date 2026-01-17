@@ -8,6 +8,8 @@ const CatTelemetryEventSchema = z.object({
 export type CatTelemetryEvent = z.infer<typeof CatTelemetryEventSchema>;
 
 export async function logCatTelemetry(event: CatTelemetryEvent): Promise<void> {
+  if (process.env.NEXT_PUBLIC_E2E_TEST_MODE === "true") return;
+
   const parsed = CatTelemetryEventSchema.safeParse(event);
   if (!parsed.success) return;
 

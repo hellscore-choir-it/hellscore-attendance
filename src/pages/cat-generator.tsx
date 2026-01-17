@@ -2,7 +2,6 @@ import { Download, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { CatGenerator } from "../components/CatGenerator";
@@ -24,8 +23,9 @@ import {
 import { useCatGeneratorConfigQuery } from "../hooks/useCatGeneratorConfigQuery";
 import { computeCatGeneratorEligibility } from "../server/db/catGeneratorConfig";
 import { useUserDbData } from "../server/db/useUserStreak";
+import { useAppSession } from "../utils/useAppSession";
 const Index = () => {
-  const { data: session } = useSession();
+  const { data: session } = useAppSession();
   const router = useRouter();
   const userEmail = session?.user?.email ?? "";
   const { data: userData, isLoading: isUserLoading } = useUserDbData(userEmail);
@@ -61,6 +61,13 @@ const Index = () => {
     if (isConfigLoading) return;
     if (eligibility.streak === null) return;
     if (eligibility.canAccess) return;
+
+    if (process.env.NEXT_PUBLIC_E2E_TEST_MODE === "true") {
+      const params = new URLSearchParams(window.location.search);
+      const query = params.toString();
+      void router.replace(query ? `/thank-you?${query}` : "/thank-you");
+      return;
+    }
 
     void router.replace("/thank-you");
   }, [eligibility.canAccess, eligibility.streak, isConfigLoading, router]);
