@@ -2,6 +2,7 @@ name: DB Migrations
 
 on:
   pull_request:
+  workflow_dispatch:
   push:
     branches:
       - master
@@ -77,7 +78,7 @@ jobs:
 
   prod-migrate:
     name: Apply migrations to production (main)
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     runs-on: ubuntu-latest
     concurrency:
       group: prod-db-migrations

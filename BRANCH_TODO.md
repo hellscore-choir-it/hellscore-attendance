@@ -110,6 +110,16 @@ Initial allowlist:
 - [ ] Apply pending migrations (`003` and `004`) to the production DB via the default-branch-only pipeline.
   - Completion criteria: the `public.app_config` table + `catGenerator.*` seeded entries exist in production, and the app reads config values from Supabase without falling back to defaults.
 
+  Notes / how to apply:
+  - Ensure GitHub Actions secret `SUPABASE_DB_URL` is set for this repo (production Supabase DB connection string).
+  - Apply via one of:
+    - Push to `main`/`master` (will trigger the `DB Migrations` workflow automatically), OR
+    - Manually run the `DB Migrations` workflow from GitHub Actions (now enabled via `workflow_dispatch`), selecting `main`/`master`.
+  - Verify in production DB (SQL):
+    - `select * from public.app_config where key like 'catGenerator.%' order by key;`
+    - `select to_regclass('public.cat_generator_telemetry') as cat_generator_telemetry;`
+    - `select to_regclass('public.cat_generator_telemetry_events') as cat_generator_telemetry_events;` (if the schema uses an events table)
+
 ### 1) Config + foundations
 
 - [x] Add Supabase app config table (`public.app_config`) for the decided thresholds, rollout pause toggle, and admin allowlist. Move existing hardcoded / environment variable controlled constants to use this table. (Config reads `catGenerator.*` keys from `public.app_config` with defaults; generic `appConfig` fetch/parsing lives in `src/server/db/appConfig.ts`; production provisioning still depends on applying migration `003`.)
