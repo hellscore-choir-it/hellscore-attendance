@@ -8,6 +8,9 @@ import {
   isEmailAllowlisted,
 } from "../../../server/db/telemetryDashboardConfig";
 import { createServiceRoleClient } from "../../../utils/supabase/serviceRoleClient";
+import { isE2EServer } from "../../../e2e/mode";
+import { getE2EEmailFromApiRequest } from "../../../e2e/server/query";
+import { getE2ETelemetryDashboardResponse } from "../../../e2e/server/telemetryDashboardFixture";
 
 type DayRow = {
   day: string; // YYYY-MM-DD
@@ -36,21 +39,10 @@ export default async function handler(
     return res.status(405).end();
   }
 
-  if (process.env.E2E_TEST_MODE === "true") {
-    const e2eEmailRaw = req.query.e2eEmail;
-    const e2eEmail =
-      typeof e2eEmailRaw === "string" && e2eEmailRaw.trim().length > 0
-        ? e2eEmailRaw.trim()
-        : null;
-
-    if (!e2eEmail) {
-      return res.status(401).end();
-    }
-
-    return res.status(200).json({
-      totals: { impressions: 0, clicks: 0, ctr: 0 },
-      series: [],
-    } satisfies ResponseBody);
+  if (isE2EServer()) {
+    const e2eEmail = getE2EEmailFromApiRequest(req);
+    if (!e2eEmail) return res.status(401).end();
+    return res.status(200).json(getE2ETelemetryDashboardResponse());
   }
 
   const session = await getServerAuthSession({ req, res });

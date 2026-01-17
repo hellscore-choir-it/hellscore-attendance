@@ -1,6 +1,8 @@
 import { captureException } from "@sentry/nextjs";
 import { isArray, isNil, map, some } from "lodash";
 
+import { isE2EClient } from "../../e2e/mode";
+
 import { fetchAppConfigEntriesByPrefix } from "./appConfig";
 
 export interface CatGeneratorConfig {
@@ -23,8 +25,6 @@ export const DEFAULT_CAT_GENERATOR_CONFIG: CatGeneratorConfig = {
 };
 
 const CAT_GENERATOR_PREFIX = "catGenerator.";
-
-const isE2ETestMode = () => process.env.NEXT_PUBLIC_E2E_TEST_MODE === "true";
 
 const sanitizeThreshold = (value: unknown, fallback: number) => {
   if (typeof value === "number" && Number.isFinite(value) && value >= 0) {
@@ -69,9 +69,7 @@ export const normalizeCatGeneratorConfig = (
 export const fetchCatGeneratorConfig = async (
   signal?: AbortSignal
 ): Promise<CatGeneratorConfig> => {
-  if (isE2ETestMode()) {
-    return DEFAULT_CAT_GENERATOR_CONFIG;
-  }
+  if (isE2EClient()) return DEFAULT_CAT_GENERATOR_CONFIG;
 
   try {
     const entries = await fetchAppConfigEntriesByPrefix({

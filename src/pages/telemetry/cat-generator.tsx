@@ -22,6 +22,8 @@ import {
   fetchTelemetryDashboardAllowlist,
   isEmailAllowlisted,
 } from "../../server/db/telemetryDashboardConfig";
+import { isE2EServer } from "../../e2e/mode";
+import { getE2EEmailFromGSSPContext } from "../../e2e/server/query";
 
 type DashboardResponse = {
   totals: {
@@ -38,13 +40,8 @@ type DashboardResponse = {
 };
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  if (process.env.E2E_TEST_MODE === "true") {
-    const e2eEmailRaw = ctx.query.e2eEmail;
-    const e2eEmail =
-      typeof e2eEmailRaw === "string" && e2eEmailRaw.trim().length > 0
-        ? e2eEmailRaw.trim()
-        : null;
-
+  if (isE2EServer()) {
+    const e2eEmail = getE2EEmailFromGSSPContext(ctx);
     if (!e2eEmail) {
       return {
         redirect: {
@@ -53,7 +50,6 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
         },
       };
     }
-
     return { props: {} };
   }
 

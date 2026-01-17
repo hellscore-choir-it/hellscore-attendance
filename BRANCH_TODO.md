@@ -194,6 +194,12 @@ Initial allowlist:
   - Completion criteria: we have a documented approach that works reliably in CI.
   - If CT integration is brittle in this Next/Vercel setup: skip CT and keep Jest-only + minimal E2E smoke.
 
+- [x] Add minimal Playwright E2E smoke suite + run in CI.
+  - Notes:
+    - Runs via `pnpm pw:test` using `playwright.config.ts`.
+    - Uses E2E mode flags (`E2E_TEST_MODE` + `NEXT_PUBLIC_E2E_TEST_MODE`) and query params (`e2eEmail`, `e2eStreak`) to avoid real Google/Supabase/NextAuth.
+    - E2E-only logic/fixtures are centralized under `src/e2e/` to minimize production footprint.
+
 - [ ] If we do CT: add Cypress and wire scripts.
   - Completion criteria: `pnpm cypress:open` and `pnpm cypress:run` work locally; CI can run `cypress:run` headlessly.
   - Notes: keep tests stable/deterministic; avoid relying on real Google/Supabase/network.
