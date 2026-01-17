@@ -7,8 +7,10 @@
 
 ## Current context
 
-- `/thank-you` already shows `StreakTracker` using `useUserDbData` (Supabase `responseStreak`), but does not link to `/cat-generator`.
-- `/cat-generator` exists and is wrapped with `SessionBoundary`, yet it is not gated or linked from navigation.
+- `/thank-you` shows `StreakTracker` (Supabase `responseStreak`) and a gated CTA to `/cat-generator` once `catGenerator.accessStreak` is met.
+- `/thank-you` logs telemetry for CTA impression/click via `/api/telemetry/cat` into the `cat_generator_telemetry` table.
+- `/cat-generator` is wrapped with `SessionBoundary` and has a client-side guard that redirects ineligible users back to `/thank-you`.
+- Config is stored in `public.app_config` (`catGenerator.*` keys) and fetched client-side via Supabase.
 - Streak data lives in Supabase (`SupabaseUser.data.responseStreak`, updated in `userUpdateSideEffects`).
 
 ## Agent constraints (must follow during this branch)
@@ -110,7 +112,7 @@ Initial allowlist:
 
 ### 1) Config + foundations
 
-- [x] Add Supabase app config table (`public.app_config`) for the decided thresholds, rollout pause toggle, and admin allowlist. Move existing hardcoded / environment variable controlled constants to use this table. (Config reads `catGenerator.*` keys from `public.app_config` with defaults; production provisioning still depends on applying migration `003`.)
+- [x] Add Supabase app config table (`public.app_config`) for the decided thresholds, rollout pause toggle, and admin allowlist. Move existing hardcoded / environment variable controlled constants to use this table. (Config reads `catGenerator.*` keys from `public.app_config` with defaults; generic `appConfig` fetch/parsing lives in `src/server/db/appConfig.ts`; production provisioning still depends on applying migration `003`.)
   - Completion criteria: a dedicated table exists in Supabase; defaults match the Decisions section; rollout pause can disable all cat-generator gating/CTAs; admin emails are sourced from Supabase (not env vars).
 - [x] Create a single helper for reading streak + eligibility safely. (Implemented `computeCatGeneratorEligibility` with defaults + tests.)
   - Completion criteria: helper handles loading/error/null; returns a normalized streak number + feature unlock booleans; unit tests cover edge cases.

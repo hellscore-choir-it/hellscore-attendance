@@ -1,6 +1,8 @@
 import { captureException } from "@sentry/nextjs";
 import { isArray, isNil, map, some } from "lodash";
 
+import { fetchAppConfigEntriesByPrefix } from "./appConfig";
+
 export interface CatGeneratorConfig {
   rolloutPaused: boolean;
   accessStreak: number;
@@ -20,14 +22,7 @@ export const DEFAULT_CAT_GENERATOR_CONFIG: CatGeneratorConfig = {
   allowlist: ["vehpus@gmail.com", "hellscorechoir.it@gmail.com"],
 };
 
-const APP_CONFIG_TABLE_NAME = "app_config";
 const CAT_GENERATOR_PREFIX = "catGenerator.";
-
-type AppConfigRow = {
-  key: string;
-  value: unknown;
-  updated_at?: string;
-};
 
 const sanitizeThreshold = (value: unknown, fallback: number) => {
   if (typeof value === "number" && Number.isFinite(value) && value >= 0) {
@@ -69,33 +64,18 @@ export const normalizeCatGeneratorConfig = (
   };
 };
 
-const loadSupabaseBrowserClient = async () => {
-  const { createClient } = await import("../../utils/supabase/client");
-  return createClient();
-};
-
 export const fetchCatGeneratorConfig = async (
   signal?: AbortSignal
 ): Promise<CatGeneratorConfig> => {
   try {
-    const supabase = await loadSupabaseBrowserClient();
-    const baseQuery = supabase
-      .from(APP_CONFIG_TABLE_NAME)
-      .select("key,value,updated_at")
-      .like("key", `${CAT_GENERATOR_PREFIX}%`);
-    const query = signal ? baseQuery.abortSignal(signal) : baseQuery;
-    const { data, error } = await query.returns<AppConfigRow[]>();
+    const entries = await fetchAppConfigEntriesByPrefix({
+      prefix: CAT_GENERATOR_PREFIX,
+      signal,
+      source: "catGeneratorConfig",
+    });
 
-    if (error) {
-      captureException(error, { extra: { source: "catGeneratorConfig" } });
+    if (!entries) {
       return DEFAULT_CAT_GENERATOR_CONFIG;
-    }
-
-    const entries = new Map<string, { value: unknown; updated_at?: string }>();
-    for (const row of data ?? []) {
-      if (!row?.key?.startsWith(CAT_GENERATOR_PREFIX)) continue;
-      const shortKey = row.key.slice(CAT_GENERATOR_PREFIX.length);
-      entries.set(shortKey, { value: row.value, updated_at: row.updated_at });
     }
 
     const parsed: Partial<CatGeneratorConfig> = {
