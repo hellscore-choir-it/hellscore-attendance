@@ -203,7 +203,7 @@ describe("Google APIs", () => {
       });
 
       await expect(getHellscoreEvents()).rejects.toThrow(
-        "No items in hellscore calendar???"
+        "No items in Hellscore calendar???"
       );
     });
   });

@@ -1,19 +1,15 @@
 import { filter, find, map, startsWith } from "lodash";
 import type { InferGetStaticPropsType, NextPage } from "next";
-import { useSession } from "next-auth/react";
 
 import AttendanceForm from "../components/AttendanceForm";
 import SessionBoundary from "../components/SessionBoundary";
-import {
-  getHellscoreEvents,
-  getUserEventTypeAssignments,
-} from "../server/googleApis";
+import { useAppSession } from "../utils/useAppSession";
 
 const Home: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
   calendarData,
   userEvents,
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useAppSession();
 
   return (
     <SessionBoundary>
@@ -29,6 +25,31 @@ const hasTitleAndStart = (event: {
   Boolean(event.title && event.start);
 
 export const getStaticProps = async () => {
+  // E2E mode: avoid any real Google calls (and avoid importing googleApis).
+  if (process.env.E2E_TEST_MODE === "true") {
+    return {
+      props: {
+        calendarData: [
+          {
+            title: "E2E Event",
+            start: new Date().toISOString(),
+          },
+        ],
+        userEvents: [
+          {
+            title: "E2E Event",
+            email: "e2e@example.com",
+          },
+        ],
+      },
+      revalidate: 10,
+    };
+  }
+
+  const { getHellscoreEvents, getUserEventTypeAssignments } = await import(
+    "../server/googleApis"
+  );
+
   const [calendarDataRaw, userEvents] = await Promise.all([
     getHellscoreEvents(),
     getUserEventTypeAssignments(),

@@ -1,0 +1,37 @@
+name: DB Migrations (Production)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  prod-migrate:
+    name: Apply migrations to production (main)
+    runs-on: ubuntu-latest
+    concurrency:
+      group: prod-db-migrations
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Apply migrations via Supabase CLI
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${SUPABASE_DB_URL:-}" ]]; then
+            echo "Missing required secret SUPABASE_DB_URL" >&2
+            exit 1
+          fi
+
+          # Uses Supabase's migration ledger table (supabase_migrations.schema_migrations).
+          # Note: Supabase CLI expects db URLs to be RFC 3986 percent-encoded if they contain special characters.
+          npx supabase@latest --yes db push --db-url "$SUPABASE_DB_URL"

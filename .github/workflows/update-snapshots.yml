@@ -1,0 +1,35 @@
+name: Update Jest snapshots
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-snapshots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+      - name: Install dependencies
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+      - name: Update snapshots
+        run: pnpm test -- --updateSnapshot
+
+      - name: Create PR with updated snapshots
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "test: update Jest snapshots"
+          title: "Update Jest snapshots"
+          body: "Automated snapshot update triggered via workflow_dispatch."
+          branch: "automation/update-jest-snapshots"
+          delete-branch: true

@@ -11,18 +11,33 @@ import {
 } from "../ui/select";
 import { Separator } from "../ui/separator";
 import { Slider } from "../ui/slider";
-import { colorSchemeDetails, type accessories, type CatConfig } from "./types";
+import {
+  colorSchemeDetails,
+  rareColorSchemes,
+  type accessories,
+  type CatConfig,
+} from "./types";
 
 interface CatGeneratorProps {
   config: CatConfig;
   onChange: (config: CatConfig) => void;
+  disabled?: boolean;
+  rareTraitsEnabled?: boolean;
+  dir?: "ltr" | "rtl";
 }
 
-export const CatGenerator = ({ config, onChange }: CatGeneratorProps) => {
+export const CatGenerator = ({
+  config,
+  onChange,
+  disabled = false,
+  rareTraitsEnabled = true,
+  dir,
+}: CatGeneratorProps) => {
   const updateConfig = <K extends keyof CatConfig>(
     key: K,
     value: CatConfig[K]
   ) => {
+    if (disabled) return;
     onChange({ ...config, [key]: value });
   };
 
@@ -34,6 +49,7 @@ export const CatGenerator = ({ config, onChange }: CatGeneratorProps) => {
   };
 
   const toggleAccessory = (accessory: (typeof accessories)[number]) => {
+    if (disabled) return;
     const newAccessories = includes(config.accessories, accessory)
       ? filter(config.accessories, (a) => a !== accessory)
       : [...config.accessories, accessory];
@@ -41,242 +57,275 @@ export const CatGenerator = ({ config, onChange }: CatGeneratorProps) => {
   };
 
   return (
-    <div className="max-h-[600px] space-y-6 overflow-y-auto pr-2">
-      {/* Basic Attributes */}
-      <div className="space-y-4">
-        <h3 className="text-hell-fire flex items-center gap-2 text-lg font-semibold">
-          👹 Basic Attributes
-        </h3>
+    <div className="max-h-[600px] overflow-y-auto pr-2">
+      <div
+        style={disabled ? { pointerEvents: "none", opacity: 0.6 } : undefined}
+      >
+        {/* Basic Attributes */}
+        <div className="space-y-4">
+          <h3 className="text-hell-fire flex items-center gap-2 text-lg font-semibold">
+            👹 מאפיינים בסיסיים
+          </h3>
 
-        {/* Horn Style */}
-        <div className="space-y-2">
-          <Label>Horn Style</Label>
-          <Select
-            value={config.hornStyle}
-            onValueChange={(value: any) => updateConfig("hornStyle", value)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="curved">🎯 Curved Horns</SelectItem>
-              <SelectItem value="straight">⚔️ Straight Horns</SelectItem>
-              <SelectItem value="twisted">🌪️ Twisted Horns</SelectItem>
-              <SelectItem value="none">😇 No Horns</SelectItem>
-            </SelectContent>
-          </Select>
+          {/* Horn Style */}
+          <div className="space-y-2">
+            <Label>סגנון קרניים</Label>
+            <Select
+              value={config.hornStyle}
+              onValueChange={(value: any) => updateConfig("hornStyle", value)}
+              disabled={disabled}
+            >
+              <SelectTrigger disabled={disabled}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="curved">🎯 קרניים מעוגלות</SelectItem>
+                <SelectItem value="straight">⚔️ קרניים ישרות</SelectItem>
+                <SelectItem value="twisted">🌪️ קרניים מסולסלות</SelectItem>
+                <SelectItem value="none">😇 בלי קרניים</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Horn Size Slider */}
+          {config.hornStyle !== "none" && (
+            <div className="space-y-2">
+              <Label>
+                גודל קרניים:{" "}
+                <Badge variant="secondary">{config.hornSize}%</Badge>
+              </Label>
+              <Slider
+                dir={dir}
+                value={[config.hornSize]}
+                onValueChange={(values) =>
+                  updateSliderValue("hornSize", values)
+                }
+                max={100}
+                step={5}
+                className="w-full"
+                disabled={disabled}
+              />
+            </div>
+          )}
+
+          {/* Expression */}
+          <div className="space-y-2">
+            <Label>הבעה</Label>
+            <Select
+              value={config.expression}
+              onValueChange={(value: any) => updateConfig("expression", value)}
+              disabled={disabled}
+            >
+              <SelectTrigger disabled={disabled}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="neutral">😐 ניטרלי</SelectItem>
+                <SelectItem value="menacing">😈 מאיים</SelectItem>
+                <SelectItem value="playful">😸 שובב</SelectItem>
+                <SelectItem value="sleepy">😴 מנומנם</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        {/* Horn Size Slider */}
-        {config.hornStyle !== "none" && (
+        <Separator className="bg-hell-ember/30" />
+
+        {/* Eyes & Glow */}
+        <div className="space-y-4">
+          <h3 className="text-hell-fire flex items-center gap-2 text-lg font-semibold">
+            👁️ עיניים וזוהר
+          </h3>
+
+          {/* Eye Color */}
+          <div className="space-y-2">
+            <Label>צבע עיניים</Label>
+            <Select
+              value={config.eyeColor}
+              onValueChange={(value: any) => updateConfig("eyeColor", value)}
+              disabled={disabled}
+            >
+              <SelectTrigger disabled={disabled}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fire">🔥 כתום אש</SelectItem>
+                <SelectItem value="ember">✨ אדום גחלים</SelectItem>
+                <SelectItem value="glow">💛 זוהר זהוב</SelectItem>
+                <SelectItem value="blood">🩸 אדום דם</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Eye Glow Intensity */}
           <div className="space-y-2">
             <Label>
-              Horn Size: <Badge variant="secondary">{config.hornSize}%</Badge>
+              עוצמת זוהר עיניים:{" "}
+              <Badge variant="secondary">{config.eyeGlow}%</Badge>
             </Label>
             <Slider
-              value={[config.hornSize]}
-              onValueChange={(values) => updateSliderValue("hornSize", values)}
+              dir={dir}
+              value={[config.eyeGlow]}
+              onValueChange={(values) => updateSliderValue("eyeGlow", values)}
               max={100}
               step={5}
               className="w-full"
+              disabled={disabled}
             />
           </div>
-        )}
-
-        {/* Expression */}
-        <div className="space-y-2">
-          <Label>Expression</Label>
-          <Select
-            value={config.expression}
-            onValueChange={(value: any) => updateConfig("expression", value)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="neutral">😐 Neutral</SelectItem>
-              <SelectItem value="menacing">😈 Menacing</SelectItem>
-              <SelectItem value="playful">😸 Playful</SelectItem>
-              <SelectItem value="sleepy">😴 Sleepy</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <Separator className="bg-hell-ember/30" />
-
-      {/* Eyes & Glow */}
-      <div className="space-y-4">
-        <h3 className="text-hell-fire flex items-center gap-2 text-lg font-semibold">
-          👁️ Eyes & Glow
-        </h3>
-
-        {/* Eye Color */}
-        <div className="space-y-2">
-          <Label>Eye Color</Label>
-          <Select
-            value={config.eyeColor}
-            onValueChange={(value: any) => updateConfig("eyeColor", value)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="fire">🔥 Fire Orange</SelectItem>
-              <SelectItem value="ember">✨ Ember Red</SelectItem>
-              <SelectItem value="glow">💛 Golden Glow</SelectItem>
-              <SelectItem value="blood">🩸 Blood Red</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
-        {/* Eye Glow Intensity */}
-        <div className="space-y-2">
-          <Label>
-            Eye Glow Intensity:{" "}
-            <Badge variant="secondary">{config.eyeGlow}%</Badge>
-          </Label>
-          <Slider
-            value={[config.eyeGlow]}
-            onValueChange={(values) => updateSliderValue("eyeGlow", values)}
-            max={100}
-            step={5}
-            className="w-full"
-          />
-        </div>
-      </div>
+        <Separator className="bg-hell-ember/30" />
 
-      <Separator className="bg-hell-ember/30" />
+        {/* Body & Pose */}
+        <div className="space-y-4">
+          <h3 className="text-hell-fire flex items-center gap-2 text-lg font-semibold">
+            🐱 גוף ותנוחה
+          </h3>
 
-      {/* Body & Pose */}
-      <div className="space-y-4">
-        <h3 className="text-hell-fire flex items-center gap-2 text-lg font-semibold">
-          🐱 Body & Pose
-        </h3>
-
-        {/* Pose */}
-        <div className="space-y-2">
-          <Label>Pose</Label>
-          <Select
-            value={config.pose}
-            onValueChange={(value: any) => updateConfig("pose", value)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="sitting">🪑 Sitting</SelectItem>
-              <SelectItem value="standing">🚶 Standing</SelectItem>
-              <SelectItem value="crouching">🐾 Crouching</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Body Size */}
-        <div className="space-y-2">
-          <Label>
-            Body Size: <Badge variant="secondary">{config.bodySize}%</Badge>
-          </Label>
-          <Slider
-            value={[config.bodySize]}
-            onValueChange={(values) => updateSliderValue("bodySize", values)}
-            min={25}
-            max={75}
-            step={5}
-            className="w-full"
-          />
-        </div>
-
-        {/* Tail Length */}
-        <div className="space-y-2">
-          <Label>
-            Tail Length: <Badge variant="secondary">{config.tailLength}%</Badge>
-          </Label>
-          <Slider
-            value={[config.tailLength]}
-            onValueChange={(values) => updateSliderValue("tailLength", values)}
-            max={100}
-            step={5}
-            className="w-full"
-          />
-        </div>
-      </div>
-
-      <Separator className="bg-hell-ember/30" />
-
-      {/* Appearance */}
-      <div className="space-y-4">
-        <h3 className="text-hell-fire flex items-center gap-2 text-lg font-semibold">
-          🎨 Appearance
-        </h3>
-
-        {/* Color Scheme */}
-        <div className="space-y-2">
-          <Label>Color Scheme</Label>
-          <Select
-            value={config.colorScheme}
-            onValueChange={(value: any) => updateConfig("colorScheme", value)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {map(colorSchemeDetails, (details, key) => (
-                <SelectItem key={key} value={key}>
-                  {details.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Body Markings */}
-        <div className="space-y-2">
-          <Label>Body Markings</Label>
-          <Select
-            value={config.markings}
-            onValueChange={(value: any) => updateConfig("markings", value)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">⚪ None</SelectItem>
-              <SelectItem value="stripes">🦓 Hell Stripes</SelectItem>
-              <SelectItem value="spots">🐆 Demon Spots</SelectItem>
-              <SelectItem value="flames">🔥 Flame Patterns</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <Separator className="bg-hell-ember/30" />
-
-      {/* Accessories */}
-      <div className="space-y-3">
-        <h3 className="text-hell-fire flex items-center gap-2 text-lg font-semibold">
-          👑 Accessories
-        </h3>
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="collar"
-              checked={config.accessories.includes("collar")}
-              onCheckedChange={() => toggleAccessory("collar")}
-            />
-            <Label htmlFor="collar" className="text-sm">
-              🎵 Hellscore Collar
-            </Label>
+          {/* Pose */}
+          <div className="space-y-2">
+            <Label>תנוחה</Label>
+            <Select
+              value={config.pose}
+              onValueChange={(value: any) => updateConfig("pose", value)}
+              disabled={disabled}
+            >
+              <SelectTrigger disabled={disabled}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sitting">🪑 יושב</SelectItem>
+                <SelectItem value="standing">🚶 עומד</SelectItem>
+                <SelectItem value="crouching">🐾 מתכופף</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="crown"
-              checked={config.accessories.includes("crown")}
-              onCheckedChange={() => toggleAccessory("crown")}
-            />
-            <Label htmlFor="crown" className="text-sm">
-              👑 Hell Crown
+
+          {/* Body Size */}
+          <div className="space-y-2">
+            <Label>
+              גודל גוף: <Badge variant="secondary">{config.bodySize}%</Badge>
             </Label>
+            <Slider
+              dir={dir}
+              value={[config.bodySize]}
+              onValueChange={(values) => updateSliderValue("bodySize", values)}
+              min={25}
+              max={75}
+              step={5}
+              className="w-full"
+              disabled={disabled}
+            />
+          </div>
+
+          {/* Tail Length */}
+          <div className="space-y-2">
+            <Label>
+              אורך זנב: <Badge variant="secondary">{config.tailLength}%</Badge>
+            </Label>
+            <Slider
+              dir={dir}
+              value={[config.tailLength]}
+              onValueChange={(values) =>
+                updateSliderValue("tailLength", values)
+              }
+              max={100}
+              step={5}
+              className="w-full"
+              disabled={disabled}
+            />
+          </div>
+        </div>
+
+        <Separator className="bg-hell-ember/30" />
+
+        {/* Appearance */}
+        <div className="space-y-4">
+          <h3 className="text-hell-fire flex items-center gap-2 text-lg font-semibold">
+            🎨 מראה
+          </h3>
+
+          {/* Color Scheme */}
+          <div className="space-y-2">
+            <Label>ערכת צבעים</Label>
+            <Select
+              value={config.colorScheme}
+              onValueChange={(value: any) => updateConfig("colorScheme", value)}
+              disabled={disabled}
+            >
+              <SelectTrigger disabled={disabled}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {map(colorSchemeDetails, (details, key) => {
+                  const isRare = includes(
+                    rareColorSchemes as readonly string[],
+                    key
+                  );
+                  if (isRare && !rareTraitsEnabled) return null;
+
+                  return (
+                    <SelectItem key={key} value={key}>
+                      {details.title}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Body Markings */}
+          <div className="space-y-2">
+            <Label>סימני גוף</Label>
+            <Select
+              value={config.markings}
+              onValueChange={(value: any) => updateConfig("markings", value)}
+              disabled={disabled}
+            >
+              <SelectTrigger disabled={disabled}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">⚪ ללא</SelectItem>
+                <SelectItem value="stripes">🦓 פסים מהשאול</SelectItem>
+                <SelectItem value="spots">🐆 נקודות שדים</SelectItem>
+                <SelectItem value="flames">🔥 דפוסי להבה</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <Separator className="bg-hell-ember/30" />
+
+        {/* Accessories */}
+        <div className="space-y-3">
+          <h3 className="text-hell-fire flex items-center gap-2 text-lg font-semibold">
+            👑 אביזרים
+          </h3>
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="collar"
+                checked={includes(config.accessories, "collar")}
+                onCheckedChange={() => toggleAccessory("collar")}
+                disabled={disabled}
+              />
+              <Label htmlFor="collar" className="text-sm">
+                🎵 קולר Hellscore
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="crown"
+                checked={includes(config.accessories, "crown")}
+                onCheckedChange={() => toggleAccessory("crown")}
+                disabled={disabled}
+              />
+              <Label htmlFor="crown" className="text-sm">
+                👑 כתר מהשאול
+              </Label>
+            </div>
           </div>
         </div>
       </div>

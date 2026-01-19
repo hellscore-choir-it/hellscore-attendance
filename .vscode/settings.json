@@ -5,5 +5,25 @@
   "editor.quickSuggestions": {
     "strings": true
   },
-  "cSpell.words": ["Hellscore", "supabase", "חזרה", "נוכחותך", "נרשמה"]
+  "cSpell.words": [
+    "anonymization",
+    "Hellscore",
+    "isready",
+    "notistack",
+    "pipefail",
+    "supabase",
+    "אישית",
+    "במחולל",
+    "ברצף",
+    "דיווחים",
+    "החתולים",
+    "התאמה",
+    "חזרה",
+    "לפתוח",
+    "לצפייה",
+    "מחולל",
+    "נוכחותך",
+    "נפתחת",
+    "נרשמה"
+  ]
 }

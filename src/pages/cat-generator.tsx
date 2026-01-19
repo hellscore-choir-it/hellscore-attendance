@@ -1,7 +1,9 @@
 import { Download, Zap } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import Link from "next/link";
+import { useRouter } from "next/router";
 import { CatGenerator } from "../components/CatGenerator";
 import { HellCat } from "../components/CatGenerator/HellCat";
 import {
@@ -14,11 +16,29 @@ import { Button } from "../components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
-
+import { useCatGeneratorConfigQuery } from "../hooks/useCatGeneratorConfigQuery";
+import { computeCatGeneratorEligibility } from "../server/db/catGeneratorConfig";
+import { useUserDbData } from "../server/db/useUserStreak";
+import { useAppSession } from "../utils/useAppSession";
 const Index = () => {
+  const { data: session } = useAppSession();
+  const router = useRouter();
+  const userEmail = session?.user?.email ?? "";
+  const { data: userData, isLoading: isUserLoading } = useUserDbData(userEmail);
+  const { data: config, isLoading: isConfigLoading } =
+    useCatGeneratorConfigQuery();
+
+  const streak = isUserLoading ? null : userData?.data?.responseStreak ?? 0;
+  const eligibility = computeCatGeneratorEligibility({
+    streak,
+    userEmail,
+    config: isConfigLoading ? undefined : config,
+  });
+
   const [catConfig, setCatConfig] = useState<CatConfig>({
     hornStyle: "curved",
     eyeColor: "fire",
@@ -35,6 +55,53 @@ const Index = () => {
     markings: "none",
     expression: "neutral",
   });
+
+  useEffect(() => {
+    // Only redirect once we know the streak/config and have determined the user is ineligible.
+    if (isConfigLoading) return;
+    if (eligibility.streak === null) return;
+    if (eligibility.canAccess) return;
+
+    if (process.env.NEXT_PUBLIC_E2E_TEST_MODE === "true") {
+      const params = new URLSearchParams(window.location.search);
+      const query = params.toString();
+      void router.replace(query ? `/thank-you?${query}` : "/thank-you");
+      return;
+    }
+
+    void router.replace("/thank-you");
+  }, [eligibility.canAccess, eligibility.streak, isConfigLoading, router]);
+
+  if (!eligibility.canAccess) {
+    const remaining =
+      eligibility.config.accessStreak - (eligibility.streak ?? 0);
+    return (
+      <SessionBoundary>
+        <div className="bg-gradient-shadow flex min-h-screen items-center justify-center px-6 text-center">
+          <div className="space-y-4">
+            <p className="text-lg text-gray-200">
+              {eligibility.streak === null
+                ? "בודקים את הרצף שלך..."
+                : isConfigLoading
+                ? "בודקים את ההרשאות שלך..."
+                : "מחולל החתולים עדיין נעול — מעבירים אותך לעמוד התודה..."}
+            </p>
+            {!isConfigLoading && eligibility.streak !== null && (
+              <p className="text-sm text-gray-300">
+                {`עוד ${Math.max(
+                  remaining,
+                  1
+                )} דיווחים כדי לפתוח את מחולל החתולים 🐱‍👤`}
+              </p>
+            )}
+            <Link href="/thank-you" className="text-hell-fire underline">
+              חזרה לעמוד התודה
+            </Link>
+          </div>
+        </div>
+      </SessionBoundary>
+    );
+  }
 
   const generateRandomCat = () => {
     const hornStyles = ["curved", "straight", "twisted", "none"];
@@ -78,13 +145,17 @@ const Index = () => {
       ] as any,
     });
 
-    toast("New hellish feline generated! 🔥");
+    toast("נוצר חתול חדש מהשאול! 🔥");
   };
 
+  const isCustomizationLocked = !eligibility.canCustomize;
+  const isExportLocked = !eligibility.canExport;
+
   const exportSVG = () => {
+    if (isExportLocked) return;
     const svgElement = document.querySelector("#hell-cat-svg") as SVGElement;
     if (!svgElement) {
-      toast.error("No cat to export!");
+      toast.error("אין חתול לייצוא!");
       return;
     }
 
@@ -102,25 +173,21 @@ const Index = () => {
     document.body.removeChild(downloadLink);
     URL.revokeObjectURL(svgUrl);
 
-    toast.success("Hellish mascot exported! 🎵");
+    toast.success("הקמע יוצא בהצלחה! 🎵");
   };
 
   return (
     <SessionBoundary>
-      <div
-        style={{ direction: "ltr" }}
-        className="bg-gradient-shadow min-h-screen"
-      >
+      <div dir="rtl" className="bg-gradient-shadow min-h-screen">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-12 text-center">
             <h1 className="text-hell-fire animate-glow-pulse mb-4 text-4xl font-bold">
-              Cat Mascot Generator
+              מחולל החתולים
             </h1>
             <p className="text-muted-foreground mx-auto max-w-2xl">
-              Generate demonic feline mascots for your metal a cappella choir.
-              Perfect for attendance tracking rewards and positive
-              reinforcement!
+              צרו קמע חתולי דמוני למקהלת המטאל א-קפלה. מושלם כפרס על דיווחי
+              נוכחות ועידוד חיובי!
             </p>
           </div>
 
@@ -130,7 +197,7 @@ const Index = () => {
               <CardHeader>
                 <CardTitle className="text-hell-glow flex items-center gap-2">
                   <Zap className="h-5 w-5" />
-                  Your Hellish Mascot
+                  הקמע החתולי שלך
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col items-center gap-6">
@@ -145,11 +212,16 @@ const Index = () => {
                     className="bg-primary hover:bg-primary/90"
                   >
                     <Zap className="mr-2 h-4 w-4" />
-                    Random
+                    אקראי
                   </Button>
-                  <Button size="sm" onClick={exportSVG} variant="secondary">
+                  <Button
+                    size="sm"
+                    onClick={exportSVG}
+                    variant="secondary"
+                    disabled={isExportLocked}
+                  >
                     <Download className="mr-2 h-4 w-4" />
-                    Export SVG
+                    ייצוא SVG
                   </Button>
                 </div>
               </CardContent>
@@ -159,20 +231,30 @@ const Index = () => {
             <Card className="bg-card/50 border-hell-ember/30 text-center align-middle backdrop-blur">
               <CardHeader>
                 <CardTitle className="text-hell-glow ">
-                  Customize Your Demon
+                  התאימו את השד שלכם
                 </CardTitle>
+                {isCustomizationLocked && (
+                  <CardDescription>
+                    {`התאמה אישית נפתחת ברצף של ${eligibility.config.customizeStreak} דיווחים.`}
+                  </CardDescription>
+                )}
               </CardHeader>
               <CardContent>
-                <CatGenerator config={catConfig} onChange={setCatConfig} />
+                <CatGenerator
+                  config={catConfig}
+                  onChange={setCatConfig}
+                  disabled={isCustomizationLocked}
+                  rareTraitsEnabled={eligibility.canUseRareTraits}
+                  dir="rtl"
+                />
               </CardContent>
             </Card>
           </div>
 
           {/* Footer */}
           <div className="text-muted-foreground mt-6 text-center">
-            <p>Created for Hellscore Metal A Cappella Choir</p>
             <p className="mt-2 text-sm">
-              May your attendance streaks burn eternal 🔥
+              מי ייתן ורצפי הנוכחות שלכם יבערו לנצח 🔥
             </p>
           </div>
         </div>

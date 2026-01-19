@@ -1,0 +1,72 @@
+name: DB Migrations
+
+on:
+  pull_request:
+
+jobs:
+  pr-merge-gate-migrations-up-to-date:
+    name: PR gate (migrations up-to-date)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fail if branch is missing migrations from base branch
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          base_branch="${GITHUB_BASE_REF}"
+          if [[ -z "$base_branch" ]]; then
+            echo "GITHUB_BASE_REF is empty; cannot determine PR base branch" >&2
+            exit 1
+          fi
+
+          git fetch origin "$base_branch" --depth=1
+
+          main_list=/tmp/migrations_main.txt
+          head_list=/tmp/migrations_head.txt
+
+          git ls-tree -r --name-only "origin/$base_branch" supabase/migrations | sort > "$main_list"
+          git ls-tree -r --name-only HEAD supabase/migrations | sort > "$head_list"
+
+          missing=$(comm -23 "$main_list" "$head_list" || true)
+          if [[ -n "$missing" ]]; then
+            echo "Missing migrations from base branch ($base_branch):" >&2
+            echo "$missing" >&2
+            echo "Rebase/merge $base_branch before merging this PR." >&2
+            exit 1
+          fi
+
+  pr-migrations-apply-check:
+    name: Apply migrations (ephemeral Postgres)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Postgres client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Run migration check
+        run: |
+          chmod +x scripts/db/check-migrations.sh
+          ./scripts/db/check-migrations.sh
