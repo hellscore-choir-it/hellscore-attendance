@@ -13,6 +13,32 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Validate migration filename format
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          files=(supabase/migrations/*.sql)
+          if [[ ${#files[@]} -eq 0 ]]; then
+            echo "No migrations found in supabase/migrations" >&2
+            exit 1
+          fi
+
+          bad=()
+          for f in "${files[@]}"; do
+            base="$(basename "$f")"
+            if [[ ! "$base" =~ ^[0-9]{14}_.+\.sql$ ]]; then
+              bad+=("$base")
+            fi
+          done
+
+          if [[ ${#bad[@]} -gt 0 ]]; then
+            echo "Invalid migration filenames (expected <timestamp>_name.sql):" >&2
+            printf '%s\n' "${bad[@]}" >&2
+            exit 1
+          fi
+
       - name: Fail if branch is missing migrations from base branch
         shell: bash
         run: |
@@ -29,10 +55,26 @@ jobs:
           main_list=/tmp/migrations_main.txt
           head_list=/tmp/migrations_head.txt
 
+          main_list_norm=/tmp/migrations_main_normalized.txt
+          head_list_norm=/tmp/migrations_head_normalized.txt
+
           git ls-tree -r --name-only "origin/$base_branch" supabase/migrations | sort > "$main_list"
           git ls-tree -r --name-only HEAD supabase/migrations | sort > "$head_list"
 
-          missing=$(comm -23 "$main_list" "$head_list" || true)
+          # Normalize filenames to be robust to renames that only change numeric prefixes.
+          # Example: 001-foo.sql -> foo.sql, 20260101000000_foo.sql -> foo.sql
+          # This preserves the intent of the check ("are base migrations present?") while
+          # allowing naming convention upgrades.
+          awk -F/ '{print $NF}' "$main_list" | sed -E 's/^([0-9]+[-_])+//' | sort > "$main_list_norm"
+          awk -F/ '{print $NF}' "$head_list" | sed -E 's/^([0-9]+[-_])+//' | sort > "$head_list_norm"
+
+          missing=$(comm -23 "$main_list_norm" "$head_list_norm" || true)
+
+          # TODO: Once the base branch migrations have all been renamed to the new
+          # <timestamp>_name.sql convention (and we don't expect renames anymore),
+          # consider restoring the stricter check below.
+          #
+          # missing=$(comm -23 "$main_list" "$head_list" || true)
           if [[ -n "$missing" ]]; then
             echo "Missing migrations from base branch ($base_branch):" >&2
             echo "$missing" >&2
