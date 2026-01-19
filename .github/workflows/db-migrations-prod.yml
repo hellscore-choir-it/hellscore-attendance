@@ -11,6 +11,7 @@ jobs:
   prod-migrate:
     name: Apply migrations to production (main)
     runs-on: ubuntu-latest
+    environment: production
     concurrency:
       group: prod-db-migrations
       cancel-in-progress: false
