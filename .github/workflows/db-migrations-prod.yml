@@ -35,4 +35,46 @@ jobs:
 
           # Uses Supabase's migration ledger table (supabase_migrations.schema_migrations).
           # Note: Supabase CLI expects db URLs to be RFC 3986 percent-encoded if they contain special characters.
-          npx supabase@latest --yes db push --db-url "$SUPABASE_DB_URL"
+          log_file="/tmp/supabase-db-push.log"
+
+          set +e
+          npx supabase@latest --yes db push --db-url "$SUPABASE_DB_URL" 2>&1 | tee "$log_file"
+          status=${PIPESTATUS[0]}
+          set -e
+
+          if [[ "$status" -ne 0 ]]; then
+            echo "Supabase CLI exited with status $status" >&2
+            exit "$status"
+          fi
+
+          if grep -q "Skipping migration" "$log_file"; then
+            echo "Supabase CLI reported skipped migrations; failing deployment." >&2
+            exit 1
+          fi
+
+          if grep -q "file name must match pattern" "$log_file"; then
+            echo "Supabase CLI reported invalid migration filenames; failing deployment." >&2
+            exit 1
+          fi
+
+          # Post-check based on Supabase CLI behavior:
+          # `supabase migration list --db-url` shows LOCAL vs REMOTE history (timestamps).
+          # Fail if any local migrations are still missing on remote after the push.
+          list_log="/tmp/supabase-migration-list.log"
+
+          set +e
+          npx supabase@latest --yes migration list --db-url "$SUPABASE_DB_URL" 2>&1 | tee "$list_log"
+          status=${PIPESTATUS[0]}
+          set -e
+
+          if [[ "$status" -ne 0 ]]; then
+            echo "Supabase CLI migration list failed with status $status" >&2
+            exit "$status"
+          fi
+
+          # Detect "local-only" migration entries in the table output:
+          # lines like: "  20230222032233 │                │ 2023-02-22 ..."
+          if grep -Eq '^[[:space:]]*[0-9]{14}[[:space:]]*│[[:space:]]*│' "$list_log"; then
+            echo "Remote migration history is missing one or more local migrations; failing deployment." >&2
+            exit 1
+          fi
