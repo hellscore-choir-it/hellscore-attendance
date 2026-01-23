@@ -24,6 +24,51 @@ import { ISOToHuman } from "../utils/dates";
 import { trpc } from "../utils/trpc";
 import { ErrorAccordion } from "./ErrorAccordion";
 
+const extractErrorText = (error: unknown): string => {
+  if (isError(error)) return error.message;
+  if (isString(error)) return error;
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return "Unknown error occurred";
+  }
+};
+
+const extractErrorId = (errorText: string): string | undefined => {
+  const match = errorText.match(/errorId:\s*([a-zA-Z0-9-]+)/i);
+  return match?.[1];
+};
+
+const formatSubmitAttendanceErrorDetails = (errorText: string): string => {
+  const errorId = extractErrorId(errorText);
+  const withRef = (text: string) =>
+    errorId ? `${text}\n\nReference: ${errorId}` : text;
+
+  if (includes(errorText, "UNAUTHORIZED")) {
+    return withRef(
+      "נראה שאין לך הרשאות לשלוח טופס זה. אנא פנה/י למנהל.ת המערכת."
+    );
+  }
+
+  if (includes(errorText, "Failed to fetch")) {
+    return withRef("הייתה בעיית תקשורת זמנית עם השרת. נסו שוב בעוד רגע.");
+  }
+
+  if (
+    /rate-?limited/i.test(errorText) ||
+    includes(errorText, " 429") ||
+    includes(errorText, "status 429")
+  ) {
+    return withRef("Google Sheets עמוס כרגע (Rate Limit). נסו שוב בעוד דקה.");
+  }
+
+  if (/Google Sheets/i.test(errorText)) {
+    return withRef("יש בעיה זמנית מול Google Sheets. נסו שוב.");
+  }
+
+  return withRef(errorText);
+};
+
 function useZodForm<TSchema extends z.ZodType>(
   props: Omit<UseFormProps<TSchema["_input"]>, "resolver"> & {
     schema: TSchema;
@@ -102,12 +147,9 @@ const AttendanceForm = ({
           router.push("/thank-you");
         } catch (error) {
           console.error("Error submitting attendance:", error);
-          const errorText = isError(error)
-            ? error.message
-            : isString(error)
-            ? error
-            : "Unknown error occurred";
+          const errorText = extractErrorText(error);
           const isUnknownUserError = includes(errorText, "UNAUTHORIZED");
+          const details = formatSubmitAttendanceErrorDetails(errorText);
 
           captureException(error, {
             extra: {
@@ -117,19 +159,11 @@ const AttendanceForm = ({
               userEmail: session.user?.email,
               isUnknownUserError,
               errorText,
+              extractedErrorId: extractErrorId(errorText),
             },
           });
           enqueueSnackbar(
-            <ErrorAccordion
-              title="שגיאה בשליחת הטופס"
-              details={
-                isUnknownUserError
-                  ? "נראה שאין לך הרשאות לשלוח טופס זה. אנא פנה למנהל.ת המערכת."
-                  : isError(error)
-                  ? error.message
-                  : JSON.stringify(error)
-              }
-            />,
+            <ErrorAccordion title="שגיאה בשליחת הטופס" details={details} />,
             { variant: "error" }
           );
         }
