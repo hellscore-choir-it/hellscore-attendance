@@ -85,9 +85,13 @@ afterEach(() => {
   }
 });
 
-jest.mock("notistack", () => ({
-  useSnackbar: () => ({ enqueueSnackbar: jest.fn() }),
-}));
+jest.mock("notistack", () => {
+  const enqueueSnackbar = jest.fn();
+  return {
+    useSnackbar: () => ({ enqueueSnackbar }),
+    __mock: { enqueueSnackbar },
+  };
+});
 
 const mockMutate = jest.fn();
 const mockUseMutation = jest.fn(() => ({ mutateAsync: mockMutate }));

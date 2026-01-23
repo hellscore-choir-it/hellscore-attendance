@@ -6,6 +6,7 @@ import {
   attendanceSchema,
   sanitizeText,
 } from "../../../utils/attendanceSchema";
+import { getGoogleApiErrorInfo } from "../../../utils/errors";
 import { performUpdateCallbacksSerially } from "../../db/userUpdateSideEffects";
 import {
   getUserEventTypeAssignments,
@@ -39,14 +40,26 @@ export const googleRouter = router({
             maxRetries: 3,
           });
         } catch (error) {
+          const errorId = globalThis.crypto?.randomUUID?.() ?? "unknown";
+          const googleErrorInfo = getGoogleApiErrorInfo(error);
           console.error(
             "Failed to fetch sheet content for authorization check:",
             error
           );
-          captureException(error, { extra: { userEmail, eventTitle } });
+          captureException(error, {
+            tags: {
+              errorId,
+              googleApi: "sheets",
+              operation: "getUserEventTypeAssignments",
+            },
+            extra: { userEmail, eventTitle, googleErrorInfo },
+          });
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: "Unable to verify user permissions. Please try again.",
+            message:
+              googleErrorInfo.status === 429
+                ? `Google Sheets rate-limited this request. Please try again in a minute. (errorId: ${errorId})`
+                : `Google Sheets could not verify permissions. Please try again. (errorId: ${errorId})`,
           });
         }
 
@@ -71,6 +84,9 @@ export const googleRouter = router({
         const sanitizedComments = sanitizeText(comments);
 
         // Update event, user response and streaks
+        // Attach a catch immediately to avoid unhandled promise rejections
+        // if Supabase updates fail before we await (we intentionally run these in parallel).
+        let supabaseError: unknown | undefined;
         const supabasePromise = performUpdateCallbacksSerially({
           userEmail,
           eventTitle,
@@ -80,6 +96,8 @@ export const googleRouter = router({
           whyNot: sanitizedWhyNot,
           wentLastTime,
           comments: sanitizedComments,
+        }).catch((error) => {
+          supabaseError = error;
         });
 
         // Retry logic for writing attendance data
@@ -101,8 +119,15 @@ export const googleRouter = router({
             { retry: true, maxRetries: 3 }
           );
         } catch (error) {
+          const errorId = globalThis.crypto?.randomUUID?.() ?? "unknown";
+          const googleErrorInfo = getGoogleApiErrorInfo(error);
           console.error("Failed to write attendance row:", error);
           captureException(error, {
+            tags: {
+              errorId,
+              googleApi: "sheets",
+              operation: "writeResponseRow",
+            },
             extra: {
               userEmail,
               eventTitle,
@@ -113,19 +138,22 @@ export const googleRouter = router({
               comments,
               sanitizedWhyNot,
               sanitizedComments,
+              googleErrorInfo,
             },
           });
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: "Unable to submit attendance. Please try again.",
+            message:
+              googleErrorInfo.status === 429
+                ? `Google Sheets rate-limited this request. Please try again in a minute. (errorId: ${errorId})`
+                : `Unable to submit attendance to Google Sheets. Please try again. (errorId: ${errorId})`,
           });
         }
 
-        try {
-          await supabasePromise;
-        } catch (error) {
-          console.error("Failed to update Supabase:", error);
-          captureException(error, {
+        await supabasePromise;
+        if (supabaseError) {
+          console.error("Failed to update Supabase:", supabaseError);
+          captureException(supabaseError, {
             extra: {
               userEmail,
               eventTitle,

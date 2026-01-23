@@ -1,8 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import React from "react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import AttendanceForm from "../../components/AttendanceForm";
 
@@ -13,11 +12,7 @@ const baseSession = {
 describe("AttendanceForm", () => {
   it("renders no-events message when user has no relevant assignments", () => {
     render(
-      <AttendanceForm
-        calendarData={[]}
-        userEvents={[]}
-        session={baseSession}
-      />
+      <AttendanceForm calendarData={[]} userEvents={[]} session={baseSession} />
     );
 
     expect(
@@ -40,9 +35,7 @@ describe("AttendanceForm", () => {
     );
 
     // Initially shown
-    expect(
-      screen.getByText(/נשמח לשמוע למה לא תגיעו/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/נשמח לשמוע למה לא תגיעו/i)).toBeInTheDocument();
 
     const goingToggle = screen.getByRole("checkbox", {
       name: /האם את\/ה מגיע\/ה/i,
@@ -62,7 +55,9 @@ describe("AttendanceForm", () => {
 
     const trpcMock = require("../../utils/trpc");
     trpcMock.__mock.mockMutate.mockResolvedValue({});
-    trpcMock.__mock.mockUseMutation.mockReturnValue({ mutateAsync: mockMutate });
+    trpcMock.__mock.mockUseMutation.mockReturnValue({
+      mutateAsync: mockMutate,
+    });
 
     render(
       <AttendanceForm
@@ -94,5 +89,73 @@ describe("AttendanceForm", () => {
       expect(mockMutate).toHaveBeenCalled();
       expect(mockPush).toHaveBeenCalledWith("/thank-you");
     });
+  });
+
+  it("shows a friendly rate-limit message with errorId", async () => {
+    const mockMutate = jest
+      .fn()
+      .mockRejectedValue(
+        new Error(
+          "INTERNAL_SERVER_ERROR: Google Sheets rate-limited this request. Please try again in a minute. (errorId: 123e4567-e89b-12d3-a456-426614174000)"
+        )
+      );
+    const trpcMock = require("../../utils/trpc");
+    trpcMock.__mock.mockUseMutation.mockReturnValue({
+      mutateAsync: mockMutate,
+    });
+
+    const notistackMock = require("notistack");
+    notistackMock.__mock.enqueueSnackbar.mockClear();
+
+    render(
+      <AttendanceForm
+        calendarData={[{ title: "Rehearsal", start: "2025-01-01T20:00:00Z" }]}
+        userEvents={[{ title: "Rehearsal", email: "user@example.com" }]}
+        session={baseSession}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "שלח/י טופס 🚀" }));
+
+    await waitFor(() => {
+      expect(notistackMock.__mock.enqueueSnackbar).toHaveBeenCalled();
+    });
+
+    const firstArg = notistackMock.__mock.enqueueSnackbar.mock.calls[0][0];
+    expect(firstArg.props.title).toMatch(/שגיאה בשליחת הטופס/);
+    expect(firstArg.props.details).toMatch(/Google Sheets עמוס/);
+    expect(firstArg.props.details).toMatch(
+      /Reference: 123e4567-e89b-12d3-a456-426614174000/
+    );
+  });
+
+  it("shows a friendly network error message on Failed to fetch", async () => {
+    const mockMutate = jest
+      .fn()
+      .mockRejectedValue(new Error("Failed to fetch"));
+    const trpcMock = require("../../utils/trpc");
+    trpcMock.__mock.mockUseMutation.mockReturnValue({
+      mutateAsync: mockMutate,
+    });
+
+    const notistackMock = require("notistack");
+    notistackMock.__mock.enqueueSnackbar.mockClear();
+
+    render(
+      <AttendanceForm
+        calendarData={[{ title: "Rehearsal", start: "2025-01-01T20:00:00Z" }]}
+        userEvents={[{ title: "Rehearsal", email: "user@example.com" }]}
+        session={baseSession}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "שלח/י טופס 🚀" }));
+
+    await waitFor(() => {
+      expect(notistackMock.__mock.enqueueSnackbar).toHaveBeenCalled();
+    });
+
+    const firstArg = notistackMock.__mock.enqueueSnackbar.mock.calls[0][0];
+    expect(firstArg.props.details).toMatch(/בעיית תקשורת זמנית/);
   });
 });
