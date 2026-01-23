@@ -45,7 +45,9 @@ const formatSubmitAttendanceErrorDetails = (errorText: string): string => {
     errorId ? `${text}\n\nReference: ${errorId}` : text;
 
   if (includes(errorText, "UNAUTHORIZED")) {
-    return "נראה שאין לך הרשאות לשלוח טופס זה. אנא פנה/י למנהל.ת המערכת.";
+    return withRef(
+      "נראה שאין לך הרשאות לשלוח טופס זה. אנא פנה/י למנהל.ת המערכת."
+    );
   }
 
   if (includes(errorText, "Failed to fetch")) {
