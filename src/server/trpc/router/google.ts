@@ -1,5 +1,6 @@
 import { captureException } from "@sentry/nextjs";
 import { TRPCError } from "@trpc/server";
+import { randomUUID } from "crypto";
 
 import { filter, includes, map } from "lodash";
 import {
@@ -40,7 +41,7 @@ export const googleRouter = router({
             maxRetries: 3,
           });
         } catch (error) {
-          const errorId = globalThis.crypto?.randomUUID?.() ?? "unknown";
+          const errorId = randomUUID();
           const googleErrorInfo = getGoogleApiErrorInfo(error);
           console.error(
             "Failed to fetch sheet content for authorization check:",
@@ -119,7 +120,7 @@ export const googleRouter = router({
             { retry: true, maxRetries: 3 }
           );
         } catch (error) {
-          const errorId = globalThis.crypto?.randomUUID?.() ?? "unknown";
+          const errorId = randomUUID();
           const googleErrorInfo = getGoogleApiErrorInfo(error);
           console.error("Failed to write attendance row:", error);
           captureException(error, {
