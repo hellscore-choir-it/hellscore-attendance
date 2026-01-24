@@ -92,6 +92,16 @@ const AttendanceForm = ({
   const { enqueueSnackbar } = useSnackbar();
   const { handleSubmit, watch, register, formState, setValue } = useZodForm({
     schema: attendanceSchema,
+    mode: "onChange",
+    reValidateMode: "onChange",
+    defaultValues: {
+      eventTitle: "",
+      eventDate: "",
+      going: false,
+      wentLastTime: false,
+      whyNot: "",
+      comments: "",
+    },
   });
   const relevantTitles = useMemo(
     () => map(filter(userEvents, { email: session?.user?.email }), "title"),
@@ -110,18 +120,60 @@ const AttendanceForm = ({
     () => uniq(map(relevantEvents, "title")),
     [relevantEvents]
   );
-  const relevantDates = map(
-    filter(
-      relevantEvents,
-      ({ title }) =>
-        title === (watch("eventTitle") || first(sortedRelevantTitles))
-    ),
-    "start"
-  );
+  const selectedEventTitle = watch("eventTitle");
+  const selectedEventDate = watch("eventDate");
+
+  useEffect(() => {
+    // If the currently selected title is no longer available (e.g. props changed), clear it.
+    if (
+      selectedEventTitle &&
+      !includes(sortedRelevantTitles, selectedEventTitle)
+    ) {
+      setValue("eventTitle", "");
+      return;
+    }
+
+    // If there's only one possible event, auto-select it.
+    if (!selectedEventTitle && size(sortedRelevantTitles) === 1) {
+      setValue("eventTitle", sortedRelevantTitles[0] as string);
+    }
+  }, [setValue, selectedEventTitle, sortedRelevantTitles]);
+
+  const relevantDates = useMemo(() => {
+    if (!selectedEventTitle) return [];
+    return map(
+      filter(relevantEvents, ({ title }) => title === selectedEventTitle),
+      "start"
+    ).filter(Boolean) as string[];
+  }, [relevantEvents, selectedEventTitle]);
+
+  const numDates = size(relevantDates);
   const nextDate = first(relevantDates);
   useEffect(() => {
-    if (nextDate) setValue("eventDate", nextDate);
-  }, [setValue, nextDate]);
+    // If no title selected, do not allow a date to remain selected.
+    if (!selectedEventTitle) {
+      if (selectedEventDate) setValue("eventDate", "");
+      return;
+    }
+
+    // If there's only one rehearsal date for the selected title, auto-pick it.
+    if (nextDate && numDates < 2) {
+      if (selectedEventDate !== nextDate) setValue("eventDate", nextDate);
+      return;
+    }
+
+    // If multiple dates exist, ensure the chosen date belongs to this title.
+    if (selectedEventDate && !includes(relevantDates, selectedEventDate)) {
+      setValue("eventDate", "");
+    }
+  }, [
+    setValue,
+    selectedEventTitle,
+    selectedEventDate,
+    nextDate,
+    numDates,
+    relevantDates,
+  ]);
   const showWhyNot = !watch("going");
   if (!size(relevantTitles)) {
     return <p>לא נמצאו אירועים רלוונטיים עבורך ({session.user?.email})!</p>;
@@ -175,6 +227,9 @@ const AttendanceForm = ({
           className="select select-bordered"
           {...register("eventTitle", { required: true })}
         >
+          <option value="" disabled>
+            בחר/י אירוע...
+          </option>
           {map(sortedRelevantTitles, (title) => (
             <option value={title} key={title}>
               {title}
@@ -186,8 +241,12 @@ const AttendanceForm = ({
         <div className="dark:text-hell-glow pb-2">תאריך</div>
         <select
           className="select select-bordered"
+          disabled={!selectedEventTitle}
           {...register("eventDate", { required: true })}
         >
+          <option value="" disabled>
+            בחר/י תאריך...
+          </option>
           {map(
             relevantDates,
             (date) =>
@@ -229,7 +288,10 @@ const AttendanceForm = ({
           {...register("comments")}
         ></input>
       </label>
-      <button className="btn self-center bg-green-800 px-20">
+      <button
+        className="btn self-center bg-green-800 px-20"
+        disabled={!formState.isValid || submitRow.isLoading}
+      >
         שלח/י טופס 🚀
       </button>
     </form>
