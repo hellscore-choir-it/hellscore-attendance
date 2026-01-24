@@ -14,7 +14,7 @@ import { InferGetStaticPropsType } from "next";
 import { Session } from "next-auth";
 import { useRouter } from "next/router";
 import { useSnackbar } from "notistack";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useForm, UseFormProps } from "react-hook-form";
 import { z } from "zod";
 
@@ -122,6 +122,7 @@ const AttendanceForm = ({
   );
   const selectedEventTitle = watch("eventTitle");
   const selectedEventDate = watch("eventDate");
+  const prevEventTitleRef = useRef<string>("");
 
   useEffect(() => {
     // If the currently selected title is no longer available (e.g. props changed), clear it.
@@ -129,15 +130,28 @@ const AttendanceForm = ({
       selectedEventTitle &&
       !includes(sortedRelevantTitles, selectedEventTitle)
     ) {
-      setValue("eventTitle", "");
+      setValue("eventTitle", "", { shouldValidate: true, shouldDirty: true });
       return;
     }
 
     // If there's only one possible event, auto-select it.
     if (!selectedEventTitle && size(sortedRelevantTitles) === 1) {
-      setValue("eventTitle", sortedRelevantTitles[0] as string);
+      setValue("eventTitle", sortedRelevantTitles[0] as string, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
     }
   }, [setValue, selectedEventTitle, sortedRelevantTitles]);
+
+  useEffect(() => {
+    // When switching event title, force the user to (re)confirm the date
+    // unless we can safely auto-pick it (handled in the date effect below).
+    if (prevEventTitleRef.current && prevEventTitleRef.current !== selectedEventTitle) {
+      setValue("eventDate", "", { shouldValidate: true, shouldDirty: true });
+    }
+
+    prevEventTitleRef.current = selectedEventTitle;
+  }, [setValue, selectedEventTitle]);
 
   const relevantDates = useMemo(() => {
     if (!selectedEventTitle) return [];
@@ -152,19 +166,23 @@ const AttendanceForm = ({
   useEffect(() => {
     // If no title selected, do not allow a date to remain selected.
     if (!selectedEventTitle) {
-      if (selectedEventDate) setValue("eventDate", "");
+      if (selectedEventDate) {
+        setValue("eventDate", "", { shouldValidate: true, shouldDirty: true });
+      }
       return;
     }
 
     // If there's only one rehearsal date for the selected title, auto-pick it.
     if (nextDate && numDates === 1) {
-      if (selectedEventDate !== nextDate) setValue("eventDate", nextDate);
+      if (selectedEventDate !== nextDate) {
+        setValue("eventDate", nextDate, { shouldValidate: true, shouldDirty: true });
+      }
       return;
     }
 
     // If multiple dates exist, ensure the chosen date belongs to this title.
     if (selectedEventDate && !includes(relevantDates, selectedEventDate)) {
-      setValue("eventDate", "");
+      setValue("eventDate", "", { shouldValidate: true, shouldDirty: true });
     }
   }, [
     setValue,

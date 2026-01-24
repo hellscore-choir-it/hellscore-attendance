@@ -10,6 +10,45 @@ const baseSession = {
 } as any;
 
 describe("AttendanceForm", () => {
+  it("enables submit after auto-selecting a single date, then disables again when switching to a title with multiple dates", async () => {
+    render(
+      <AttendanceForm
+        calendarData={[
+          { title: "Single", start: "2025-01-01T20:00:00Z" },
+          { title: "Multi", start: "2025-01-01T20:00:00Z" },
+          { title: "Multi", start: "2025-01-08T20:00:00Z" },
+        ]}
+        userEvents={[
+          { title: "Single", email: "user@example.com" },
+          { title: "Multi", email: "user@example.com" },
+        ]}
+        session={baseSession}
+      />
+    );
+
+    const submitButton = screen.getByRole("button", { name: "שלח/י טופס 🚀" });
+    expect(submitButton).toBeDisabled();
+
+    // Pick the title with a single upcoming event; date should auto-select, enabling submit.
+    fireEvent.change(screen.getByRole("combobox", { name: "אירוע" }), {
+      target: { value: "Single" },
+    });
+
+    await waitFor(() => expect(submitButton).not.toBeDisabled());
+
+    // Switch to a title with multiple dates; date must be explicitly re-selected.
+    fireEvent.change(screen.getByRole("combobox", { name: "אירוע" }), {
+      target: { value: "Multi" },
+    });
+
+    await waitFor(() => expect(submitButton).toBeDisabled());
+
+    fireEvent.change(screen.getByRole("combobox", { name: "תאריך" }), {
+      target: { value: "2025-01-08T20:00:00Z" },
+    });
+    await waitFor(() => expect(submitButton).not.toBeDisabled());
+  });
+
   it("auto-selects eventTitle when only one option exists (but not eventDate if multiple dates)", async () => {
     render(
       <AttendanceForm
