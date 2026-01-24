@@ -1,7 +1,8 @@
 /**
  * @jest-environment jsdom
  */
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 import AttendanceForm from "../../components/AttendanceForm";
 
@@ -10,7 +11,52 @@ const baseSession = {
 } as any;
 
 describe("AttendanceForm", () => {
+  it("marks the upcoming date option and can auto-select it via button", async () => {
+    const nowSpy = jest
+      .spyOn(Date, "now")
+      .mockReturnValue(new Date("2024-12-31T00:00:00Z").getTime());
+
+    const user = userEvent.setup();
+
+    render(
+      <AttendanceForm
+        calendarData={[
+          { title: "Multi", start: "2025-01-01T20:00:00Z" },
+          { title: "Multi", start: "2025-01-08T20:00:00Z" },
+        ]}
+        userEvents={[{ title: "Multi", email: "user@example.com" }]}
+        session={baseSession}
+      />
+    );
+
+    // Only one title exists, so it should be auto-selected.
+    await waitFor(() =>
+      expect(screen.getByRole("combobox", { name: "אירוע" })).toHaveValue(
+        "Multi"
+      )
+    );
+
+    // Upcoming indicator should appear on the earliest future date.
+    expect(
+      screen.getByRole("option", { name: /2025.*\(הקרוב\)/ })
+    ).toBeInTheDocument();
+
+    const dateSelect = screen.getByRole("combobox", { name: "תאריך" });
+    expect(dateSelect).toHaveValue("");
+
+    const pickUpcoming = screen.getByRole("button", {
+      name: "בחר/י את התאריך הקרוב",
+    });
+    await user.click(pickUpcoming);
+
+    await waitFor(() => expect(dateSelect).toHaveValue("2025-01-01T20:00:00Z"));
+
+    nowSpy.mockRestore();
+  });
+
   it("enables submit after auto-selecting a single date, then disables again when switching to a title with multiple dates", async () => {
+    const user = userEvent.setup();
+
     render(
       <AttendanceForm
         calendarData={[
@@ -30,22 +76,25 @@ describe("AttendanceForm", () => {
     expect(submitButton).toBeDisabled();
 
     // Pick the title with a single upcoming event; date should auto-select, enabling submit.
-    fireEvent.change(screen.getByRole("combobox", { name: "אירוע" }), {
-      target: { value: "Single" },
-    });
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "אירוע" }),
+      "Single"
+    );
 
     await waitFor(() => expect(submitButton).not.toBeDisabled());
 
     // Switch to a title with multiple dates; date must be explicitly re-selected.
-    fireEvent.change(screen.getByRole("combobox", { name: "אירוע" }), {
-      target: { value: "Multi" },
-    });
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "אירוע" }),
+      "Multi"
+    );
 
     await waitFor(() => expect(submitButton).toBeDisabled());
 
-    fireEvent.change(screen.getByRole("combobox", { name: "תאריך" }), {
-      target: { value: "2025-01-08T20:00:00Z" },
-    });
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "תאריך" }),
+      "2025-01-08T20:00:00Z"
+    );
     await waitFor(() => expect(submitButton).not.toBeDisabled());
   });
 
@@ -70,6 +119,8 @@ describe("AttendanceForm", () => {
   });
 
   it("auto-selects eventDate when the chosen title has only one date", async () => {
+    const user = userEvent.setup();
+
     render(
       <AttendanceForm
         calendarData={[
@@ -84,9 +135,10 @@ describe("AttendanceForm", () => {
       />
     );
 
-    fireEvent.change(screen.getByRole("combobox", { name: "אירוע" }), {
-      target: { value: "Rehearsal A" },
-    });
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "אירוע" }),
+      "Rehearsal A"
+    );
 
     const dateSelect = screen.getByRole("combobox", { name: "תאריך" });
     await waitFor(() => expect(dateSelect).toHaveValue("2025-01-01T20:00:00Z"));
@@ -111,6 +163,8 @@ describe("AttendanceForm", () => {
   });
 
   it("disables submit until required selections are made", async () => {
+    const user = userEvent.setup();
+
     render(
       <AttendanceForm
         calendarData={[
@@ -128,12 +182,14 @@ describe("AttendanceForm", () => {
     const submitButton = screen.getByRole("button", { name: "שלח/י טופס 🚀" });
     expect(submitButton).toBeDisabled();
 
-    fireEvent.change(screen.getByRole("combobox", { name: "אירוע" }), {
-      target: { value: "Rehearsal A" },
-    });
-    fireEvent.change(screen.getByRole("combobox", { name: "תאריך" }), {
-      target: { value: "2025-01-01T20:00:00Z" },
-    });
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "אירוע" }),
+      "Rehearsal A"
+    );
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "תאריך" }),
+      "2025-01-01T20:00:00Z"
+    );
 
     await waitFor(() => expect(submitButton).not.toBeDisabled());
   });
@@ -148,7 +204,9 @@ describe("AttendanceForm", () => {
     ).toBeInTheDocument();
   });
 
-  it("toggles why-not field visibility based on going checkbox", () => {
+  it("toggles why-not field visibility based on going checkbox", async () => {
+    const user = userEvent.setup();
+
     const calendarData = [
       { title: "Rehearsal", start: "2025-01-01T20:00:00Z" },
     ];
@@ -168,7 +226,7 @@ describe("AttendanceForm", () => {
     const goingToggle = screen.getByRole("checkbox", {
       name: /האם את\/ה מגיע\/ה/i,
     });
-    fireEvent.click(goingToggle);
+    await user.click(goingToggle);
 
     expect(
       screen.queryByText(/נשמח לשמוע למה לא תגיעו/i)
@@ -176,6 +234,8 @@ describe("AttendanceForm", () => {
   });
 
   it("submits the form and navigates to thank-you", async () => {
+    const user = userEvent.setup();
+
     const mockPush = jest.fn();
     const mockMutate = jest.fn().mockResolvedValue({});
     const routerMock = require("next/router");
@@ -195,26 +255,29 @@ describe("AttendanceForm", () => {
       />
     );
 
-    fireEvent.change(screen.getByRole("combobox", { name: "אירוע" }), {
-      target: { value: "Rehearsal" },
-    });
-    fireEvent.change(screen.getByRole("combobox", { name: "תאריך" }), {
-      target: { value: "2025-01-01T20:00:00Z" },
-    });
-    fireEvent.click(
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "אירוע" }),
+      "Rehearsal"
+    );
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "תאריך" }),
+      "2025-01-01T20:00:00Z"
+    );
+    await user.click(
       screen.getByRole("checkbox", { name: /האם את\/ה מגיע\/ה/ })
     );
-    fireEvent.click(
+    await user.click(
       screen.getByRole("checkbox", { name: /האם הגעת פעם שעברה/ })
     );
-    fireEvent.change(screen.getByRole("textbox", { name: /הערות נוספות/ }), {
-      target: { value: "See you there" },
-    });
+    await user.type(
+      screen.getByRole("textbox", { name: /הערות נוספות/ }),
+      "See you there"
+    );
 
     const submitButton = screen.getByRole("button", { name: "שלח/י טופס 🚀" });
     await waitFor(() => expect(submitButton).not.toBeDisabled());
 
-    fireEvent.click(submitButton);
+    await user.click(submitButton);
 
     await waitFor(() => {
       expect(mockMutate).toHaveBeenCalled();
@@ -223,6 +286,8 @@ describe("AttendanceForm", () => {
   });
 
   it("shows a friendly rate-limit message with errorId", async () => {
+    const user = userEvent.setup();
+
     const mockMutate = jest
       .fn()
       .mockRejectedValue(
@@ -246,16 +311,18 @@ describe("AttendanceForm", () => {
       />
     );
 
-    fireEvent.change(screen.getByRole("combobox", { name: "אירוע" }), {
-      target: { value: "Rehearsal" },
-    });
-    fireEvent.change(screen.getByRole("combobox", { name: "תאריך" }), {
-      target: { value: "2025-01-01T20:00:00Z" },
-    });
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "אירוע" }),
+      "Rehearsal"
+    );
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "תאריך" }),
+      "2025-01-01T20:00:00Z"
+    );
 
     const submitButton = screen.getByRole("button", { name: "שלח/י טופס 🚀" });
     await waitFor(() => expect(submitButton).not.toBeDisabled());
-    fireEvent.click(submitButton);
+    await user.click(submitButton);
 
     await waitFor(() => {
       expect(notistackMock.__mock.enqueueSnackbar).toHaveBeenCalled();
@@ -270,6 +337,8 @@ describe("AttendanceForm", () => {
   });
 
   it("shows a friendly network error message on Failed to fetch", async () => {
+    const user = userEvent.setup();
+
     const mockMutate = jest
       .fn()
       .mockRejectedValue(new Error("Failed to fetch"));
@@ -289,16 +358,18 @@ describe("AttendanceForm", () => {
       />
     );
 
-    fireEvent.change(screen.getByRole("combobox", { name: "אירוע" }), {
-      target: { value: "Rehearsal" },
-    });
-    fireEvent.change(screen.getByRole("combobox", { name: "תאריך" }), {
-      target: { value: "2025-01-01T20:00:00Z" },
-    });
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "אירוע" }),
+      "Rehearsal"
+    );
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "תאריך" }),
+      "2025-01-01T20:00:00Z"
+    );
 
     const submitButton = screen.getByRole("button", { name: "שלח/י טופס 🚀" });
     await waitFor(() => expect(submitButton).not.toBeDisabled());
-    fireEvent.click(submitButton);
+    await user.click(submitButton);
 
     await waitFor(() => {
       expect(notistackMock.__mock.enqueueSnackbar).toHaveBeenCalled();
