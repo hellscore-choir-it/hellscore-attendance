@@ -18,6 +18,7 @@ export default defineConfig({
       ...process.env,
       E2E_TEST_MODE: "true",
       NEXT_PUBLIC_E2E_TEST_MODE: "true",
+      SKIP_ENV_VALIDATION: "true",
       NODE_ENV: process.env.NODE_ENV ?? "development",
     },
   },

@@ -25,5 +25,8 @@
     "נוכחותך",
     "נפתחת",
     "נרשמה"
-  ]
+  ],
+  "chat.tools.terminal.autoApprove": {
+    "lsof": true
+  }
 }
