@@ -157,7 +157,7 @@ const AttendanceForm = ({
     }
 
     // If there's only one rehearsal date for the selected title, auto-pick it.
-    if (nextDate && numDates < 2) {
+    if (nextDate && numDates === 1) {
       if (selectedEventDate !== nextDate) setValue("eventDate", nextDate);
       return;
     }
