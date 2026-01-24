@@ -1,6 +1,8 @@
 // @ts-check
 import { clientEnv, clientSchema } from "./schema.mjs";
 
+/** @typedef {import('zod').infer<typeof import('./schema.mjs').clientSchema>} ClientEnv */
+
 const skipValidation =
   process.env.SKIP_ENV_VALIDATION === "true" ||
   process.env.SKIP_ENV_VALIDATION === "1";

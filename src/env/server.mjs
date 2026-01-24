@@ -6,6 +6,9 @@
 import { serverSchema } from "./schema.mjs";
 import { env as clientEnv, formatErrors } from "./client.mjs";
 
+/** @typedef {import('zod').infer<typeof import('./schema.mjs').serverSchema>} ServerEnv */
+/** @typedef {import('zod').infer<typeof import('./schema.mjs').clientSchema>} ClientEnv */
+
 const skipValidation =
   process.env.SKIP_ENV_VALIDATION === "true" ||
   process.env.SKIP_ENV_VALIDATION === "1";
@@ -19,9 +22,9 @@ const defaultsSchema = serverSchema.pick({
 });
 const _defaultsEnv = defaultsSchema.safeParse(process.env);
 
-const _serverEnv = skipValidation ? null : serverSchema.safeParse(process.env);
+const _serverEnv = serverSchema.safeParse(process.env);
 
-if (!skipValidation && _serverEnv && !_serverEnv.success) {
+if (!skipValidation && !_serverEnv.success) {
   console.error(
     "❌ Invalid environment variables:\n",
     ...formatErrors(_serverEnv.error.format()),
@@ -30,7 +33,7 @@ if (!skipValidation && _serverEnv && !_serverEnv.success) {
 
 const serverEnvData = skipValidation
   ? { ...process.env, ...(_defaultsEnv.success ? _defaultsEnv.data : {}) }
-  : _serverEnv?.data;
+  : (_serverEnv.data ?? {});
 
 for (let key of Object.keys(serverEnvData || {})) {
   if (key.startsWith("NEXT_PUBLIC_") && !skipValidation) {
@@ -38,4 +41,10 @@ for (let key of Object.keys(serverEnvData || {})) {
   }
 }
 
+/**
+ * In strict mode (non-skip), `serverSchema` guarantees required values exist.
+ * In skip mode, values may be missing at runtime, but we still expose the same
+ * shape for TypeScript (call sites often use `!`).
+ * @type {Partial<ServerEnv> & Partial<ClientEnv>}
+ */
 export const env = { ...serverEnvData, ...clientEnv };
