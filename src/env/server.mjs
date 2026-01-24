@@ -6,19 +6,45 @@
 import { serverSchema } from "./schema.mjs";
 import { env as clientEnv, formatErrors } from "./client.mjs";
 
+/** @typedef {import('zod').infer<typeof import('./schema.mjs').serverSchema>} ServerEnv */
+/** @typedef {import('zod').infer<typeof import('./schema.mjs').clientSchema>} ClientEnv */
+
+const skipValidation =
+  process.env.SKIP_ENV_VALIDATION === "true" ||
+  process.env.SKIP_ENV_VALIDATION === "1";
+
+// Even when skipping full validation (e.g. Playwright E2E in CI), we still want
+// schema defaults/coercions for the *defaulted* keys.
+const defaultsSchema = serverSchema.pick({
+  MAX_CONCURRENT_GOOGLE_SHEET_REQUESTS: true,
+  DELAY_BETWEEN_GOOGLE_SHEET_REQUESTS: true,
+  ADMIN_EMAILS: true,
+});
+const _defaultsEnv = defaultsSchema.safeParse(process.env);
+
 const _serverEnv = serverSchema.safeParse(process.env);
 
-if (!_serverEnv.success) {
+if (!skipValidation && !_serverEnv.success) {
   console.error(
     "❌ Invalid environment variables:\n",
     ...formatErrors(_serverEnv.error.format()),
   );
 }
 
-for (let key of Object.keys(_serverEnv.data || {})) {
-  if (key.startsWith("NEXT_PUBLIC_")) {
+const serverEnvData = skipValidation
+  ? { ...process.env, ...(_defaultsEnv.success ? _defaultsEnv.data : {}) }
+  : (_serverEnv.data ?? {});
+
+for (let key of Object.keys(serverEnvData || {})) {
+  if (key.startsWith("NEXT_PUBLIC_") && !skipValidation) {
     console.warn("❌ You are exposing a server-side env-variable:", key);
   }
 }
 
-export const env = { ..._serverEnv.data, ...clientEnv };
+/**
+ * In strict mode (non-skip), `serverSchema` guarantees required values exist.
+ * In skip mode, values may be missing at runtime, but we still expose the same
+ * shape for TypeScript (call sites often use `!`).
+ * @type {Partial<ServerEnv> & Partial<ClientEnv>}
+ */
+export const env = { ...serverEnvData, ...clientEnv };

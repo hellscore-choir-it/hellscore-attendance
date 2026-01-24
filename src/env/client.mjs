@@ -1,7 +1,14 @@
 // @ts-check
 import { clientEnv, clientSchema } from "./schema.mjs";
 
-const _clientEnv = clientSchema.safeParse(clientEnv);
+/** @typedef {import('zod').infer<typeof import('./schema.mjs').clientSchema>} ClientEnv */
+
+const skipValidation =
+  process.env.SKIP_ENV_VALIDATION === "true" ||
+  process.env.SKIP_ENV_VALIDATION === "1";
+
+const schemaToUse = skipValidation ? clientSchema.partial() : clientSchema;
+const _clientEnv = schemaToUse.safeParse(clientEnv);
 
 export const formatErrors = (
   /** @type {import('zod').ZodFormattedError<Map<string,string>,string>} */
@@ -14,7 +21,7 @@ export const formatErrors = (
     })
     .filter(Boolean);
 
-if (!_clientEnv.success) {
+if (!skipValidation && !_clientEnv.success) {
   console.error(
     "❌ Invalid environment variables:\n",
     ...formatErrors(_clientEnv.error.format()),
@@ -23,10 +30,12 @@ if (!_clientEnv.success) {
 
 for (let key of Object.keys(_clientEnv.data || {})) {
   if (!key.startsWith("NEXT_PUBLIC_")) {
-    console.warn(
-      `❌ Invalid public environment variable name: ${key}. It must begin with 'NEXT_PUBLIC_'`,
-    );
+    if (!skipValidation) {
+      console.warn(
+        `❌ Invalid public environment variable name: ${key}. It must begin with 'NEXT_PUBLIC_'`,
+      );
+    }
   }
 }
 
-export const env = _clientEnv.data;
+export const env = _clientEnv.success ? _clientEnv.data : clientEnv;

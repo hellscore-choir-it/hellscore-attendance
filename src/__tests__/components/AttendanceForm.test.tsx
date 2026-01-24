@@ -10,6 +10,95 @@ const baseSession = {
 } as any;
 
 describe("AttendanceForm", () => {
+  it("auto-selects eventTitle when only one option exists (but not eventDate if multiple dates)", async () => {
+    render(
+      <AttendanceForm
+        calendarData={[
+          { title: "Solo Rehearsal", start: "2025-01-01T20:00:00Z" },
+          { title: "Solo Rehearsal", start: "2025-01-08T20:00:00Z" },
+        ]}
+        userEvents={[{ title: "Solo Rehearsal", email: "user@example.com" }]}
+        session={baseSession}
+      />
+    );
+
+    const eventSelect = screen.getByRole("combobox", { name: "אירוע" });
+    const dateSelect = screen.getByRole("combobox", { name: "תאריך" });
+
+    await waitFor(() => expect(eventSelect).toHaveValue("Solo Rehearsal"));
+    expect(dateSelect).not.toBeDisabled();
+    expect(dateSelect).toHaveValue("");
+  });
+
+  it("auto-selects eventDate when the chosen title has only one date", async () => {
+    render(
+      <AttendanceForm
+        calendarData={[
+          { title: "Rehearsal A", start: "2025-01-01T20:00:00Z" },
+          { title: "Rehearsal B", start: "2025-01-08T20:00:00Z" },
+        ]}
+        userEvents={[
+          { title: "Rehearsal A", email: "user@example.com" },
+          { title: "Rehearsal B", email: "user@example.com" },
+        ]}
+        session={baseSession}
+      />
+    );
+
+    fireEvent.change(screen.getByRole("combobox", { name: "אירוע" }), {
+      target: { value: "Rehearsal A" },
+    });
+
+    const dateSelect = screen.getByRole("combobox", { name: "תאריך" });
+    await waitFor(() => expect(dateSelect).toHaveValue("2025-01-01T20:00:00Z"));
+  });
+
+  it("auto-selects eventTitle and eventDate when both have a single option", async () => {
+    render(
+      <AttendanceForm
+        calendarData={[
+          { title: "Only Rehearsal", start: "2025-01-01T20:00:00Z" },
+        ]}
+        userEvents={[{ title: "Only Rehearsal", email: "user@example.com" }]}
+        session={baseSession}
+      />
+    );
+
+    const eventSelect = screen.getByRole("combobox", { name: "אירוע" });
+    const dateSelect = screen.getByRole("combobox", { name: "תאריך" });
+
+    await waitFor(() => expect(eventSelect).toHaveValue("Only Rehearsal"));
+    await waitFor(() => expect(dateSelect).toHaveValue("2025-01-01T20:00:00Z"));
+  });
+
+  it("disables submit until required selections are made", async () => {
+    render(
+      <AttendanceForm
+        calendarData={[
+          { title: "Rehearsal A", start: "2025-01-01T20:00:00Z" },
+          { title: "Rehearsal B", start: "2025-01-08T20:00:00Z" },
+        ]}
+        userEvents={[
+          { title: "Rehearsal A", email: "user@example.com" },
+          { title: "Rehearsal B", email: "user@example.com" },
+        ]}
+        session={baseSession}
+      />
+    );
+
+    const submitButton = screen.getByRole("button", { name: "שלח/י טופס 🚀" });
+    expect(submitButton).toBeDisabled();
+
+    fireEvent.change(screen.getByRole("combobox", { name: "אירוע" }), {
+      target: { value: "Rehearsal A" },
+    });
+    fireEvent.change(screen.getByRole("combobox", { name: "תאריך" }), {
+      target: { value: "2025-01-01T20:00:00Z" },
+    });
+
+    await waitFor(() => expect(submitButton).not.toBeDisabled());
+  });
+
   it("renders no-events message when user has no relevant assignments", () => {
     render(
       <AttendanceForm calendarData={[]} userEvents={[]} session={baseSession} />
@@ -83,7 +172,10 @@ describe("AttendanceForm", () => {
       target: { value: "See you there" },
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "שלח/י טופס 🚀" }));
+    const submitButton = screen.getByRole("button", { name: "שלח/י טופס 🚀" });
+    await waitFor(() => expect(submitButton).not.toBeDisabled());
+
+    fireEvent.click(submitButton);
 
     await waitFor(() => {
       expect(mockMutate).toHaveBeenCalled();
@@ -115,7 +207,16 @@ describe("AttendanceForm", () => {
       />
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "שלח/י טופס 🚀" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "אירוע" }), {
+      target: { value: "Rehearsal" },
+    });
+    fireEvent.change(screen.getByRole("combobox", { name: "תאריך" }), {
+      target: { value: "2025-01-01T20:00:00Z" },
+    });
+
+    const submitButton = screen.getByRole("button", { name: "שלח/י טופס 🚀" });
+    await waitFor(() => expect(submitButton).not.toBeDisabled());
+    fireEvent.click(submitButton);
 
     await waitFor(() => {
       expect(notistackMock.__mock.enqueueSnackbar).toHaveBeenCalled();
@@ -149,7 +250,16 @@ describe("AttendanceForm", () => {
       />
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "שלח/י טופס 🚀" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "אירוע" }), {
+      target: { value: "Rehearsal" },
+    });
+    fireEvent.change(screen.getByRole("combobox", { name: "תאריך" }), {
+      target: { value: "2025-01-01T20:00:00Z" },
+    });
+
+    const submitButton = screen.getByRole("button", { name: "שלח/י טופס 🚀" });
+    await waitFor(() => expect(submitButton).not.toBeDisabled());
+    fireEvent.click(submitButton);
 
     await waitFor(() => {
       expect(notistackMock.__mock.enqueueSnackbar).toHaveBeenCalled();

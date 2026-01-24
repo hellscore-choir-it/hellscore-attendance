@@ -15,7 +15,7 @@ test("/ loads attendance form (E2E session)", async ({ page }) => {
   await page.goto("/?e2eEmail=e2e@example.com");
 
   // Smoke assertion: the form should render with at least one known label.
-  await expect(page.getByText("אירוע")).toBeVisible();
+  await expect(page.getByText("אירוע", { exact: true })).toBeVisible();
   await expect(
     page.getByRole("button", { name: "שלח/י טופס 🚀" })
   ).toBeVisible();
