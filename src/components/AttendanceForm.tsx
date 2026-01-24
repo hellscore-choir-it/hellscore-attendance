@@ -14,7 +14,7 @@ import { InferGetStaticPropsType } from "next";
 import { Session } from "next-auth";
 import { useRouter } from "next/router";
 import { useSnackbar } from "notistack";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useForm, UseFormProps } from "react-hook-form";
 import { z } from "zod";
 
@@ -122,6 +122,7 @@ const AttendanceForm = ({
   );
   const selectedEventTitle = watch("eventTitle");
   const selectedEventDate = watch("eventDate");
+  const prevEventTitleRef = useRef<string>("");
 
   useEffect(() => {
     // If the currently selected title is no longer available (e.g. props changed), clear it.
@@ -129,15 +130,31 @@ const AttendanceForm = ({
       selectedEventTitle &&
       !includes(sortedRelevantTitles, selectedEventTitle)
     ) {
-      setValue("eventTitle", "");
+      setValue("eventTitle", "", { shouldValidate: true, shouldDirty: true });
       return;
     }
 
     // If there's only one possible event, auto-select it.
     if (!selectedEventTitle && size(sortedRelevantTitles) === 1) {
-      setValue("eventTitle", sortedRelevantTitles[0] as string);
+      setValue("eventTitle", sortedRelevantTitles[0] as string, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
     }
   }, [setValue, selectedEventTitle, sortedRelevantTitles]);
+
+  useEffect(() => {
+    // When switching event title, force the user to (re)confirm the date
+    // unless we can safely auto-pick it (handled in the date effect below).
+    if (
+      prevEventTitleRef.current &&
+      prevEventTitleRef.current !== selectedEventTitle
+    ) {
+      setValue("eventDate", "", { shouldValidate: true, shouldDirty: true });
+    }
+
+    prevEventTitleRef.current = selectedEventTitle;
+  }, [setValue, selectedEventTitle]);
 
   const relevantDates = useMemo(() => {
     if (!selectedEventTitle) return [];
@@ -147,24 +164,52 @@ const AttendanceForm = ({
     ).filter(Boolean) as string[];
   }, [relevantEvents, selectedEventTitle]);
 
-  const numDates = size(relevantDates);
-  const nextDate = first(relevantDates);
+  const sortedRelevantDates = useMemo(() => {
+    return [...relevantDates].sort(
+      (a, b) => new Date(a).getTime() - new Date(b).getTime()
+    );
+  }, [relevantDates]);
+
+  const upcomingDate = useMemo(() => {
+    if (!size(sortedRelevantDates)) return undefined;
+
+    const now = Date.now();
+    const nextFuture = sortedRelevantDates.find(
+      (iso) => new Date(iso).getTime() >= now
+    );
+
+    // If everything is in the past (e.g. local testing), fall back to earliest.
+    return nextFuture ?? first(sortedRelevantDates);
+  }, [sortedRelevantDates]);
+
+  const numDates = size(sortedRelevantDates);
+  const nextDate = first(sortedRelevantDates);
   useEffect(() => {
     // If no title selected, do not allow a date to remain selected.
     if (!selectedEventTitle) {
-      if (selectedEventDate) setValue("eventDate", "");
+      if (selectedEventDate) {
+        setValue("eventDate", "", { shouldValidate: true, shouldDirty: true });
+      }
       return;
     }
 
     // If there's only one rehearsal date for the selected title, auto-pick it.
     if (nextDate && numDates === 1) {
-      if (selectedEventDate !== nextDate) setValue("eventDate", nextDate);
+      if (selectedEventDate !== nextDate) {
+        setValue("eventDate", nextDate, {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
+      }
       return;
     }
 
     // If multiple dates exist, ensure the chosen date belongs to this title.
-    if (selectedEventDate && !includes(relevantDates, selectedEventDate)) {
-      setValue("eventDate", "");
+    if (
+      selectedEventDate &&
+      !includes(sortedRelevantDates, selectedEventDate)
+    ) {
+      setValue("eventDate", "", { shouldValidate: true, shouldDirty: true });
     }
   }, [
     setValue,
@@ -172,7 +217,7 @@ const AttendanceForm = ({
     selectedEventDate,
     nextDate,
     numDates,
-    relevantDates,
+    sortedRelevantDates,
   ]);
   const showWhyNot = !watch("going");
   if (!size(relevantTitles)) {
@@ -237,9 +282,12 @@ const AttendanceForm = ({
           ))}
         </select>
       </label>
-      <label>
-        <div className="dark:text-hell-glow pb-2">תאריך</div>
+      <div>
+        <label htmlFor="eventDate" className="dark:text-hell-glow block pb-2">
+          תאריך
+        </label>
         <select
+          id="eventDate"
           className="select select-bordered"
           disabled={!selectedEventTitle}
           {...register("eventDate", { required: true })}
@@ -248,16 +296,32 @@ const AttendanceForm = ({
             בחר/י תאריך...
           </option>
           {map(
-            relevantDates,
+            sortedRelevantDates,
             (date) =>
               Boolean(date) && (
                 <option value={date as string} key={date}>
                   {ISOToHuman(date)}
+                  {upcomingDate && date === upcomingDate ? " (הקרוב)" : ""}
                 </option>
               )
           )}
         </select>
-      </label>
+        {selectedEventTitle && numDates > 1 && upcomingDate && (
+          <button
+            type="button"
+            className="btn btn-sm mt-2"
+            onClick={() =>
+              setValue("eventDate", upcomingDate, {
+                shouldValidate: true,
+                shouldDirty: true,
+              })
+            }
+            disabled={selectedEventDate === upcomingDate}
+          >
+            בחר/י את התאריך הקרוב
+          </button>
+        )}
+      </div>
       <label className="cursor-pointer">
         <div className="dark:text-hell-glow pb-2">האם את/ה מגיע/ה?</div>
         <input type="checkbox" className="toggle" {...register("going")} />
