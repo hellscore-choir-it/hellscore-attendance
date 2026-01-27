@@ -2,6 +2,8 @@
 
 Source: temporary-files-for-agents/Hellscore attendance.xlsx
 
+Inspection helper: use [src/**tests**/utils/inspectTestSheet.ts](src/__tests__/utils/inspectTestSheet.ts) for test-sheet validation instead of a standalone script.
+
 ## Named ranges
 
 - event_title → Events!$A$2:$A$21

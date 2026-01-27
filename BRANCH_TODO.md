@@ -11,9 +11,9 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
 
 ## Phase 0 — Inspect Sheet Dump (local-only) or Test Sheet (script)
 
-- [x] Confirm column headers and ranges using either the XLSX dump or the inspect script.
+- [x] Confirm column headers and ranges using either the XLSX dump or the inspection helper.
   - [x] Option A (local XLSX): Open the XLSX from temporary-files-for-agents and identify sheet tabs (Users, Responses, View Attendance).
-  - [x] Option B (test sheet): Use scripts/google/inspect-test-sheet.mjs to list sheet tabs and preview headers.
+  - [x] Option B (test sheet): Use the test inspection helper to list sheet tabs and preview headers.
     - Ran against TEST_SHEET_ID; Users/Responses headers match XLSX dump.
   - [x] Record the column order and header names for the Users and Responses tabs.
     - Users headers (A1:B1): Email, Name
@@ -41,7 +41,7 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
   - [ ] Include duplicate submissions for a single user to confirm latest wins.
   - [ ] Include a member with no responses to confirm “No Response”.
 - [ ] Add guarded integration tests that can hit the test sheet when env vars are present.
-  - [ ] Use scripts/google/inspect-test-sheet.mjs to derive real headers/ranges to validate.
+  - [ ] Use the test inspection helper to derive real headers/ranges to validate.
   - [ ] Add regression tests for existing Google Sheets features (e.g., `getUserEventTypeAssignments`, `writeResponseRow`) when the test sheet is configured.
 
 ## Phase 2 — Types and Normalization
@@ -79,7 +79,7 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
   - [ ] Reuse `doAsyncOperationWithRetry` and `RequestQueue` patterns.
   - [ ] Add Zod schemas to validate incoming sheet data structure.
 - [ ] Ensure sanitize/validation rules are consistent with existing `attendanceSchema` usage.
-- [ ] Use scripts/google/inspect-test-sheet.mjs to validate the A1 ranges and header expectations against the test sheet.
+- [ ] Use the test inspection helper to validate the A1 ranges and header expectations against the test sheet.
 
 ## Phase 5 — TRPC Procedure
 
