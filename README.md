@@ -4,6 +4,13 @@ This is a web app for tracking attendance of [Hellscore](https://www.youtube.com
 
 It can be viewed [Here](https://hellscore-attendance.vercel.app/)
 
+## Google Sheets data mapping
+
+The attendance data source of truth lives in Google Sheets. These A1 ranges are used for reading attendance data:
+
+- Users!A1:B (Email, Name)
+- Responses!A1:J (User Email, Timestamp millis, Event Title, Event Date, Going?, Why Not?, Went Last Time?, Comments, Row Key, Is Last Submission)
+
 ## Database & migrations (Supabase)
 
 This repo stores Postgres schema changes as SQL migrations in `supabase/migrations/`. These are intended to be applied in order (e.g. `001-...sql`, `002-...sql`, etc).

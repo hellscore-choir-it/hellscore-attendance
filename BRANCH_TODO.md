@@ -28,7 +28,7 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
   - [x] Capture core QUERY/VLOOKUP formulas that drive View Attendance.
 - [x] Record sheet findings in docs/agents/attendance-sheet.md.
 - [x] Document the ranges to query in Google Sheets (named ranges or A1 ranges).
-  - [ ] Add a brief mapping section to README or a new internal doc if helpful.
+  - [x] Add a brief mapping section to README or a new internal doc if helpful.
   - A1 ranges (from XLSX dump):
     - Users!A1:B (Email, Name)
     - Responses!A1:J (User Email, Timestamp millis, Event Title, Event Date, Going?, Why Not?, Went Last Time?, Comments, Row Key, Is Last Submission)
