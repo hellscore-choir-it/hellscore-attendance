@@ -5,6 +5,7 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
 ## Agent constraints (must follow during this branch)
 
 - Create frequent, self-contained, well-documented commits.
+- Before proceeding to a new phase, ensure all prior phase tasks are complete by running tests and linting.
 - Update this file (`BRANCH_TODO.md`) as progress is made (check items off + add brief notes when useful).
 - Checkpoint with the user for any significant questions/changes (thresholds, feature set, telemetry approach).
 - Prefer existing code patterns/styles in this repo; avoid inventing new patterns unless necessary.
@@ -36,18 +37,18 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
 ## Phase 1 — Test First: Specs and Fixtures
 
 - [x] Refactor inspect-test-sheet logic into a test util to reuse the same query logic in integration tests.
-- [ ] Add initial test specs for the attendance view logic.
-  - [ ] Create src/**tests**/utils/attendance-view.test.ts with failing tests that encode the expected behavior.
-  - [ ] Include duplicate submissions for a single user to confirm latest wins.
-  - [ ] Include a member with no responses to confirm “No Response”.
+- [x] Add initial test specs for the attendance view logic.
+  - [x] Create src/**tests**/utils/attendance-view.test.ts with failing tests that encode the expected behavior.
+  - [x] Include duplicate submissions for a single user to confirm latest wins.
+  - [x] Include a member with no responses to confirm “No Response”.
 - [ ] Add guarded integration tests that can hit the test sheet when env vars are present.
   - [ ] Use the test inspection helper to derive real headers/ranges to validate.
   - [ ] Add regression tests for existing Google Sheets features (e.g., `getUserEventTypeAssignments`, `writeResponseRow`) when the test sheet is configured.
 
 ## Phase 2 — Types and Normalization
 
-- [ ] Add Typescript interfaces for attendance data.
-  - [ ] Create src/types/attendance.ts with:
+- [x] Add Typescript interfaces for attendance data.
+  - [x] Create src/types/attendance.ts with:
     - `ChoirMember` (name, email).
     - `RawResponse` (email, timestampMillis, eventTitle, eventDate, going, whyNot, wentLastTime, comments).
     - `AttendanceViewRow` (member, status, reason, comments, lastUpdated).
@@ -60,16 +61,16 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
 
 ## Phase 3 — Business Logic (View Attendance)
 
-- [ ] Implement the core “latest response per user” logic.
-  - [ ] Create src/utils/attendance/view.ts with `getAttendanceView(allMembers, allResponses, targetEventDate, targetEventTitle?)`.
-  - [ ] Filter responses by event date (and optionally title if both are required).
-  - [ ] Reduce to latest response per member by timestampMillis.
-  - [ ] Map to `AttendanceViewRow` with status values:
+- [x] Implement the core “latest response per user” logic.
+  - [x] Create src/utils/attendance/view.ts with `getAttendanceView(allMembers, allResponses, targetEventDate, targetEventTitle?)`.
+  - [x] Filter responses by event date (and optionally title if both are required).
+  - [x] Reduce to latest response per member by timestampMillis.
+  - [x] Map to `AttendanceViewRow` with status values:
     - Going → response.going === true
     - Not Going → response.going === false
     - No Response → no matching response
-  - [ ] Default missing reason/comments to empty strings.
-  - [ ] Update the initial tests to pass once the implementation is complete.
+  - [x] Default missing reason/comments to empty strings.
+  - [x] Update the initial tests to pass once the implementation is complete.
 
 ## Phase 4 — Google Sheets Data Fetch
 
@@ -123,9 +124,9 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
 
 ## Deliverables Checklist
 
-- [ ] src/types/attendance.ts
+- [x] src/types/attendance.ts
 - [ ] src/utils/attendance/normalize.ts
-- [ ] src/utils/attendance/view.ts
+- [x] src/utils/attendance/view.ts
 - [ ] src/server/googleApis.ts updates (new getters + schemas)
 - [ ] src/server/trpc/router/google.ts updates
 - [ ] src/components/AttendanceViewTable.tsx
