@@ -1,0 +1,119 @@
+# Branch Plan: View Attendance
+
+Goal: Recreate the Google Sheets “View Attendance” logic inside the app, using the same Sheets data source and showing the latest response per user for a selected event/date.
+
+## Agent constraints (must follow during this branch)
+
+- Create frequent, self-contained, well-documented commits.
+- Update this file (`BRANCH_TODO.md`) as progress is made (check items off + add brief notes when useful).
+- Checkpoint with the user for any significant questions/changes (thresholds, feature set, telemetry approach).
+- Prefer existing code patterns/styles in this repo; avoid inventing new patterns unless necessary.
+
+## Phase 0 — Inspect Sheet Dump (local-only) or Test Sheet (script)
+
+- [ ] Confirm column headers and ranges using either the XLSX dump or the inspect script.
+  - [ ] Option A (local XLSX): Open the XLSX from temporary-files-for-agents and identify sheet tabs (Users, Responses, View Attendance).
+  - [ ] Option B (test sheet): Use scripts/google/inspect-test-sheet.mjs to list sheet tabs and preview headers.
+  - [ ] Record the column order and header names for the Users and Responses tabs.
+  - [ ] Note the exact column used as unique member key (email) and any event title/date columns used for filtering.
+  - [ ] Capture the “latest submission” rule used (timestamp column name and format).
+- [ ] Document the ranges to query in Google Sheets (named ranges or A1 ranges).
+  - [ ] Add a brief mapping section to README or a new internal doc if helpful.
+
+## Phase 1 — Test First: Specs and Fixtures
+
+- [ ] Add initial test specs for the attendance view logic.
+  - [ ] Create src/**tests**/utils/attendance-view.test.ts with failing tests that encode the expected behavior.
+  - [ ] Include duplicate submissions for a single user to confirm latest wins.
+  - [ ] Include a member with no responses to confirm “No Response”.
+- [ ] Add guarded integration tests that can hit the test sheet when env vars are present.
+  - [ ] Use scripts/google/inspect-test-sheet.mjs to derive real headers/ranges to validate.
+  - [ ] Add regression tests for existing Google Sheets features (e.g., `getUserEventTypeAssignments`, `writeResponseRow`) when the test sheet is configured.
+
+## Phase 2 — Types and Normalization
+
+- [ ] Add Typescript interfaces for attendance data.
+  - [ ] Create src/types/attendance.ts with:
+    - `ChoirMember` (name, email).
+    - `RawResponse` (email, timestampMillis, eventTitle, eventDate, going, whyNot, wentLastTime, comments).
+    - `AttendanceViewRow` (member, status, reason, comments, lastUpdated).
+- [ ] Add normalization helpers to convert raw sheet rows into typed objects.
+  - [ ] Create src/utils/attendance/normalize.ts with functions like:
+    - `parseMembersSheet(rows)` → `ChoirMember[]`.
+    - `parseResponsesSheet(rows)` → `RawResponse[]`.
+  - [ ] Normalize booleans (TRUE/FALSE, yes/no) into actual booleans.
+  - [ ] Normalize timestamp to millis and create `Date` objects as needed.
+
+## Phase 3 — Business Logic (View Attendance)
+
+- [ ] Implement the core “latest response per user” logic.
+  - [ ] Create src/utils/attendance/view.ts with `getAttendanceView(allMembers, allResponses, targetEventDate, targetEventTitle?)`.
+  - [ ] Filter responses by event date (and optionally title if both are required).
+  - [ ] Reduce to latest response per member by timestampMillis.
+  - [ ] Map to `AttendanceViewRow` with status values:
+    - Going → response.going === true
+    - Not Going → response.going === false
+    - No Response → no matching response
+  - [ ] Default missing reason/comments to empty strings.
+  - [ ] Update the initial tests to pass once the implementation is complete.
+
+## Phase 4 — Google Sheets Data Fetch
+
+- [ ] Add Sheets fetch functions in src/server/googleApis.ts.
+  - [ ] Implement `getSheetMembers()` to read the Users tab (use RequestQueue + retry).
+  - [ ] Implement `getSheetResponses()` to read the Responses tab (use RequestQueue + retry).
+  - [ ] Reuse `doAsyncOperationWithRetry` and `RequestQueue` patterns.
+  - [ ] Add Zod schemas to validate incoming sheet data structure.
+- [ ] Ensure sanitize/validation rules are consistent with existing `attendanceSchema` usage.
+- [ ] Use scripts/google/inspect-test-sheet.mjs to validate the A1 ranges and header expectations against the test sheet.
+
+## Phase 5 — TRPC Procedure
+
+- [ ] Add a protected TRPC endpoint for the view.
+  - [ ] Update src/server/trpc/router/google.ts with `google.getAttendanceView`.
+  - [ ] Input: `{ eventDate: string; eventTitle?: string }` validated via Zod.
+  - [ ] Authorization: gate with session and optionally restrict to admin emails using `ADMIN_EMAILS`.
+  - [ ] Load members + responses from Sheets, normalize, then compute view.
+  - [ ] Return rows plus summary counts (going, notGoing, noResponse, total).
+  - [ ] Log and capture exceptions with Sentry.
+
+## Phase 6 — UI View (Page + Table)
+
+- [ ] Build a table component for the attendance view.
+  - [ ] Create src/components/AttendanceViewTable.tsx.
+  - [ ] Props: `rows`, `summary`, `eventName`.
+  - [ ] Row colors: going = green, not going = red, no response = gray/white.
+- [ ] Add a page to display the view.
+  - [ ] Create src/pages/attendance-view.tsx.
+  - [ ] Use `SessionBoundary` and `Layout`.
+  - [ ] Add date/event selector (Dropdown or calendar input).
+  - [ ] Call `trpc.google.getAttendanceView` and render the table.
+  - [ ] Show loading, empty, and error states using existing UI patterns.
+
+## Phase 7 — Tests and QA
+
+- [ ] Add component tests for the new table.
+  - [ ] Include snapshot tests for row coloring.
+  - [ ] Include tests for summary counts.
+- [ ] Extend/maintain integration tests as new sheet calls are added.
+- [ ] Run pnpm test, pnpm typecheck, pnpm lint.
+
+## Phase 8 — Observability and Edge Cases
+
+- [ ] Add Sentry logging for parsing failures, unexpected data shapes, or missing columns.
+- [ ] Add guardrails for missing data (return empty view with warning instead of hard crash).
+- [ ] Verify behavior for:
+  - [ ] Multiple responses for the same user/date.
+  - [ ] Missing or malformed email.
+  - [ ] Event title mismatch.
+
+## Deliverables Checklist
+
+- [ ] src/types/attendance.ts
+- [ ] src/utils/attendance/normalize.ts
+- [ ] src/utils/attendance/view.ts
+- [ ] src/server/googleApis.ts updates (new getters + schemas)
+- [ ] src/server/trpc/router/google.ts updates
+- [ ] src/components/AttendanceViewTable.tsx
+- [ ] src/pages/attendance-view.tsx
+- [ ] Tests in src/**tests**/utils and src/**tests**/components
