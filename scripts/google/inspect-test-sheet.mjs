@@ -1,5 +1,5 @@
-import { google } from "googleapis";
 import { env } from "../../src/env/server.mjs";
+import inspectUtils from "./inspect-test-sheet-utils.cjs";
 
 const spreadsheetId = env.TEST_SHEET_ID || env.SHEET_ID;
 
@@ -14,64 +14,29 @@ if (!rawCredentials) {
     process.exit(1);
 }
 
-const auth = google.auth.fromJSON(JSON.parse(rawCredentials));
-auth.scopes = [
-    "https://www.googleapis.com/auth/drive",
-    "https://www.googleapis.com/auth/spreadsheets",
-];
-
-const sheets = google.sheets({ version: "v4", auth });
+const sheets = inspectUtils.buildSheetsClient({ credentials: rawCredentials });
 
 const args = process.argv.slice(2);
-const parseRangesArg = (items) =>
-    items
-        .flatMap((item) => item.split(","))
-        .map((item) => item.trim())
-        .filter(Boolean);
-
-const requestedRanges = parseRangesArg(
+const requestedRanges = inspectUtils.parseRangesArg(
     args.filter((arg) => !arg.startsWith("--"))
 );
 
-const toA1PreviewRange = (title) => `${title}!A1:Z5`;
-
-const getSheetTitles = async () => {
-    const sheetInfo = await sheets.spreadsheets.get({ spreadsheetId });
-    return (
-        sheetInfo.data.sheets
-            ?.map((sheet) => sheet.properties?.title)
-            .filter(Boolean) || []
-    );
-};
-
 const main = async () => {
-    const sheetTitles = await getSheetTitles();
-    console.log("Spreadsheet:", spreadsheetId);
-    console.log("Sheets:", sheetTitles.join(", "));
+    const result = await inspectUtils.inspectSheet({
+        sheets,
+        spreadsheetId,
+        ranges: requestedRanges,
+    });
 
-    const ranges =
-        requestedRanges.length > 0
-            ? requestedRanges
-            : [
-                sheetTitles.includes("Users")
-                    ? toA1PreviewRange("Users")
-                    : undefined,
-                sheetTitles.includes("Responses")
-                    ? toA1PreviewRange("Responses")
-                    : undefined,
-            ].filter(Boolean);
+    console.log("Spreadsheet:", result.spreadsheetId);
+    console.log("Sheets:", result.sheetTitles.join(", "));
 
-    if (ranges.length === 0) {
+    if (!result.ranges.length) {
         console.log("No ranges provided and no default tabs found.");
         return;
     }
 
-    const response = await sheets.spreadsheets.values.batchGet({
-        spreadsheetId,
-        ranges,
-    });
-
-    response.data.valueRanges?.forEach((range) => {
+    result.valueRanges.forEach((range) => {
         console.log("\nRange:", range.range);
         console.log("Rows:", range.values ?? []);
     });

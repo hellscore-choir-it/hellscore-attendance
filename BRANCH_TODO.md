@@ -35,7 +35,7 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
 
 ## Phase 1 — Test First: Specs and Fixtures
 
-- [ ] Refactor inspect-test-sheet logic into a test util to reuse the same query logic in integration tests.
+- [x] Refactor inspect-test-sheet logic into a test util to reuse the same query logic in integration tests.
 - [ ] Add initial test specs for the attendance view logic.
   - [ ] Create src/**tests**/utils/attendance-view.test.ts with failing tests that encode the expected behavior.
   - [ ] Include duplicate submissions for a single user to confirm latest wins.
