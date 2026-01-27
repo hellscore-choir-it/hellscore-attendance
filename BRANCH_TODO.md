@@ -11,17 +11,31 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
 
 ## Phase 0 — Inspect Sheet Dump (local-only) or Test Sheet (script)
 
-- [ ] Confirm column headers and ranges using either the XLSX dump or the inspect script.
-  - [ ] Option A (local XLSX): Open the XLSX from temporary-files-for-agents and identify sheet tabs (Users, Responses, View Attendance).
-  - [ ] Option B (test sheet): Use scripts/google/inspect-test-sheet.mjs to list sheet tabs and preview headers.
-  - [ ] Record the column order and header names for the Users and Responses tabs.
-  - [ ] Note the exact column used as unique member key (email) and any event title/date columns used for filtering.
-  - [ ] Capture the “latest submission” rule used (timestamp column name and format).
-- [ ] Document the ranges to query in Google Sheets (named ranges or A1 ranges).
+- [x] Confirm column headers and ranges using either the XLSX dump or the inspect script.
+  - [x] Option A (local XLSX): Open the XLSX from temporary-files-for-agents and identify sheet tabs (Users, Responses, View Attendance).
+  - [x] Option B (test sheet): Use scripts/google/inspect-test-sheet.mjs to list sheet tabs and preview headers.
+    - Ran against TEST_SHEET_ID; Users/Responses headers match XLSX dump.
+  - [x] Record the column order and header names for the Users and Responses tabs.
+    - Users headers (A1:B1): Email, Name
+    - Responses headers (A1:J1): User Email, Timestamp millis, Event Title, Event Date, Going?, Why Not?, Went Last Time?, Comments, Row Key, Is Last Submission
+  - [x] Note the exact column used as unique member key (email) and any event title/date columns used for filtering.
+    - Unique key: Users.Email / Responses.User Email
+    - Event filters: Responses.Event Date (primary), Responses.Event Title (optional)
+  - [x] Capture the “latest submission” rule used (timestamp column name and format).
+    - Use Responses.Timestamp millis (epoch ms) to select latest per user
+- [x] Investigate named ranges and major sheet queries.
+  - [x] List named ranges (e.g., selected event/date, relevant emails, selected responses).
+  - [x] Capture core QUERY/VLOOKUP formulas that drive View Attendance.
+- [x] Record sheet findings in docs/agents/attendance-sheet.md.
+- [x] Document the ranges to query in Google Sheets (named ranges or A1 ranges).
   - [ ] Add a brief mapping section to README or a new internal doc if helpful.
+  - A1 ranges (from XLSX dump):
+    - Users!A1:B (Email, Name)
+    - Responses!A1:J (User Email, Timestamp millis, Event Title, Event Date, Going?, Why Not?, Went Last Time?, Comments, Row Key, Is Last Submission)
 
 ## Phase 1 — Test First: Specs and Fixtures
 
+- [ ] Refactor inspect-test-sheet logic into a test util to reuse the same query logic in integration tests.
 - [ ] Add initial test specs for the attendance view logic.
   - [ ] Create src/**tests**/utils/attendance-view.test.ts with failing tests that encode the expected behavior.
   - [ ] Include duplicate submissions for a single user to confirm latest wins.
