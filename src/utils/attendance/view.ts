@@ -1,3 +1,4 @@
+import { filter, forEach, map, uniqBy } from "lodash";
 import type {
   AttendanceViewRow,
   ChoirMember,
@@ -45,7 +46,7 @@ const getLatestResponsesByEmail = (
 ) => {
   const latestByEmail = new Map<string, RawResponse>();
 
-  responses.forEach((response) => {
+  forEach(responses, (response) => {
     if (!response.email) {
       return;
     }
@@ -69,13 +70,18 @@ export const getAttendanceView = (
   targetEventDate: string,
   targetEventTitle?: string
 ): AttendanceViewRow[] => {
+  const uniqueMembers = filter(
+    uniqBy(members, "email"),
+    (member) => Boolean(member.email)
+  );
+
   const latestResponses = getLatestResponsesByEmail(
     responses,
     targetEventDate,
     targetEventTitle
   );
 
-  return members.map((member) => {
+  return map(uniqueMembers, (member) => {
     const response = latestResponses.get(member.email);
 
     if (!response) {

@@ -301,7 +301,7 @@ const AttendanceForm = ({
               Boolean(date) && (
                 <option value={date as string} key={date}>
                   {ISOToHuman(date)}
-                  {upcomingDate && date === upcomingDate ? " (הקרוב)" : ""}
+                  {upcomingDate && date === upcomingDate ? " (הקרובה)" : ""}
                 </option>
               )
           )}

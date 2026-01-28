@@ -74,6 +74,10 @@ const AttendanceViewPage: NextPage<
     }
   }, [eventDate, sortedDates]);
 
+  const canPickUpcoming = Boolean(
+    upcomingDate && size(sortedDates) > 1 && eventDate !== upcomingDate
+  );
+
   const eventDateForQuery = eventDate || "";
 
   const isQueryEnabled = Boolean(eventDateForQuery);
@@ -138,11 +142,20 @@ const AttendanceViewPage: NextPage<
                 {map(sortedDates, (date) => (
                   <SelectItem value={date} key={date}>
                     {ISOToHuman(date)}
-                    {upcomingDate && date === upcomingDate ? " (הקרוב)" : ""}
+                    {upcomingDate && date === upcomingDate ? " (הקרובה)" : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {canPickUpcoming && (
+              <button
+                type="button"
+                className="btn btn-sm self-start"
+                onClick={() => setEventDate(upcomingDate as string)}
+              >
+                בחרו את הקרוב
+              </button>
+            )}
           </label>
         </div>
 
@@ -201,8 +214,11 @@ export const getStaticProps = async () => {
     "../server/googleApis"
   );
 
+  const pastWindowStart = new Date();
+  pastWindowStart.setMonth(pastWindowStart.getMonth() - 6);
+
   const [calendarDataRaw, userEvents] = await Promise.all([
-    getHellscoreEvents(),
+    getHellscoreEvents({ timeMin: pastWindowStart.toISOString() }),
     getUserEventTypeAssignments(),
   ]);
 

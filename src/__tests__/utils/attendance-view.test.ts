@@ -92,4 +92,46 @@ describe("attendance view", () => {
     expect(rileyRow?.reason).toBe("");
     expect(rileyRow?.comments).toBe("");
   });
+
+  it("deduplicates members by email and uses latest response", () => {
+    const members: ChoirMember[] = [
+      { name: "Jamie A", email: "jamie@example.com" },
+      { name: "Jamie B", email: "jamie@example.com" },
+    ];
+
+    const responses: RawResponse[] = [
+      {
+        email: "jamie@example.com",
+        timestampMillis: 1000,
+        eventTitle: "Rehearsal",
+        eventDate: "2025-10-10",
+        going: false,
+        whyNot: "Sick",
+        wentLastTime: true,
+        comments: "Feel bad",
+      },
+      {
+        email: "jamie@example.com",
+        timestampMillis: 2000,
+        eventTitle: "Rehearsal",
+        eventDate: "2025-10-10",
+        going: true,
+        whyNot: "",
+        wentLastTime: true,
+        comments: "Recovered",
+      },
+    ];
+
+    const rows = getAttendanceView(
+      members,
+      responses,
+      "2025-10-10",
+      "Rehearsal"
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.member.email).toBe("jamie@example.com");
+    expect(rows[0]?.status).toBe("Going");
+    expect(rows[0]?.comments).toBe("Recovered");
+  });
 });

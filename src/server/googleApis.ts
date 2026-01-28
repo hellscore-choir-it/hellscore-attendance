@@ -244,14 +244,20 @@ export const getSheetResponses = async ({
 const hellscoreCalendarId =
   "6bo68oo6iujc4obpo3fvanpd24@group.calendar.google.com";
 
-export const getHellscoreEvents = async () => {
+export const getHellscoreEvents = async ({
+  timeMin = nowISO(),
+  maxResults = 100,
+}: {
+  timeMin?: string;
+  maxResults?: number;
+} = {}) => {
   const response = await calendars.events.list({
     calendarId: hellscoreCalendarId,
     maxAttendees: 1,
-    maxResults: 20,
+    maxResults,
     orderBy: "startTime",
     singleEvents: true,
-    timeMin: nowISO(),
+    timeMin,
   });
   const items = response.data.items;
   if (!items) {
