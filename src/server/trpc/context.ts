@@ -2,6 +2,7 @@
 import type { inferAsyncReturnType } from "@trpc/server";
 import type { CreateNextContextOptions } from "@trpc/server/adapters/next";
 import type { Session } from "next-auth";
+import { isE2EServer } from "../../e2e/mode";
 import { getServerAuthSession } from "../common/get-server-auth-session";
 
 type CreateContextOptions = {
@@ -24,6 +25,17 @@ export const createContextInner = async (opts: CreateContextOptions) => {
  **/
 export const createContext = async (opts: CreateNextContextOptions) => {
   const { req, res } = opts;
+
+  if (isE2EServer()) {
+    return await createContextInner({
+      session: {
+        user: {
+          email: "e2e@example.com",
+        },
+        expires: "2999-01-01T00:00:00.000Z",
+      } as Session,
+    });
+  }
 
   // Get the session from the server using the unstable_getServerSession wrapper function
   const session = await getServerAuthSession({ req, res });

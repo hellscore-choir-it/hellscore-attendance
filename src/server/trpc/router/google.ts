@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 
 import { filter, includes, map, reduce } from "lodash";
 import { z } from "zod";
+import { getE2EAttendanceViewResponse } from "../../../e2e/server/attendanceViewFixture";
 import {
   parseMembersSheet,
   parseResponsesSheet,
@@ -25,6 +26,7 @@ import {
   getUserEventTypeAssignments,
   writeResponseRow,
 } from "../../googleApis";
+import { isE2EServer } from "../../../e2e/mode";
 import { protectedProcedure, router } from "../trpc";
 
 const attendanceViewInputSchema = z.object({
@@ -192,6 +194,10 @@ export const googleRouter = router({
   getAttendanceView: protectedProcedure
     .input(attendanceViewInputSchema)
     .query(async ({ input: { eventDate, eventTitle }, ctx }) => {
+      if (isE2EServer()) {
+        return getE2EAttendanceViewResponse();
+      }
+
       const userEmail = ctx.session.user.email;
       if (!userEmail) {
         const error = new TRPCError({

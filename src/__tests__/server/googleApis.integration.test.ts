@@ -93,4 +93,34 @@ describe("Google Sheets integration (test sheet)", () => {
       )
     ).toBe(true);
   });
+
+  it("loads members from the Users sheet", async () => {
+    const { getSheetMembers } = await loadGoogleApis();
+    const rows = await getSheetMembers({ retry: false, maxRetries: 1 });
+
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows[0]).toEqual(["Email", "Name"]);
+  });
+
+  it("loads responses from the Responses sheet", async () => {
+    const { getSheetResponses } = await loadGoogleApis();
+    const rows = await getSheetResponses({ retry: false, maxRetries: 1 });
+
+    expect(rows.length).toBeGreaterThan(0);
+    const firstRow = rows[0];
+    expect(firstRow).toBeDefined();
+    if (!firstRow) {
+      throw new Error("Expected Responses header row.");
+    }
+    expect(firstRow.slice(0, 8)).toEqual([
+      "User Email",
+      "Timestamp millis",
+      "Event Title",
+      "Event Date",
+      "Going?",
+      "Why Not?",
+      "Went Last Time?",
+      "Comments",
+    ]);
+  });
 });

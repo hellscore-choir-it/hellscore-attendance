@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
-import type { Mock } from "jest-mock";
+type Mock = jest.Mock;
 
 jest.mock("../../server/googleApis", () => ({
   getHellscoreEvents: jest.fn(),

@@ -53,6 +53,9 @@ describe("AttendanceViewTable controls", () => {
   it("sorts by name by default", () => {
     renderTable();
     const [firstRow] = getDataRows();
+    if (!firstRow) {
+      throw new Error("Expected at least one data row.");
+    }
     const cells = within(firstRow).getAllByRole("cell");
     expect(cells[0]).toHaveTextContent("Alpha");
   });
@@ -66,6 +69,9 @@ describe("AttendanceViewTable controls", () => {
     await user.click(emailSort);
 
     const [firstRow] = getDataRows();
+    if (!firstRow) {
+      throw new Error("Expected at least one data row.");
+    }
     const cells = within(firstRow).getAllByRole("cell");
     expect(cells[1]).toHaveTextContent("c@example.com");
   });
@@ -79,6 +85,9 @@ describe("AttendanceViewTable controls", () => {
 
     const rows = getDataRows();
     expect(rows).toHaveLength(1);
+    if (!rows[0]) {
+      throw new Error("Expected a filtered row.");
+    }
     expect(within(rows[0]).getAllByRole("cell")[0]).toHaveTextContent("Alpha");
   });
 
@@ -91,6 +100,9 @@ describe("AttendanceViewTable controls", () => {
 
     const rows = getDataRows();
     expect(rows).toHaveLength(1);
+    if (!rows[0]) {
+      throw new Error("Expected a filtered row.");
+    }
     expect(within(rows[0]).getAllByRole("cell")[1]).toHaveTextContent(
       "c@example.com"
     );
@@ -126,6 +138,9 @@ describe("AttendanceViewTable controls", () => {
 
     const rows = getDataRows();
     expect(rows).toHaveLength(1);
+    if (!rows[0]) {
+      throw new Error("Expected a filtered row.");
+    }
     expect(within(rows[0]).getAllByRole("cell")[2]).toHaveTextContent("לא ענו");
   });
 });

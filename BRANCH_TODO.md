@@ -116,9 +116,10 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
 - [x] Add component tests for the new table.
   - [x] Include snapshot tests for row coloring.
   - [x] Include tests for summary counts.
-- [ ] Extend/maintain integration tests as new sheet calls are added.
+- [x] Extend/maintain integration tests as new sheet calls are added.
 - [x] Add unit tests for `google.getAttendanceView` router.
-- [ ] Run pnpm test, pnpm typecheck.
+- [x] Add end-to-end tests for the attendance view page.
+- [x] Run pnpm test, pnpm typecheck.
 
 ## Phase 8 — Observability and Edge Cases
 
@@ -138,4 +139,4 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
 - [x] src/server/trpc/router/google.ts updates
 - [x] src/components/AttendanceViewTable.tsx
 - [x] src/pages/attendance-view.tsx
-- [ ] Tests in src/**tests**/utils and src/**tests**/components
+- [x] Tests in src/**tests**/utils and src/**tests**/components

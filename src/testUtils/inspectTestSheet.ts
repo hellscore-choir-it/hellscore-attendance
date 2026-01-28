@@ -17,8 +17,10 @@ const parseRangesArg = (items: string[]) =>
 const toA1PreviewRange = (title: string) => `${title}!A1:Z5`;
 
 const buildSheetsClient = (credentials: string) => {
-  const auth = google.auth.fromJSON(JSON.parse(credentials));
-  auth.scopes = DEFAULT_SCOPES;
+  const auth = new google.auth.GoogleAuth({
+    credentials: JSON.parse(credentials),
+    scopes: DEFAULT_SCOPES,
+  });
   return google.sheets({ version: "v4", auth });
 };
 
@@ -86,10 +88,15 @@ export const inspectTestSheet = async (
     ranges: resolvedRanges,
   });
 
+  const valueRanges = (response.data.valueRanges ?? []).map((range) => ({
+    ...range,
+    values: (range.values ?? undefined) as string[][] | undefined,
+  }));
+
   return {
     spreadsheetId,
     sheetTitles,
     ranges: resolvedRanges,
-    valueRanges: response.data.valueRanges ?? [],
+    valueRanges,
   };
 };
