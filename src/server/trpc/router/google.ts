@@ -16,6 +16,10 @@ import {
 import { getGoogleApiErrorInfo } from "../../../utils/errors";
 import { performUpdateCallbacksSerially } from "../../db/userUpdateSideEffects";
 import {
+  fetchAttendanceViewAllowlist,
+  isEmailAllowlisted,
+} from "../../db/attendanceViewConfig";
+import {
   getSheetMembers,
   getSheetResponses,
   getUserEventTypeAssignments,
@@ -193,6 +197,18 @@ export const googleRouter = router({
         const error = new TRPCError({
           code: "UNAUTHORIZED",
           message: "User email is required to view attendance.",
+        });
+        captureException(error, {
+          extra: { userEmail, eventDate, eventTitle },
+        });
+        throw error;
+      }
+
+      const allowlist = await fetchAttendanceViewAllowlist();
+      if (!isEmailAllowlisted(allowlist, userEmail)) {
+        const error = new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User is not authorized to view attendance.",
         });
         captureException(error, {
           extra: { userEmail, eventDate, eventTitle },

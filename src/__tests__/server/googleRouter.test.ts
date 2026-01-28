@@ -7,6 +7,15 @@ jest.mock("../../server/googleApis", () => ({
   writeResponseRow: jest.fn(),
 }));
 
+jest.mock("../../server/db/attendanceViewConfig", () => ({
+  fetchAttendanceViewAllowlist: jest.fn().mockResolvedValue([
+    "jamie@example.com",
+  ]),
+  isEmailAllowlisted: jest.fn((allowlist: string[], email?: string) =>
+    Boolean(email && allowlist.includes(email))
+  ),
+}));
+
 const { getSheetMembers, getSheetResponses } = jest.requireMock(
   "../../server/googleApis"
 );

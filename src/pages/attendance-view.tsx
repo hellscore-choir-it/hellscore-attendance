@@ -10,7 +10,11 @@ import {
   startsWith,
   uniq,
 } from "lodash";
-import type { InferGetStaticPropsType, NextPage } from "next";
+import type {
+  GetServerSideProps,
+  InferGetServerSidePropsType,
+  NextPage,
+} from "next";
 import { useEffect, useMemo, useState } from "react";
 
 import AttendanceViewTable from "../components/AttendanceViewTable";
@@ -22,12 +26,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
+import { getServerAuthSession } from "../server/common/get-server-auth-session";
+import {
+  fetchAttendanceViewAllowlist,
+  isEmailAllowlisted,
+} from "../server/db/attendanceViewConfig";
 import { ISOToHuman } from "../utils/dates";
 import { trpc } from "../utils/trpc";
 
 const AttendanceViewPage: NextPage<
-  InferGetStaticPropsType<typeof getStaticProps>
-> = ({ calendarData, userEvents }) => {
+  InferGetServerSidePropsType<typeof getServerSideProps>
+> = ({ calendarData }) => {
   const [eventTitle, setEventTitle] = useState<string>("");
   const [eventDate, setEventDate] = useState<string>("");
 
@@ -189,7 +198,7 @@ const hasTitleAndStart = (event: {
 }): event is { title: string; start: string } =>
   Boolean(event.title && event.start);
 
-export const getStaticProps = async () => {
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
   if (process.env.E2E_TEST_MODE === "true") {
     return {
       props: {
@@ -199,14 +208,32 @@ export const getStaticProps = async () => {
             start: new Date().toISOString(),
           },
         ],
-        userEvents: [
-          {
-            title: "E2E Event",
-            email: "e2e@example.com",
-          },
-        ],
       },
-      revalidate: 10,
+    };
+  }
+
+  const session = await getServerAuthSession({
+    req: ctx.req,
+    res: ctx.res,
+  });
+
+  const userEmail = session?.user?.email;
+  if (!userEmail) {
+    return {
+      redirect: {
+        destination: "/api/auth/signin",
+        permanent: false,
+      },
+    };
+  }
+
+  const allowlist = await fetchAttendanceViewAllowlist();
+  if (!isEmailAllowlisted(allowlist, userEmail)) {
+    return {
+      redirect: {
+        destination: "/thank-you",
+        permanent: false,
+      },
     };
   }
 
@@ -237,8 +264,7 @@ export const getStaticProps = async () => {
   );
 
   return {
-    props: { calendarData, userEvents },
-    revalidate: 10,
+    props: { calendarData },
   };
 };
 

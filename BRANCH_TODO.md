@@ -87,7 +87,7 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
 - [x] Add a protected TRPC endpoint for the view.
   - [x] Update src/server/trpc/router/google.ts with `google.getAttendanceView`.
   - [x] Input: `{ eventDate: string; eventTitle?: string }` validated via Zod.
-  - [ ] Authorization: gate with session and optionally restrict to admin emails using `ADMIN_EMAILS`.
+  - [x] Authorization: gate with session and optionally restrict to admin emails using `ADMIN_EMAILS`.
   - [x] Load members + responses from Sheets, normalize, then compute view.
   - [x] Return rows plus summary counts (going, notGoing, noResponse, total).
   - [x] Log and capture exceptions with Sentry.
@@ -104,10 +104,12 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
   - [x] Add date/event selector (Dropdown or calendar input).
   - [x] Call `trpc.google.getAttendanceView` and render the table.
   - [x] Show loading, empty, and error states using existing UI patterns.
-- [ ] Protect the page to users:
-  - [ ] using emails with sheet access.
-  - [ ] using a DB config containing allowed emails (similar to admin check).
-- [ ] Add protections to the API calls as well based on the same logic.
+  - [ ] Make sure you get the list of choir member who didn't respond to and event from the Users assigned to `User Events`.
+- [x] Protect the page to users:
+  - [x] using emails with sheet access.
+  - [x] using a DB config containing allowed emails (similar to admin check).
+- [x] Add protections to the API calls as well based on the same logic.
+  - Access gating now uses an app_config allowlist with `ADMIN_EMAILS` fallback in attendance view.
 
 ## Phase 7 — Tests and QA
 
