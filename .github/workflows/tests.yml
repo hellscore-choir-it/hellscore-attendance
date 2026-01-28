@@ -12,7 +12,7 @@ jobs:
     env:
       GOOGLE_SERVICE_ACCOUNT_CREDENTIALS: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS }}
       TEST_SHEET_ID: ${{ secrets.TEST_SHEET_ID }}
-      TEST_EVENTS: "true"
+      SHEET_ID: ${{ secrets.TEST_SHEET_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -27,7 +27,7 @@ jobs:
       - name: Check required env vars
         run: |
           missing=0
-          for var in GOOGLE_SERVICE_ACCOUNT_CREDENTIALS TEST_SHEET_ID; do
+          for var in GOOGLE_SERVICE_ACCOUNT_CREDENTIALS TEST_SHEET_ID SHEET_ID; do
             if [ -z "${!var}" ]; then
               echo "Missing required env var: $var"
               missing=1
