@@ -7,8 +7,8 @@
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "test": "jest",
-    "test:watch": "jest --watch",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "typecheck": "tsc --noEmit",
     "pw:install": "playwright install --with-deps",
     "pw:test": "playwright test",
@@ -106,6 +106,7 @@
     "prettier": "^2.7.1",
     "prettier-plugin-tailwindcss": "^0.1.13",
     "tailwindcss": "^3.2.0",
+    "dotenv": "^16.6.1",
     "ts-jest": "^29.3.2",
     "typescript": "^5.9.3"
   },

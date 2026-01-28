@@ -1,5 +1,5 @@
 import { google } from "googleapis";
-import { env } from "../../env/server.mjs";
+import { compact, flatMap, includes, map, size, split, trim } from "lodash";
 
 const DEFAULT_SCOPES = [
   "https://www.googleapis.com/auth/drive",
@@ -7,10 +7,9 @@ const DEFAULT_SCOPES = [
 ];
 
 const parseRangesArg = (items: string[]) =>
-  items
-    .flatMap((item) => item.split(","))
-    .map((item) => item.trim())
-    .filter(Boolean);
+  compact(
+    map(flatMap(items, (item) => split(item, ",")), (item) => trim(item))
+  );
 
 const toA1PreviewRange = (title: string) => `${title}!A1:Z5`;
 
@@ -33,40 +32,41 @@ export type InspectSheetResult = {
 };
 
 export const canInspectTestSheet = () =>
-  Boolean(env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS) &&
-  Boolean(env.TEST_SHEET_ID || env.SHEET_ID);
+  Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS) &&
+  Boolean(process.env.TEST_SHEET_ID || process.env.SHEET_ID);
 
 export const parseInspectRangesArg = (items: string[]) => parseRangesArg(items);
 
 export const inspectTestSheet = async (
   ranges: string[] = []
 ): Promise<InspectSheetResult> => {
-  if (!env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS) {
+  if (!process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS) {
     throw new Error("Missing GOOGLE_SERVICE_ACCOUNT_CREDENTIALS in env.");
   }
 
-  const spreadsheetId = env.TEST_SHEET_ID || env.SHEET_ID;
+  const spreadsheetId = process.env.TEST_SHEET_ID || process.env.SHEET_ID;
   if (!spreadsheetId) {
     throw new Error("Missing TEST_SHEET_ID or SHEET_ID in env.");
   }
 
-  const sheets = buildSheetsClient(env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS);
+  const sheets = buildSheetsClient(
+    process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS
+  );
   const sheetInfo = await sheets.spreadsheets.get({ spreadsheetId });
-  const sheetTitles =
-    sheetInfo.data.sheets
-      ?.map((sheet) => sheet.properties?.title)
-      .filter(Boolean) || [];
+  const sheetTitles = compact(
+    map(sheetInfo.data.sheets ?? [], (sheet) => sheet.properties?.title)
+  );
 
-  const defaultRanges = [
-    sheetTitles.includes("Users") ? toA1PreviewRange("Users") : undefined,
-    sheetTitles.includes("Responses")
+  const defaultRanges = compact([
+    includes(sheetTitles, "Users") ? toA1PreviewRange("Users") : undefined,
+    includes(sheetTitles, "Responses")
       ? toA1PreviewRange("Responses")
       : undefined,
-  ].filter(Boolean) as string[];
+  ]);
 
-  const resolvedRanges = ranges.length ? ranges : defaultRanges;
+  const resolvedRanges = size(ranges) ? ranges : defaultRanges;
 
-  if (resolvedRanges.length === 0) {
+  if (size(resolvedRanges) === 0) {
     return {
       spreadsheetId,
       sheetTitles,

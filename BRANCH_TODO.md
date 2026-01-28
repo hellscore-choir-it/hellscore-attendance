@@ -5,7 +5,7 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
 ## Agent constraints (must follow during this branch)
 
 - Create frequent, self-contained, well-documented commits.
-- Before proceeding to a new phase, ensure all prior phase tasks are complete by running tests and linting.
+- Before proceeding to a new phase, ensure all prior phase tasks are complete by running tests.
 - Update this file (`BRANCH_TODO.md`) as progress is made (check items off + add brief notes when useful).
 - Checkpoint with the user for any significant questions/changes (thresholds, feature set, telemetry approach).
 - Prefer existing code patterns/styles in this repo; avoid inventing new patterns unless necessary.
@@ -41,9 +41,9 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
   - [x] Create src/**tests**/utils/attendance-view.test.ts with failing tests that encode the expected behavior.
   - [x] Include duplicate submissions for a single user to confirm latest wins.
   - [x] Include a member with no responses to confirm “No Response”.
-- [ ] Add guarded integration tests that can hit the test sheet when env vars are present.
-  - [ ] Use the test inspection helper to derive real headers/ranges to validate.
-  - [ ] Add regression tests for existing Google Sheets features (e.g., `getUserEventTypeAssignments`, `writeResponseRow`) when the test sheet is configured.
+- [x] Add guarded integration tests that can hit the test sheet when env vars are present.
+  - [x] Use the test inspection helper to derive real headers/ranges to validate.
+  - [x] Add regression tests for existing Google Sheets features (e.g., `getUserEventTypeAssignments`, `writeResponseRow`) when the test sheet is configured.
 
 ## Phase 2 — Types and Normalization
 
@@ -52,12 +52,12 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
     - `ChoirMember` (name, email).
     - `RawResponse` (email, timestampMillis, eventTitle, eventDate, going, whyNot, wentLastTime, comments).
     - `AttendanceViewRow` (member, status, reason, comments, lastUpdated).
-- [ ] Add normalization helpers to convert raw sheet rows into typed objects.
-  - [ ] Create src/utils/attendance/normalize.ts with functions like:
+- [x] Add normalization helpers to convert raw sheet rows into typed objects.
+  - [x] Create src/utils/attendance/normalize.ts with functions like:
     - `parseMembersSheet(rows)` → `ChoirMember[]`.
     - `parseResponsesSheet(rows)` → `RawResponse[]`.
-  - [ ] Normalize booleans (TRUE/FALSE, yes/no) into actual booleans.
-  - [ ] Normalize timestamp to millis and create `Date` objects as needed.
+  - [x] Normalize booleans (TRUE/FALSE, yes/no) into actual booleans.
+  - [x] Normalize timestamp to millis and create `Date` objects as needed.
 
 ## Phase 3 — Business Logic (View Attendance)
 
@@ -125,7 +125,7 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
 ## Deliverables Checklist
 
 - [x] src/types/attendance.ts
-- [ ] src/utils/attendance/normalize.ts
+- [x] src/utils/attendance/normalize.ts
 - [x] src/utils/attendance/view.ts
 - [ ] src/server/googleApis.ts updates (new getters + schemas)
 - [ ] src/server/trpc/router/google.ts updates

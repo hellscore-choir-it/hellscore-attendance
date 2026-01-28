@@ -2,7 +2,7 @@
 
 Source: temporary-files-for-agents/Hellscore attendance.xlsx
 
-Inspection helper: use [src/**tests**/utils/inspectTestSheet.ts](src/__tests__/utils/inspectTestSheet.ts) for test-sheet validation instead of a standalone script.
+Inspection helper: use [src/testUtils/inspectTestSheet.ts](src/testUtils/inspectTestSheet.ts) for test-sheet validation instead of a standalone script.
 
 ## Named ranges
 
