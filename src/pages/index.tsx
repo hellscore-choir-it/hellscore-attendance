@@ -3,6 +3,7 @@ import type { InferGetStaticPropsType, NextPage } from "next";
 
 import AttendanceForm from "../components/AttendanceForm";
 import SessionBoundary from "../components/SessionBoundary";
+import { nowISO } from "../utils/dates";
 import { useAppSession } from "../utils/useAppSession";
 
 const Home: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
@@ -51,7 +52,7 @@ export const getStaticProps = async () => {
   );
 
   const [calendarDataRaw, userEvents] = await Promise.all([
-    getHellscoreEvents(),
+    getHellscoreEvents({ maxResults: 20, timeMin: nowISO() }),
     getUserEventTypeAssignments(),
   ]);
 

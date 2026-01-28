@@ -14,17 +14,45 @@ const sheetsRequestQueue = new RequestQueue();
 // If we need to check if we're running in a build environment (like Vercel build)
 // const isBuildEnvironment = () => process.env.NEXT_PHASE === 'PHASE_PRODUCTION_BUILD' || process.env.VERCEL_ENV === 'production';
 
-const auth = google.auth.fromJSON(
-  JSON.parse(env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS || "")
-) as Auth.JWT & { scopes: string[] };
+let cachedAuth: (Auth.JWT & { scopes: string[] }) | null = null;
+let cachedSheets: ReturnType<typeof google.sheets> | null = null;
+let cachedCalendars: ReturnType<typeof google.calendar> | null = null;
 
-auth.scopes = [
-  "https://www.googleapis.com/auth/drive",
-  "https://www.googleapis.com/auth/spreadsheets",
-  "https://www.googleapis.com/auth/calendar.readonly",
-];
-const sheets = google.sheets({ version: "v4", auth });
-const calendars = google.calendar({ version: "v3", auth });
+const getGoogleAuth = () => {
+  if (cachedAuth) return cachedAuth;
+
+  const credentials = env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS;
+  if (!credentials) {
+    throw new Error("GOOGLE_SERVICE_ACCOUNT_CREDENTIALS is not set.");
+  }
+
+  const auth = google.auth.fromJSON(JSON.parse(credentials)) as Auth.JWT & {
+    scopes: string[];
+  };
+
+  auth.scopes = [
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/calendar.readonly",
+  ];
+
+  cachedAuth = auth;
+  return auth;
+};
+
+const getSheetsClient = () => {
+  if (!cachedSheets) {
+    cachedSheets = google.sheets({ version: "v4", auth: getGoogleAuth() });
+  }
+  return cachedSheets;
+};
+
+const getCalendarsClient = () => {
+  if (!cachedCalendars) {
+    cachedCalendars = google.calendar({ version: "v3", auth: getGoogleAuth() });
+  }
+  return cachedCalendars;
+};
 
 const isTestEnvironment = () =>
   env.TEST_EVENTS === "true" || env.TEST_EVENTS === "1";
@@ -42,7 +70,7 @@ export const writeResponseRow = async (
   return await doAsyncOperationWithRetry(
     async () =>
       sheetsRequestQueue.add(() =>
-        sheets.spreadsheets.values.append({
+        getSheetsClient().spreadsheets.values.append({
           spreadsheetId: isTestEnvironment() ? env.TEST_SHEET_ID : env.SHEET_ID,
           requestBody: { values: [row] },
           range: "response",
@@ -63,6 +91,19 @@ const gsheetDataSchema = z.object({
       values: z.array(z.tuple([z.string().email()])),
     }),
   ]),
+});
+
+const sheetCellSchema = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+  z.null(),
+]);
+
+const sheetValuesResponseSchema = z.object({
+  range: z.string().optional(),
+  majorDimension: z.string().optional(),
+  values: z.array(z.array(sheetCellSchema)).optional(),
 });
 
 export interface UserEventType {
@@ -92,7 +133,9 @@ export const getUserEventTypeAssignments = async ({
         ranges: ["user_event_event_title", "user_event_user_email"],
       };
       const userEventSheetResponse = await sheetsRequestQueue.add(() =>
-        sheets.spreadsheets.values.batchGet(googleSheetsBatchGetParams)
+        getSheetsClient().spreadsheets.values.batchGet(
+          googleSheetsBatchGetParams
+        )
       );
 
       try {
@@ -139,17 +182,112 @@ export const getUserEventTypeAssignments = async ({
   );
 };
 
+const membersSheetRange = "Users!A1:B";
+const responsesSheetRange = "Responses!A1:J";
+
+export const getSheetMembers = async ({
+  retry = true,
+  maxRetries = 3,
+}: {
+  retry?: boolean;
+  maxRetries?: number;
+} = {}): Promise<(string | number | boolean | null)[][]> => {
+  return await doAsyncOperationWithRetry(
+    async () => {
+      const googleSheetsGetParams = {
+        spreadsheetId: isTestEnvironment() ? env.TEST_SHEET_ID : env.SHEET_ID,
+        range: membersSheetRange,
+      };
+
+      const membersResponse = await sheetsRequestQueue.add(() =>
+        getSheetsClient().spreadsheets.values.get(googleSheetsGetParams)
+      );
+
+      try {
+        const membersData = sheetValuesResponseSchema.parse(
+          membersResponse.data
+        );
+        return membersData.values ?? [];
+      } catch (error) {
+        captureException(error, {
+          extra: { membersResponse, googleSheetsGetParams },
+        });
+        console.error(
+          "Failed to parse Google Sheets members data:",
+          error,
+          membersResponse.data
+        );
+        throw new Error(
+          `Failed to parse Google Sheets members data: ${error}. Response: ${JSON.stringify(
+            membersResponse.data || "No data"
+          )}`
+        );
+      }
+    },
+    { retry, maxRetries }
+  );
+};
+
+export const getSheetResponses = async ({
+  retry = true,
+  maxRetries = 3,
+}: {
+  retry?: boolean;
+  maxRetries?: number;
+} = {}): Promise<(string | number | boolean | null)[][]> => {
+  return await doAsyncOperationWithRetry(
+    async () => {
+      const googleSheetsGetParams = {
+        spreadsheetId: isTestEnvironment() ? env.TEST_SHEET_ID : env.SHEET_ID,
+        range: responsesSheetRange,
+      };
+
+      const responsesResponse = await sheetsRequestQueue.add(() =>
+        getSheetsClient().spreadsheets.values.get(googleSheetsGetParams)
+      );
+
+      try {
+        const responsesData = sheetValuesResponseSchema.parse(
+          responsesResponse.data
+        );
+        return responsesData.values ?? [];
+      } catch (error) {
+        captureException(error, {
+          extra: { responsesResponse, googleSheetsGetParams },
+        });
+        console.error(
+          "Failed to parse Google Sheets responses data:",
+          error,
+          responsesResponse.data
+        );
+        throw new Error(
+          `Failed to parse Google Sheets responses data: ${error}. Response: ${JSON.stringify(
+            responsesResponse.data || "No data"
+          )}`
+        );
+      }
+    },
+    { retry, maxRetries }
+  );
+};
+
 const hellscoreCalendarId =
   "6bo68oo6iujc4obpo3fvanpd24@group.calendar.google.com";
 
-export const getHellscoreEvents = async () => {
-  const response = await calendars.events.list({
+export const getHellscoreEvents = async ({
+  timeMin = nowISO(),
+  maxResults = 100,
+}: {
+  timeMin?: string;
+  maxResults?: number;
+} = {}) => {
+  const response = await getCalendarsClient().events.list({
     calendarId: hellscoreCalendarId,
     maxAttendees: 1,
-    maxResults: 20,
+    maxResults,
     orderBy: "startTime",
     singleEvents: true,
-    timeMin: nowISO(),
+    timeMin,
   });
   const items = response.data.items;
   if (!items) {

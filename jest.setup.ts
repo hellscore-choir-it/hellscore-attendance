@@ -1,5 +1,19 @@
 /// <reference types="jest" />
 import "@testing-library/jest-dom";
+import dotenv from "dotenv";
+import { existsSync } from "fs";
+import { resolve } from "path";
+
+process.env.TZ = "UTC";
+
+const envFiles = [".env.test.local", ".env.test", ".env.local", ".env"];
+
+envFiles.forEach((file) => {
+  const fullPath = resolve(process.cwd(), file);
+  if (existsSync(fullPath)) {
+    dotenv.config({ path: fullPath });
+  }
+});
 
 // Global Next.js router mock.
 // Tests can inspect/override via `jest.requireMock("next/router").__mockRouter`.

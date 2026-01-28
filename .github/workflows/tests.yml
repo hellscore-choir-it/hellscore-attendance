@@ -9,6 +9,10 @@ on:
 jobs:
   component-tests:
     runs-on: ubuntu-latest
+    env:
+      GOOGLE_SERVICE_ACCOUNT_CREDENTIALS: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS }}
+      TEST_SHEET_ID: ${{ secrets.TEST_SHEET_ID }}
+      SHEET_ID: ${{ secrets.TEST_SHEET_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -20,6 +24,18 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Check required env vars
+        run: |
+          missing=0
+          for var in GOOGLE_SERVICE_ACCOUNT_CREDENTIALS TEST_SHEET_ID SHEET_ID; do
+            if [ -z "${!var}" ]; then
+              echo "Missing required env var: $var"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
       - name: Run all tests
         run: pnpm test
 

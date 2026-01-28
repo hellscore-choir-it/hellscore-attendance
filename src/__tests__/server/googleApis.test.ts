@@ -187,7 +187,7 @@ describe("Google APIs", () => {
       expect(mockEventsList).toHaveBeenCalledWith({
         calendarId: "6bo68oo6iujc4obpo3fvanpd24@group.calendar.google.com",
         maxAttendees: 1,
-        maxResults: 20,
+        maxResults: 100,
         orderBy: "startTime",
         singleEvents: true,
         timeMin: expect.any(String),

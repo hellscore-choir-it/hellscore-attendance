@@ -1,0 +1,256 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AttendanceViewTable summaries and styling matches row coloring snapshot 1`] = `
+<DocumentFragment>
+  <div
+    class="flex flex-col gap-4"
+  >
+    <div
+      class="flex flex-col gap-2"
+    >
+      <h2
+        class="text-lg font-semibold"
+      >
+        Test
+      </h2>
+      <div
+        class="flex flex-wrap gap-2"
+      >
+        <div
+          class="rounded-full bg-slate-200 px-3 py-1 text-sm text-slate-900 dark:bg-slate-800 dark:text-slate-100"
+        >
+          מגיעים: 1
+        </div>
+        <div
+          class="rounded-full bg-slate-200 px-3 py-1 text-sm text-slate-900 dark:bg-slate-800 dark:text-slate-100"
+        >
+          לא מגיעים: 1
+        </div>
+        <div
+          class="rounded-full bg-slate-200 px-3 py-1 text-sm text-slate-900 dark:bg-slate-800 dark:text-slate-100"
+        >
+          לא ענו: 1
+        </div>
+        <div
+          class="rounded-full bg-slate-200 px-3 py-1 text-sm text-slate-900 dark:bg-slate-800 dark:text-slate-100"
+        >
+          סה״כ: 3
+        </div>
+      </div>
+    </div>
+    <div
+      class="flex flex-col gap-3 rounded-lg border border-slate-200 p-3 text-sm dark:border-slate-700"
+    >
+      <div
+        class="flex flex-col gap-2 md:flex-row md:items-center md:gap-4"
+      >
+        <label
+          class="flex flex-1 flex-col gap-2"
+        >
+          <span
+            class="text-slate-600 dark:text-slate-300"
+          >
+            חיפוש
+          </span>
+          <input
+            class="input input-bordered bg-white text-right text-slate-900 dark:bg-slate-900 dark:text-slate-100"
+            placeholder="חיפוש לפי שם או אימייל"
+            value=""
+          />
+        </label>
+        <label
+          class="flex flex-col gap-2"
+        >
+          <span
+            class="text-slate-600 dark:text-slate-300"
+          >
+            סטטוס
+          </span>
+          <select
+            class="input input-bordered bg-white text-right text-slate-900 dark:bg-slate-900 dark:text-slate-100"
+          >
+            <option
+              value="all"
+            >
+              הכול
+            </option>
+            <option
+              value="Going"
+            >
+              מגיעים
+            </option>
+            <option
+              value="Not Going"
+            >
+              לא מגיעים
+            </option>
+            <option
+              value="No Response"
+            >
+              לא ענו
+            </option>
+          </select>
+        </label>
+      </div>
+    </div>
+    <div
+      class="relative w-full overflow-auto"
+    >
+      <table
+        class="w-full caption-bottom text-sm min-w-[640px] text-right text-slate-900 dark:text-slate-100"
+      >
+        <thead
+          class="[&_tr]:border-b bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100"
+        >
+          <tr
+            class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors"
+          >
+            <th
+              class="text-muted-foreground h-12 px-4 align-middle [&:has([role=checkbox])]:pr-0 text-right font-semibold"
+            >
+              <button
+                class="inline-flex items-center gap-2"
+                type="button"
+              >
+                שם ▲
+              </button>
+            </th>
+            <th
+              class="text-muted-foreground h-12 px-4 align-middle [&:has([role=checkbox])]:pr-0 text-right font-semibold"
+            >
+              <button
+                class="inline-flex items-center gap-2"
+                type="button"
+              >
+                אימייל 
+              </button>
+            </th>
+            <th
+              class="text-muted-foreground h-12 px-4 align-middle [&:has([role=checkbox])]:pr-0 text-right font-semibold"
+            >
+              <button
+                class="inline-flex items-center gap-2"
+                type="button"
+              >
+                סטטוס 
+              </button>
+            </th>
+            <th
+              class="text-muted-foreground h-12 px-4 align-middle [&:has([role=checkbox])]:pr-0 text-right font-semibold"
+            >
+              סיבה
+            </th>
+            <th
+              class="text-muted-foreground h-12 px-4 align-middle [&:has([role=checkbox])]:pr-0 text-right font-semibold"
+            >
+              הערות
+            </th>
+            <th
+              class="text-muted-foreground h-12 px-4 align-middle [&:has([role=checkbox])]:pr-0 text-right font-semibold"
+            >
+              <button
+                class="inline-flex items-center gap-2"
+                type="button"
+              >
+                עודכן לאחרונה 
+              </button>
+            </th>
+          </tr>
+        </thead>
+        <tbody
+          class="[&_tr:last-child]:border-0"
+        >
+          <tr
+            class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors bg-green-50 text-green-900 dark:bg-green-900/60 dark:text-green-100"
+          >
+            <td
+              class="p-4 align-middle [&:has([role=checkbox])]:pr-0"
+            >
+              Alpha
+            </td>
+            <td
+              class="p-4 align-middle [&:has([role=checkbox])]:pr-0"
+            >
+              a@example.com
+            </td>
+            <td
+              class="p-4 align-middle [&:has([role=checkbox])]:pr-0"
+            >
+              מגיעים
+            </td>
+            <td
+              class="p-4 align-middle [&:has([role=checkbox])]:pr-0"
+            />
+            <td
+              class="p-4 align-middle [&:has([role=checkbox])]:pr-0"
+            />
+            <td
+              class="p-4 align-middle [&:has([role=checkbox])]:pr-0"
+            >
+              1/1/1970, 12:00:02 AM
+            </td>
+          </tr>
+          <tr
+            class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors bg-slate-50 text-slate-700 dark:bg-slate-900/60 dark:text-slate-200"
+          >
+            <td
+              class="p-4 align-middle [&:has([role=checkbox])]:pr-0"
+            >
+              Bravo
+            </td>
+            <td
+              class="p-4 align-middle [&:has([role=checkbox])]:pr-0"
+            >
+              b@example.com
+            </td>
+            <td
+              class="p-4 align-middle [&:has([role=checkbox])]:pr-0"
+            >
+              לא ענו
+            </td>
+            <td
+              class="p-4 align-middle [&:has([role=checkbox])]:pr-0"
+            />
+            <td
+              class="p-4 align-middle [&:has([role=checkbox])]:pr-0"
+            />
+            <td
+              class="p-4 align-middle [&:has([role=checkbox])]:pr-0"
+            />
+          </tr>
+          <tr
+            class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors bg-red-50 text-red-900 dark:bg-red-900/60 dark:text-red-100"
+          >
+            <td
+              class="p-4 align-middle [&:has([role=checkbox])]:pr-0"
+            >
+              c@example.com
+            </td>
+            <td
+              class="p-4 align-middle [&:has([role=checkbox])]:pr-0"
+            >
+              c@example.com
+            </td>
+            <td
+              class="p-4 align-middle [&:has([role=checkbox])]:pr-0"
+            >
+              לא מגיעים
+            </td>
+            <td
+              class="p-4 align-middle [&:has([role=checkbox])]:pr-0"
+            />
+            <td
+              class="p-4 align-middle [&:has([role=checkbox])]:pr-0"
+            />
+            <td
+              class="p-4 align-middle [&:has([role=checkbox])]:pr-0"
+            >
+              1/1/1970, 12:00:01 AM
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</DocumentFragment>
+`;

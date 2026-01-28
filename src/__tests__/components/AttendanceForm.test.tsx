@@ -38,7 +38,7 @@ describe("AttendanceForm", () => {
 
     // Upcoming indicator should appear on the earliest future date.
     expect(
-      screen.getByRole("option", { name: /2025.*\(הקרוב\)/ })
+      screen.getByRole("option", { name: /2025.*\(הקרובה\)/ })
     ).toBeInTheDocument();
 
     const dateSelect = screen.getByRole("combobox", { name: "תאריך" });
