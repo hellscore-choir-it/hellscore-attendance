@@ -8,7 +8,10 @@ const DEFAULT_SCOPES = [
 
 const parseRangesArg = (items: string[]) =>
   compact(
-    map(flatMap(items, (item) => split(item, ",")), (item) => trim(item))
+    map(
+      flatMap(items, (item) => split(item, ",")),
+      (item) => trim(item)
+    )
   );
 
 const toA1PreviewRange = (title: string) => `${title}!A1:Z5`;
@@ -32,8 +35,11 @@ export type InspectSheetResult = {
 };
 
 export const canInspectTestSheet = () =>
-  Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS) &&
-  Boolean(process.env.TEST_SHEET_ID || process.env.SHEET_ID);
+  Boolean(
+    process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS &&
+      process.env.TEST_SHEET_ID &&
+      process.env.SHEET_ID
+  );
 
 export const parseInspectRangesArg = (items: string[]) => parseRangesArg(items);
 

@@ -5,6 +5,7 @@ jest.mock("../../env/server.mjs", () => ({
   env: {
     GOOGLE_SERVICE_ACCOUNT_CREDENTIALS:
       process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS,
+    SHEET_ID: process.env.TEST_SHEET_ID,
     TEST_SHEET_ID: process.env.TEST_SHEET_ID,
   },
 }));
@@ -15,9 +16,15 @@ import {
 } from "../../testUtils/inspectTestSheet";
 const loadGoogleApis = async () => import("../../server/googleApis");
 
-const describeIfSheet = canInspectTestSheet() ? describe : describe.skip;
+describe("Google Sheets integration (test sheet)", () => {
+  beforeAll(() => {
+    if (!canInspectTestSheet()) {
+      throw new Error(
+        "Missing GOOGLE_SERVICE_ACCOUNT_CREDENTIALS or TEST_SHEET_ID in env."
+      );
+    }
+  });
 
-describeIfSheet("Google Sheets integration (test sheet)", () => {
   it("inspects Users and Responses headers", async () => {
     const result = await inspectTestSheet();
 
