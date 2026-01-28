@@ -187,7 +187,7 @@ exports[`AttendanceViewTable summaries and styling matches row coloring snapshot
             <td
               class="p-4 align-middle [&:has([role=checkbox])]:pr-0"
             >
-              1/1/1970, 2:00:02 AM
+              1/1/1970, 12:00:02 AM
             </td>
           </tr>
           <tr
@@ -245,7 +245,7 @@ exports[`AttendanceViewTable summaries and styling matches row coloring snapshot
             <td
               class="p-4 align-middle [&:has([role=checkbox])]:pr-0"
             >
-              1/1/1970, 2:00:01 AM
+              1/1/1970, 12:00:01 AM
             </td>
           </tr>
         </tbody>

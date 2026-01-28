@@ -146,6 +146,26 @@ describe("AttendanceViewTable controls", () => {
 });
 
 describe("AttendanceViewTable summaries and styling", () => {
+  beforeAll(() => {
+    jest
+      .spyOn(Date.prototype, "toLocaleString")
+      .mockImplementation(function (this: Date) {
+        return new Intl.DateTimeFormat("en-US", {
+          timeZone: "UTC",
+          year: "numeric",
+          month: "numeric",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          second: "2-digit",
+        }).format(this);
+      });
+  });
+
+  afterAll(() => {
+    (Date.prototype.toLocaleString as jest.Mock).mockRestore();
+  });
+
   it("renders summary counts", () => {
     renderTable();
 
