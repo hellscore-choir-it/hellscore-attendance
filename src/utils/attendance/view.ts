@@ -9,7 +9,25 @@ const isMatchingEvent = (
   targetEventDate: string,
   targetEventTitle?: string
 ) => {
-  if (response.eventDate !== targetEventDate) {
+  const toDateKey = (value: string) => {
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return "";
+    }
+    const month = String(parsed.getMonth() + 1).padStart(2, "0");
+    const day = String(parsed.getDate()).padStart(2, "0");
+    return `${parsed.getFullYear()}-${month}-${day}`;
+  };
+
+  const responseDateKey = toDateKey(response.eventDate);
+  const targetDateKey = toDateKey(targetEventDate);
+
+  const isDateMatch =
+    responseDateKey && targetDateKey
+      ? responseDateKey === targetDateKey
+      : response.eventDate === targetEventDate;
+
+  if (!isDateMatch) {
     return false;
   }
 

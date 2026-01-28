@@ -73,7 +73,6 @@ const sheetCellSchema = z.union([
 ]);
 
 const sheetValuesResponseSchema = z.object({
-  spreadsheetId: z.string(),
   range: z.string().optional(),
   majorDimension: z.string().optional(),
   values: z.array(z.array(sheetCellSchema)).optional(),
@@ -175,7 +174,9 @@ export const getSheetMembers = async ({
       );
 
       try {
-        const membersData = sheetValuesResponseSchema.parse(membersResponse.data);
+        const membersData = sheetValuesResponseSchema.parse(
+          membersResponse.data
+        );
         return membersData.values ?? [];
       } catch (error) {
         captureException(error, {

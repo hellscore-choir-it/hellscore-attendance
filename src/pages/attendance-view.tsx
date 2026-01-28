@@ -15,6 +15,13 @@ import { useEffect, useMemo, useState } from "react";
 
 import AttendanceViewTable from "../components/AttendanceViewTable";
 import SessionBoundary from "../components/SessionBoundary";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 import { ISOToHuman } from "../utils/dates";
 import { trpc } from "../utils/trpc";
 
@@ -67,79 +74,97 @@ const AttendanceViewPage: NextPage<
     }
   }, [eventDate, sortedDates]);
 
-  const eventDateForQuery = eventDate ? ISOToHuman(eventDate) : "";
+  const eventDateForQuery = eventDate || "";
+
+  const isQueryEnabled = Boolean(eventDateForQuery);
 
   const attendanceQuery = trpc.google.getAttendanceView.useQuery(
     {
       eventDate: eventDateForQuery,
       eventTitle: eventTitle || undefined,
     },
-    { enabled: Boolean(eventDateForQuery) }
+    { enabled: isQueryEnabled }
   );
 
+  const eventLabelDate = eventDate ? ISOToHuman(eventDate) : "";
   const eventLabel = eventTitle
-    ? `${eventTitle} - ${eventDateForQuery}`
-    : `Attendance - ${eventDateForQuery}`;
+    ? `${eventTitle} - ${eventLabelDate}`
+    : `נוכחות - ${eventLabelDate}`;
+
+  const titleSelectValue = eventTitle || "all";
+  const dateSelectValue = eventDate || undefined;
 
   return (
     <SessionBoundary>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-3 rounded-lg border border-slate-200 p-4 dark:border-slate-700">
-          <h2 className="text-lg font-semibold">View Attendance</h2>
+          <h2 className="text-lg font-semibold">צפייה בנוכחות</h2>
           <label className="flex flex-col gap-2">
             <span className="text-sm text-slate-600 dark:text-slate-300">
-              Event title
+              סוג אירוע
             </span>
-            <select
-              className="input input-bordered"
-              value={eventTitle}
-              onChange={(event) => setEventTitle(event.target.value)}
+            <Select
+              value={titleSelectValue}
+              onValueChange={(value) =>
+                setEventTitle(value === "all" ? "" : value)
+              }
             >
-              <option value="">All events</option>
-              {map(availableTitles, (title) => (
-                <option key={title} value={title}>
-                  {title}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="text-right">
+                <SelectValue placeholder="כל האירועים" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">כל האירועים</SelectItem>
+                {map(availableTitles, (title) => (
+                  <SelectItem key={title} value={title}>
+                    {title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </label>
           <label className="flex flex-col gap-2">
             <span className="text-sm text-slate-600 dark:text-slate-300">
-              Event date
+              תאריך
             </span>
-            <select
-              className="input input-bordered"
-              value={eventDate}
-              onChange={(event) => setEventDate(event.target.value)}
+            <Select
+              value={dateSelectValue}
+              onValueChange={setEventDate}
               disabled={!size(sortedDates)}
             >
-              <option value="">Select a date</option>
-              {map(sortedDates, (date) => (
-                <option value={date} key={date}>
-                  {ISOToHuman(date)}
-                  {upcomingDate && date === upcomingDate ? " (Upcoming)" : ""}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="text-right">
+                <SelectValue placeholder="בחרו תאריך" />
+              </SelectTrigger>
+              <SelectContent>
+                {map(sortedDates, (date) => (
+                  <SelectItem value={date} key={date}>
+                    {ISOToHuman(date)}
+                    {upcomingDate && date === upcomingDate ? " (הקרוב)" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </label>
         </div>
 
-        {attendanceQuery.isLoading && <p>טוען...</p>}
-        {attendanceQuery.error && (
+        {isQueryEnabled && attendanceQuery.isLoading && <p>טוען...</p>}
+        {isQueryEnabled && attendanceQuery.error && (
           <p className="text-red-600">{attendanceQuery.error.message}</p>
         )}
-        {!attendanceQuery.isLoading &&
+        {isQueryEnabled &&
+          !attendanceQuery.isLoading &&
           attendanceQuery.data &&
           size(attendanceQuery.data.rows) === 0 && (
             <p>אין נתונים לתצוגה עבור הבחירה הזו.</p>
           )}
-        {attendanceQuery.data && size(attendanceQuery.data.rows) > 0 && (
-          <AttendanceViewTable
-            rows={attendanceQuery.data.rows}
-            summary={attendanceQuery.data.summary}
-            eventName={eventLabel}
-          />
-        )}
+        {isQueryEnabled &&
+          attendanceQuery.data &&
+          size(attendanceQuery.data.rows) > 0 && (
+            <AttendanceViewTable
+              rows={attendanceQuery.data.rows}
+              summary={attendanceQuery.data.summary}
+              eventName={eventLabel}
+            />
+          )}
       </div>
     </SessionBoundary>
   );
