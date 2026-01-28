@@ -8,17 +8,16 @@ jest.mock("../../server/googleApis", () => ({
 }));
 
 jest.mock("../../server/db/attendanceViewConfig", () => ({
-  fetchAttendanceViewAllowlist: jest.fn().mockResolvedValue([
-    "jamie@example.com",
-  ]),
+  fetchAttendanceViewAllowlist: jest
+    .fn()
+    .mockResolvedValue(["jamie@example.com"]),
   isEmailAllowlisted: jest.fn((allowlist: string[], email?: string) =>
     Boolean(email && allowlist.includes(email))
   ),
 }));
 
-const { getSheetMembers, getSheetResponses } = jest.requireMock(
-  "../../server/googleApis"
-);
+const { getSheetMembers, getSheetResponses, getUserEventTypeAssignments } =
+  jest.requireMock("../../server/googleApis");
 
 const buildSession = (email: string) =>
   ({
@@ -35,6 +34,10 @@ describe("googleRouter.getAttendanceView", () => {
   });
 
   it("returns rows and summary for the selected event", async () => {
+    getUserEventTypeAssignments.mockResolvedValue([
+      { title: "Rehearsal", email: "jamie@example.com" },
+      { title: "Rehearsal", email: "riley@example.com" },
+    ]);
     getSheetMembers.mockResolvedValue([
       ["Email", "Name"],
       ["jamie@example.com", "Jamie"],
@@ -79,7 +82,46 @@ describe("googleRouter.getAttendanceView", () => {
     });
   });
 
+  it("scopes members to user-event assignments", async () => {
+    getUserEventTypeAssignments.mockResolvedValue([
+      { title: "Rehearsal", email: "jamie@example.com" },
+    ]);
+    getSheetMembers.mockResolvedValue([
+      ["Email", "Name"],
+      ["jamie@example.com", "Jamie"],
+      ["riley@example.com", "Riley"],
+    ]);
+    getSheetResponses.mockResolvedValue([
+      [
+        "User Email",
+        "Timestamp millis",
+        "Event Title",
+        "Event Date",
+        "Going?",
+        "Why Not?",
+        "Went Last Time?",
+        "Comments",
+      ],
+    ]);
+
+    const caller = createCaller(buildSession("jamie@example.com"));
+
+    const result = await caller.getAttendanceView({
+      eventDate: "2025-10-10",
+      eventTitle: "Rehearsal",
+    });
+
+    expect(result.rows).toHaveLength(1);
+    expect(result.summary).toEqual({
+      going: 0,
+      notGoing: 0,
+      noResponse: 1,
+      total: 1,
+    });
+  });
+
   it("requires a session", async () => {
+    getUserEventTypeAssignments.mockResolvedValue([]);
     const caller = createCaller(null);
 
     await expect(

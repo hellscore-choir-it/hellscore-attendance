@@ -104,7 +104,7 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
   - [x] Add date/event selector (Dropdown or calendar input).
   - [x] Call `trpc.google.getAttendanceView` and render the table.
   - [x] Show loading, empty, and error states using existing UI patterns.
-  - [ ] Make sure you get the list of choir member who didn't respond to and event from the Users assigned to `User Events`.
+  - [x] Make sure you get the list of choir member who didn't respond to and event from the Users assigned to `User Events`.
 - [x] Protect the page to users:
   - [x] using emails with sheet access.
   - [x] using a DB config containing allowed emails (similar to admin check).

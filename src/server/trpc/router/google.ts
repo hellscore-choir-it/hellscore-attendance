@@ -14,11 +14,11 @@ import {
   sanitizeText,
 } from "../../../utils/attendanceSchema";
 import { getGoogleApiErrorInfo } from "../../../utils/errors";
-import { performUpdateCallbacksSerially } from "../../db/userUpdateSideEffects";
 import {
   fetchAttendanceViewAllowlist,
   isEmailAllowlisted,
 } from "../../db/attendanceViewConfig";
+import { performUpdateCallbacksSerially } from "../../db/userUpdateSideEffects";
 import {
   getSheetMembers,
   getSheetResponses,
@@ -218,11 +218,13 @@ export const googleRouter = router({
 
       let membersRows: (string | number | boolean | null)[][] = [];
       let responsesRows: (string | number | boolean | null)[][] = [];
+      let userEventTypes;
 
       try {
-        [membersRows, responsesRows] = await Promise.all([
+        [membersRows, responsesRows, userEventTypes] = await Promise.all([
           getSheetMembers({ retry: true, maxRetries: 3 }),
           getSheetResponses({ retry: true, maxRetries: 3 }),
+          getUserEventTypeAssignments({ retry: true, maxRetries: 3 }),
         ]);
       } catch (error) {
         const errorId = randomUUID();
@@ -246,8 +248,23 @@ export const googleRouter = router({
       }
 
       const members = parseMembersSheet(membersRows);
+      const requiredAttendees = eventTitle
+        ? map(filter(userEventTypes, { title: eventTitle }), "email")
+            .map((email) => email?.toLowerCase())
+            .filter(Boolean)
+        : [];
+      const scopedMembers = eventTitle
+        ? filter(members, (member) =>
+            includes(requiredAttendees, member.email.toLowerCase())
+          )
+        : members;
       const responses = parseResponsesSheet(responsesRows);
-      const rows = getAttendanceView(members, responses, eventDate, eventTitle);
+      const rows = getAttendanceView(
+        scopedMembers,
+        responses,
+        eventDate,
+        eventTitle
+      );
 
       const summary = reduce(
         rows,
