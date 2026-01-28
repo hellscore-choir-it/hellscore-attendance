@@ -1,4 +1,5 @@
 import type { ChoirMember, RawResponse } from "../../types/attendance";
+import { sanitizeText } from "../attendanceSchema";
 
 type SheetCell = string | number | boolean | null | undefined;
 
@@ -88,9 +89,9 @@ export const parseResponsesSheet = (rows: SheetCell[][]): RawResponse[] =>
       const eventTitle = normalizeString(row[2]);
       const eventDate = normalizeString(row[3]);
       const going = normalizeBoolean(row[4]);
-      const whyNot = normalizeString(row[5]);
+      const whyNot = sanitizeText(normalizeString(row[5]));
       const wentLastTime = normalizeBoolean(row[6]);
-      const comments = normalizeString(row[7]);
+      const comments = sanitizeText(normalizeString(row[7]));
 
       return {
         email,

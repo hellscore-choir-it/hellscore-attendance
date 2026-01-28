@@ -79,7 +79,7 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
   - [x] Implement `getSheetResponses()` to read the Responses tab (use RequestQueue + retry).
   - [x] Reuse `doAsyncOperationWithRetry` and `RequestQueue` patterns.
   - [x] Add Zod schemas to validate incoming sheet data structure.
-- [ ] Ensure sanitize/validation rules are consistent with existing `attendanceSchema` usage.
+- [x] Ensure sanitize/validation rules are consistent with existing `attendanceSchema` usage.
 - [x] Use the test inspection helper to validate the A1 ranges and header expectations against the test sheet.
 
 ## Phase 5 — TRPC Procedure
