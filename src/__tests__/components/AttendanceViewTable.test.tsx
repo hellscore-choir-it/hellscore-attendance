@@ -129,3 +129,19 @@ describe("AttendanceViewTable controls", () => {
     expect(within(rows[0]).getAllByRole("cell")[2]).toHaveTextContent("לא ענו");
   });
 });
+
+describe("AttendanceViewTable summaries and styling", () => {
+  it("renders summary counts", () => {
+    renderTable();
+
+    expect(screen.getByText(/^מגיעים: 1$/)).toBeInTheDocument();
+    expect(screen.getByText(/^לא מגיעים: 1$/)).toBeInTheDocument();
+    expect(screen.getByText(/^לא ענו: 1$/)).toBeInTheDocument();
+    expect(screen.getByText(/^סה״כ: 3$/)).toBeInTheDocument();
+  });
+
+  it("matches row coloring snapshot", () => {
+    const { asFragment } = renderTable();
+    expect(asFragment()).toMatchSnapshot();
+  });
+});

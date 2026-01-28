@@ -113,9 +113,9 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
 
 ## Phase 7 — Tests and QA
 
-- [ ] Add component tests for the new table.
-  - [ ] Include snapshot tests for row coloring.
-  - [ ] Include tests for summary counts.
+- [x] Add component tests for the new table.
+  - [x] Include snapshot tests for row coloring.
+  - [x] Include tests for summary counts.
 - [ ] Extend/maintain integration tests as new sheet calls are added.
 - [x] Add unit tests for `google.getAttendanceView` router.
 - [ ] Run pnpm test, pnpm typecheck.
