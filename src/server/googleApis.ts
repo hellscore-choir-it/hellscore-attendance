@@ -65,6 +65,20 @@ const gsheetDataSchema = z.object({
   ]),
 });
 
+const sheetCellSchema = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+  z.null(),
+]);
+
+const sheetValuesResponseSchema = z.object({
+  spreadsheetId: z.string(),
+  range: z.string().optional(),
+  majorDimension: z.string().optional(),
+  values: z.array(z.array(sheetCellSchema)).optional(),
+});
+
 export interface UserEventType {
   title: string;
   email: string;
@@ -131,6 +145,93 @@ export const getUserEventTypeAssignments = async ({
         throw new Error(
           `Failed to parse Google Sheets data: ${error}. Response: ${JSON.stringify(
             userEventSheetResponse.data || "No data"
+          )}`
+        );
+      }
+    },
+    { retry, maxRetries }
+  );
+};
+
+const membersSheetRange = "Users!A1:B";
+const responsesSheetRange = "Responses!A1:J";
+
+export const getSheetMembers = async ({
+  retry = true,
+  maxRetries = 3,
+}: {
+  retry?: boolean;
+  maxRetries?: number;
+} = {}): Promise<(string | number | boolean | null)[][]> => {
+  return await doAsyncOperationWithRetry(
+    async () => {
+      const googleSheetsGetParams = {
+        spreadsheetId: isTestEnvironment() ? env.TEST_SHEET_ID : env.SHEET_ID,
+        range: membersSheetRange,
+      };
+
+      const membersResponse = await sheetsRequestQueue.add(() =>
+        sheets.spreadsheets.values.get(googleSheetsGetParams)
+      );
+
+      try {
+        const membersData = sheetValuesResponseSchema.parse(membersResponse.data);
+        return membersData.values ?? [];
+      } catch (error) {
+        captureException(error, {
+          extra: { membersResponse, googleSheetsGetParams },
+        });
+        console.error(
+          "Failed to parse Google Sheets members data:",
+          error,
+          membersResponse.data
+        );
+        throw new Error(
+          `Failed to parse Google Sheets members data: ${error}. Response: ${JSON.stringify(
+            membersResponse.data || "No data"
+          )}`
+        );
+      }
+    },
+    { retry, maxRetries }
+  );
+};
+
+export const getSheetResponses = async ({
+  retry = true,
+  maxRetries = 3,
+}: {
+  retry?: boolean;
+  maxRetries?: number;
+} = {}): Promise<(string | number | boolean | null)[][]> => {
+  return await doAsyncOperationWithRetry(
+    async () => {
+      const googleSheetsGetParams = {
+        spreadsheetId: isTestEnvironment() ? env.TEST_SHEET_ID : env.SHEET_ID,
+        range: responsesSheetRange,
+      };
+
+      const responsesResponse = await sheetsRequestQueue.add(() =>
+        sheets.spreadsheets.values.get(googleSheetsGetParams)
+      );
+
+      try {
+        const responsesData = sheetValuesResponseSchema.parse(
+          responsesResponse.data
+        );
+        return responsesData.values ?? [];
+      } catch (error) {
+        captureException(error, {
+          extra: { responsesResponse, googleSheetsGetParams },
+        });
+        console.error(
+          "Failed to parse Google Sheets responses data:",
+          error,
+          responsesResponse.data
+        );
+        throw new Error(
+          `Failed to parse Google Sheets responses data: ${error}. Response: ${JSON.stringify(
+            responsesResponse.data || "No data"
           )}`
         );
       }

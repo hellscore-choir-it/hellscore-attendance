@@ -74,13 +74,13 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
 
 ## Phase 4 — Google Sheets Data Fetch
 
-- [ ] Add Sheets fetch functions in src/server/googleApis.ts.
-  - [ ] Implement `getSheetMembers()` to read the Users tab (use RequestQueue + retry).
-  - [ ] Implement `getSheetResponses()` to read the Responses tab (use RequestQueue + retry).
-  - [ ] Reuse `doAsyncOperationWithRetry` and `RequestQueue` patterns.
-  - [ ] Add Zod schemas to validate incoming sheet data structure.
+- [x] Add Sheets fetch functions in src/server/googleApis.ts.
+  - [x] Implement `getSheetMembers()` to read the Users tab (use RequestQueue + retry).
+  - [x] Implement `getSheetResponses()` to read the Responses tab (use RequestQueue + retry).
+  - [x] Reuse `doAsyncOperationWithRetry` and `RequestQueue` patterns.
+  - [x] Add Zod schemas to validate incoming sheet data structure.
 - [ ] Ensure sanitize/validation rules are consistent with existing `attendanceSchema` usage.
-- [ ] Use the test inspection helper to validate the A1 ranges and header expectations against the test sheet.
+- [x] Use the test inspection helper to validate the A1 ranges and header expectations against the test sheet.
 
 ## Phase 5 — TRPC Procedure
 
@@ -104,6 +104,10 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
   - [ ] Add date/event selector (Dropdown or calendar input).
   - [ ] Call `trpc.google.getAttendanceView` and render the table.
   - [ ] Show loading, empty, and error states using existing UI patterns.
+- [ ] Protect the page to users:
+  - [ ] using emails with sheet access.
+  - [ ] using a DB config containing allowed emails (similar to admin check).
+- [ ] Add protections to the API calls as well based on the same logic.
 
 ## Phase 7 — Tests and QA
 

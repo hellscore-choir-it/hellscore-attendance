@@ -61,3 +61,13 @@ Inspection helper: use [src/testUtils/inspectTestSheet.ts](src/testUtils/inspect
 - “View Attendance” uses `Responses` filtered by event title and exact date (via `toDate`) plus `Is Last Submission = true` (column J) to compute the latest response per email.
 - Emails are pre-filtered using `User Events` (email + event title), then VLOOKUP is used to fill per-user fields.
 - Display order is by member name (query order by Col2 in View Attendance).
+
+## App integration notes
+
+- Sheets A1 ranges used by the app:
+  - Users: `Users!A1:B`
+  - Responses: `Responses!A1:J`
+- Fetch helpers live in `src/server/googleApis.ts`:
+  - `getSheetMembers()` reads the Users range.
+  - `getSheetResponses()` reads the Responses range.
+- The test-sheet integration validates these ranges in `src/__tests__/server/googleApis.integration.test.ts`.

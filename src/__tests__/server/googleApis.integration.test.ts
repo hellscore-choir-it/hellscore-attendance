@@ -51,6 +51,32 @@ describe("Google Sheets integration (test sheet)", () => {
     ]);
   });
 
+  it("validates A1 ranges for Users and Responses", async () => {
+    const result = await inspectTestSheet(["Users!A1:B", "Responses!A1:J"]);
+
+    const usersRange = result.valueRanges.find((range) =>
+      range.range?.includes("Users!A1:B")
+    );
+    const responsesRange = result.valueRanges.find((range) =>
+      range.range?.includes("Responses!A1:J")
+    );
+
+    const usersHeader = usersRange?.values?.[0] ?? [];
+    const responsesHeader = responsesRange?.values?.[0] ?? [];
+
+    expect(usersHeader).toEqual(["Email", "Name"]);
+    expect(responsesHeader.slice(0, 8)).toEqual([
+      "User Email",
+      "Timestamp millis",
+      "Event Title",
+      "Event Date",
+      "Going?",
+      "Why Not?",
+      "Went Last Time?",
+      "Comments",
+    ]);
+  });
+
   it("loads user event assignments from the sheet", async () => {
     const { getUserEventTypeAssignments } = await loadGoogleApis();
     const assignments = await getUserEventTypeAssignments({
