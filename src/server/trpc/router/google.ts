@@ -1,11 +1,14 @@
-import { captureException } from "@sentry/nextjs";
+import { captureException, captureMessage } from "@sentry/nextjs";
 import { TRPCError } from "@trpc/server";
 import { randomUUID } from "crypto";
 
-import { filter, includes, map, reduce } from "lodash";
+import { filter, includes, isEmpty, map, reduce, size } from "lodash";
 import { z } from "zod";
+import { isE2EServer } from "../../../e2e/mode";
 import { getE2EAttendanceViewResponse } from "../../../e2e/server/attendanceViewFixture";
 import {
+  getMembersHeaderIssues,
+  getResponsesHeaderIssues,
   parseMembersSheet,
   parseResponsesSheet,
 } from "../../../utils/attendance/normalize";
@@ -26,7 +29,6 @@ import {
   getUserEventTypeAssignments,
   writeResponseRow,
 } from "../../googleApis";
-import { isE2EServer } from "../../../e2e/mode";
 import { protectedProcedure, router } from "../trpc";
 
 const attendanceViewInputSchema = z.object({
@@ -253,9 +255,50 @@ export const googleRouter = router({
         });
       }
 
+      const membersHeaderIssues = getMembersHeaderIssues(membersRows);
+      if (membersHeaderIssues.length > 0) {
+        captureMessage("Attendance view members sheet header issues", {
+          level: "warning",
+          extra: {
+            userEmail,
+            eventDate,
+            eventTitle,
+            issues: membersHeaderIssues,
+            sampleRow: membersRows[0],
+          },
+        });
+      }
+
+      const responsesHeaderIssues = getResponsesHeaderIssues(responsesRows);
+      if (responsesHeaderIssues.length > 0) {
+        captureMessage("Attendance view responses sheet header issues", {
+          level: "warning",
+          extra: {
+            userEmail,
+            eventDate,
+            eventTitle,
+            issues: responsesHeaderIssues,
+            sampleRow: responsesRows[0],
+          },
+        });
+      }
+
+      if (isEmpty(membersRows) || isEmpty(responsesRows)) {
+        captureMessage("Attendance view sheet data missing", {
+          level: "warning",
+          extra: {
+            userEmail,
+            eventDate,
+            eventTitle,
+            membersRowCount: size(membersRows),
+            responsesRowCount: size(responsesRows),
+          },
+        });
+      }
+
       const members = parseMembersSheet(membersRows);
       const requiredAttendees = eventTitle
-        ? map(filter(userEventTypes, { title: eventTitle }), "email")
+        ? map(filter(userEventTypes ?? [], { title: eventTitle }), "email")
             .map((email) => email?.toLowerCase())
             .filter(Boolean)
         : [];
@@ -265,6 +308,31 @@ export const googleRouter = router({
           )
         : members;
       const responses = parseResponsesSheet(responsesRows);
+
+      if (!isEmpty(membersRows) && isEmpty(members)) {
+        captureMessage("Attendance view members parsed empty", {
+          level: "warning",
+          extra: {
+            userEmail,
+            eventDate,
+            eventTitle,
+            membersRowCount: size(membersRows),
+          },
+        });
+      }
+
+      if (!isEmpty(responsesRows) && isEmpty(responses)) {
+        captureMessage("Attendance view responses parsed empty", {
+          level: "warning",
+          extra: {
+            userEmail,
+            eventDate,
+            eventTitle,
+            responsesRowCount: size(responsesRows),
+          },
+        });
+      }
+
       const rows = getAttendanceView(
         scopedMembers,
         responses,

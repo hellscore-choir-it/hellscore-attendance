@@ -139,6 +139,14 @@ const AttendanceViewPage: NextPage<
             <span className="text-sm text-slate-600 dark:text-slate-300">
               תאריך
             </span>
+            <button
+              type="button"
+              disabled={!canPickUpcoming}
+              className="btn btn-sm self-start"
+              onClick={() => setEventDate(upcomingDate as string)}
+            >
+              בחרו את הקרוב
+            </button>
             <Select
               value={dateSelectValue}
               onValueChange={setEventDate}
@@ -156,15 +164,6 @@ const AttendanceViewPage: NextPage<
                 ))}
               </SelectContent>
             </Select>
-            {canPickUpcoming && (
-              <button
-                type="button"
-                className="btn btn-sm self-start"
-                onClick={() => setEventDate(upcomingDate as string)}
-              >
-                בחרו את הקרוב
-              </button>
-            )}
           </label>
         </div>
 

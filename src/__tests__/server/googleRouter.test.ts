@@ -1,5 +1,10 @@
 import { googleRouter } from "../../server/trpc/router/google";
 
+jest.mock("@sentry/nextjs", () => ({
+  captureException: jest.fn(),
+  captureMessage: jest.fn(),
+}));
+
 jest.mock("../../server/googleApis", () => ({
   getSheetMembers: jest.fn(),
   getSheetResponses: jest.fn(),
@@ -18,6 +23,7 @@ jest.mock("../../server/db/attendanceViewConfig", () => ({
 
 const { getSheetMembers, getSheetResponses, getUserEventTypeAssignments } =
   jest.requireMock("../../server/googleApis");
+const { captureMessage } = jest.requireMock("@sentry/nextjs");
 
 const buildSession = (email: string) =>
   ({
@@ -130,5 +136,64 @@ describe("googleRouter.getAttendanceView", () => {
         eventTitle: "Rehearsal",
       })
     ).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+  });
+
+  it("logs header warnings when sheets are empty", async () => {
+    getUserEventTypeAssignments.mockResolvedValue([]);
+    getSheetMembers.mockResolvedValue([]);
+    getSheetResponses.mockResolvedValue([]);
+
+    const caller = createCaller(buildSession("jamie@example.com"));
+
+    await caller.getAttendanceView({
+      eventDate: "2025-10-10",
+      eventTitle: "Rehearsal",
+    });
+
+    expect(captureMessage).toHaveBeenCalledWith(
+      "Attendance view members sheet header issues",
+      expect.objectContaining({ level: "warning" })
+    );
+    expect(captureMessage).toHaveBeenCalledWith(
+      "Attendance view responses sheet header issues",
+      expect.objectContaining({ level: "warning" })
+    );
+    expect(captureMessage).toHaveBeenCalledWith(
+      "Attendance view sheet data missing",
+      expect.objectContaining({ level: "warning" })
+    );
+  });
+
+  it("logs parsed-empty warnings when only headers exist", async () => {
+    getUserEventTypeAssignments.mockResolvedValue([]);
+    getSheetMembers.mockResolvedValue([["Email", "Name"]]);
+    getSheetResponses.mockResolvedValue([
+      [
+        "User Email",
+        "Timestamp millis",
+        "Event Title",
+        "Event Date",
+        "Going?",
+        "Why Not?",
+        "Went Last Time?",
+        "Comments",
+      ],
+    ]);
+
+    const caller = createCaller(buildSession("jamie@example.com"));
+
+    await caller.getAttendanceView({
+      eventDate: "2025-10-10",
+      eventTitle: "Rehearsal",
+    });
+
+    expect(captureMessage).toHaveBeenCalledWith(
+      "Attendance view members parsed empty",
+      expect.objectContaining({ level: "warning" })
+    );
+    expect(captureMessage).toHaveBeenCalledWith(
+      "Attendance view responses parsed empty",
+      expect.objectContaining({ level: "warning" })
+    );
   });
 });

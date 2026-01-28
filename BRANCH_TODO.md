@@ -123,12 +123,12 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
 
 ## Phase 8 — Observability and Edge Cases
 
-- [ ] Add Sentry logging for parsing failures, unexpected data shapes, or missing columns.
-- [ ] Add guardrails for missing data (return empty view with warning instead of hard crash).
-- [ ] Verify behavior for:
-  - [ ] Multiple responses for the same user/date.
-  - [ ] Missing or malformed email.
-  - [ ] Event title mismatch.
+- [x] Add Sentry logging for parsing failures, unexpected data shapes, or missing columns.
+- [x] Add guardrails for missing data (return empty view with warning instead of hard crash).
+- [x] Verify behavior for:
+  - [x] Multiple responses for the same user/date.
+  - [x] Missing or malformed email.
+  - [x] Event title mismatch.
 
 ## Deliverables Checklist
 
