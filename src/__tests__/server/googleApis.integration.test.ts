@@ -7,7 +7,6 @@ jest.mock("../../env/server.mjs", () => ({
       process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS,
     TEST_SHEET_ID: process.env.TEST_SHEET_ID,
     SHEET_ID: process.env.SHEET_ID,
-    TEST_EVENTS: process.env.TEST_EVENTS,
   },
 }));
 

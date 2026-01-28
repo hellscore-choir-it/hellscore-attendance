@@ -12,7 +12,6 @@ jobs:
     env:
       GOOGLE_SERVICE_ACCOUNT_CREDENTIALS: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS }}
       TEST_SHEET_ID: ${{ secrets.TEST_SHEET_ID }}
-      TEST_EVENTS: ${{ secrets.TEST_EVENTS }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
