@@ -84,13 +84,13 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
 
 ## Phase 5 — TRPC Procedure
 
-- [ ] Add a protected TRPC endpoint for the view.
-  - [ ] Update src/server/trpc/router/google.ts with `google.getAttendanceView`.
-  - [ ] Input: `{ eventDate: string; eventTitle?: string }` validated via Zod.
+- [x] Add a protected TRPC endpoint for the view.
+  - [x] Update src/server/trpc/router/google.ts with `google.getAttendanceView`.
+  - [x] Input: `{ eventDate: string; eventTitle?: string }` validated via Zod.
   - [ ] Authorization: gate with session and optionally restrict to admin emails using `ADMIN_EMAILS`.
-  - [ ] Load members + responses from Sheets, normalize, then compute view.
-  - [ ] Return rows plus summary counts (going, notGoing, noResponse, total).
-  - [ ] Log and capture exceptions with Sentry.
+  - [x] Load members + responses from Sheets, normalize, then compute view.
+  - [x] Return rows plus summary counts (going, notGoing, noResponse, total).
+  - [x] Log and capture exceptions with Sentry.
 
 ## Phase 6 — UI View (Page + Table)
 
@@ -115,6 +115,7 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
   - [ ] Include snapshot tests for row coloring.
   - [ ] Include tests for summary counts.
 - [ ] Extend/maintain integration tests as new sheet calls are added.
+- [x] Add unit tests for `google.getAttendanceView` router.
 - [ ] Run pnpm test, pnpm typecheck, pnpm lint.
 
 ## Phase 8 — Observability and Edge Cases
@@ -131,8 +132,8 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
 - [x] src/types/attendance.ts
 - [x] src/utils/attendance/normalize.ts
 - [x] src/utils/attendance/view.ts
-- [ ] src/server/googleApis.ts updates (new getters + schemas)
-- [ ] src/server/trpc/router/google.ts updates
+- [x] src/server/googleApis.ts updates (new getters + schemas)
+- [x] src/server/trpc/router/google.ts updates
 - [ ] src/components/AttendanceViewTable.tsx
 - [ ] src/pages/attendance-view.tsx
 - [ ] Tests in src/**tests**/utils and src/**tests**/components
