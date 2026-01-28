@@ -14,17 +14,45 @@ const sheetsRequestQueue = new RequestQueue();
 // If we need to check if we're running in a build environment (like Vercel build)
 // const isBuildEnvironment = () => process.env.NEXT_PHASE === 'PHASE_PRODUCTION_BUILD' || process.env.VERCEL_ENV === 'production';
 
-const auth = google.auth.fromJSON(
-  JSON.parse(env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS || "")
-) as Auth.JWT & { scopes: string[] };
+let cachedAuth: (Auth.JWT & { scopes: string[] }) | null = null;
+let cachedSheets: ReturnType<typeof google.sheets> | null = null;
+let cachedCalendars: ReturnType<typeof google.calendar> | null = null;
 
-auth.scopes = [
-  "https://www.googleapis.com/auth/drive",
-  "https://www.googleapis.com/auth/spreadsheets",
-  "https://www.googleapis.com/auth/calendar.readonly",
-];
-const sheets = google.sheets({ version: "v4", auth });
-const calendars = google.calendar({ version: "v3", auth });
+const getGoogleAuth = () => {
+  if (cachedAuth) return cachedAuth;
+
+  const credentials = env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS;
+  if (!credentials) {
+    throw new Error("GOOGLE_SERVICE_ACCOUNT_CREDENTIALS is not set.");
+  }
+
+  const auth = google.auth.fromJSON(JSON.parse(credentials)) as Auth.JWT & {
+    scopes: string[];
+  };
+
+  auth.scopes = [
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/calendar.readonly",
+  ];
+
+  cachedAuth = auth;
+  return auth;
+};
+
+const getSheetsClient = () => {
+  if (!cachedSheets) {
+    cachedSheets = google.sheets({ version: "v4", auth: getGoogleAuth() });
+  }
+  return cachedSheets;
+};
+
+const getCalendarsClient = () => {
+  if (!cachedCalendars) {
+    cachedCalendars = google.calendar({ version: "v3", auth: getGoogleAuth() });
+  }
+  return cachedCalendars;
+};
 
 const isTestEnvironment = () =>
   env.TEST_EVENTS === "true" || env.TEST_EVENTS === "1";
@@ -42,7 +70,7 @@ export const writeResponseRow = async (
   return await doAsyncOperationWithRetry(
     async () =>
       sheetsRequestQueue.add(() =>
-        sheets.spreadsheets.values.append({
+        getSheetsClient().spreadsheets.values.append({
           spreadsheetId: isTestEnvironment() ? env.TEST_SHEET_ID : env.SHEET_ID,
           requestBody: { values: [row] },
           range: "response",
@@ -105,7 +133,9 @@ export const getUserEventTypeAssignments = async ({
         ranges: ["user_event_event_title", "user_event_user_email"],
       };
       const userEventSheetResponse = await sheetsRequestQueue.add(() =>
-        sheets.spreadsheets.values.batchGet(googleSheetsBatchGetParams)
+        getSheetsClient().spreadsheets.values.batchGet(
+          googleSheetsBatchGetParams
+        )
       );
 
       try {
@@ -170,7 +200,7 @@ export const getSheetMembers = async ({
       };
 
       const membersResponse = await sheetsRequestQueue.add(() =>
-        sheets.spreadsheets.values.get(googleSheetsGetParams)
+        getSheetsClient().spreadsheets.values.get(googleSheetsGetParams)
       );
 
       try {
@@ -213,7 +243,7 @@ export const getSheetResponses = async ({
       };
 
       const responsesResponse = await sheetsRequestQueue.add(() =>
-        sheets.spreadsheets.values.get(googleSheetsGetParams)
+        getSheetsClient().spreadsheets.values.get(googleSheetsGetParams)
       );
 
       try {
@@ -251,7 +281,7 @@ export const getHellscoreEvents = async ({
   timeMin?: string;
   maxResults?: number;
 } = {}) => {
-  const response = await calendars.events.list({
+  const response = await getCalendarsClient().events.list({
     calendarId: hellscoreCalendarId,
     maxAttendees: 1,
     maxResults,
