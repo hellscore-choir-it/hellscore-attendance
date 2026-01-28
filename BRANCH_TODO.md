@@ -94,16 +94,16 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
 
 ## Phase 6 — UI View (Page + Table)
 
-- [ ] Build a table component for the attendance view.
-  - [ ] Create src/components/AttendanceViewTable.tsx.
-  - [ ] Props: `rows`, `summary`, `eventName`.
-  - [ ] Row colors: going = green, not going = red, no response = gray/white.
-- [ ] Add a page to display the view.
-  - [ ] Create src/pages/attendance-view.tsx.
-  - [ ] Use `SessionBoundary` and `Layout`.
-  - [ ] Add date/event selector (Dropdown or calendar input).
-  - [ ] Call `trpc.google.getAttendanceView` and render the table.
-  - [ ] Show loading, empty, and error states using existing UI patterns.
+- [x] Build a table component for the attendance view.
+  - [x] Create src/components/AttendanceViewTable.tsx.
+  - [x] Props: `rows`, `summary`, `eventName`.
+  - [x] Row colors: going = green, not going = red, no response = gray/white.
+- [x] Add a page to display the view.
+  - [x] Create src/pages/attendance-view.tsx.
+  - [x] Use `SessionBoundary` and `Layout`.
+  - [x] Add date/event selector (Dropdown or calendar input).
+  - [x] Call `trpc.google.getAttendanceView` and render the table.
+  - [x] Show loading, empty, and error states using existing UI patterns.
 - [ ] Protect the page to users:
   - [ ] using emails with sheet access.
   - [ ] using a DB config containing allowed emails (similar to admin check).
@@ -116,7 +116,7 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
   - [ ] Include tests for summary counts.
 - [ ] Extend/maintain integration tests as new sheet calls are added.
 - [x] Add unit tests for `google.getAttendanceView` router.
-- [ ] Run pnpm test, pnpm typecheck, pnpm lint.
+- [ ] Run pnpm test, pnpm typecheck.
 
 ## Phase 8 — Observability and Edge Cases
 
@@ -134,6 +134,6 @@ Goal: Recreate the Google Sheets “View Attendance” logic inside the app, usi
 - [x] src/utils/attendance/view.ts
 - [x] src/server/googleApis.ts updates (new getters + schemas)
 - [x] src/server/trpc/router/google.ts updates
-- [ ] src/components/AttendanceViewTable.tsx
-- [ ] src/pages/attendance-view.tsx
+- [x] src/components/AttendanceViewTable.tsx
+- [x] src/pages/attendance-view.tsx
 - [ ] Tests in src/**tests**/utils and src/**tests**/components

@@ -15,7 +15,7 @@ const buildSession = (email: string) =>
   ({
     user: { email, name: "Test User" },
     expires: "2099-01-01T00:00:00.000Z",
-  }) as any;
+  } as any);
 
 const createCaller = (session: any) =>
   googleRouter.createCaller({ session } as any);
