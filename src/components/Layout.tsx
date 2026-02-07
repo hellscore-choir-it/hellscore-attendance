@@ -44,7 +44,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       mainElement.removeEventListener("scroll", updateScrollState);
       window.removeEventListener("resize", updateScrollState);
     };
-  }, [children]);
+  }, []);
 
   return (
     <div

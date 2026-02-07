@@ -236,7 +236,7 @@ All colors MUST be HSL.
 .scrollable-main::before,
 .scrollable-main::after {
   content: "";
-  position: fixed;
+  position: absolute;
   left: 0;
   right: 0;
   height: 30px;
@@ -247,7 +247,7 @@ All colors MUST be HSL.
 }
 
 .scrollable-main::before {
-  top: calc(env(safe-area-inset-top) + 4rem);
+  top: 0;
   background: linear-gradient(
     to bottom,
     hsl(var(--background)) 0%,
@@ -258,7 +258,7 @@ All colors MUST be HSL.
 }
 
 .scrollable-main::after {
-  bottom: calc(env(safe-area-inset-bottom) + 7rem);
+  bottom: 0;
   background: linear-gradient(
     to top,
     hsl(var(--background)) 0%,
