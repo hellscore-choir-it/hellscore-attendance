@@ -2,11 +2,16 @@ import { map } from "lodash";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const { data: session } = useSession();
   const router = useRouter();
+  const mainRef = useRef<HTMLElement>(null);
+  const [scrollState, setScrollState] = useState({
+    canScrollUp: false,
+    canScrollDown: false,
+  });
 
   const bottomLinks = [
     {
@@ -18,6 +23,28 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       route: "/catalog",
     },
   ];
+
+  useEffect(() => {
+    const mainElement = mainRef.current;
+    if (!mainElement) return;
+
+    const updateScrollState = () => {
+      const { scrollTop, scrollHeight, clientHeight } = mainElement;
+      setScrollState({
+        canScrollUp: scrollTop > 10,
+        canScrollDown: scrollTop < scrollHeight - clientHeight - 10,
+      });
+    };
+
+    updateScrollState();
+    mainElement.addEventListener("scroll", updateScrollState);
+    window.addEventListener("resize", updateScrollState);
+
+    return () => {
+      mainElement.removeEventListener("scroll", updateScrollState);
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, []);
 
   return (
     <div
@@ -57,7 +84,14 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           {session ? "התנתק/י" : "התחבר/י"}
         </button>
       </header>
-      <main className="flex-1 overflow-auto px-4 py-3">{children}</main>
+      <main
+        ref={mainRef}
+        className="scrollable-main flex-1 overflow-auto px-4 py-3"
+        data-scroll-up={scrollState.canScrollUp}
+        data-scroll-down={scrollState.canScrollDown}
+      >
+        {children}
+      </main>
       <footer className="flex flex-shrink-0 flex-col border-t pb-4 pt-6 text-center text-sm text-gray-500">
         <div className="mb-3">
           {map(bottomLinks, (linkDetails, index) => (
