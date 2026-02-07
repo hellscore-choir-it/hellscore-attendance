@@ -190,3 +190,88 @@ All colors MUST be HSL.
 .animate-flame-dance {
   animation: flame-dance 2s ease-in-out infinite;
 }
+
+/* Scrollable content with visual indicators */
+.scrollable-main {
+  position: relative;
+  /* Custom scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--hell-fire) / 0.6) hsl(var(--background));
+}
+
+/* Webkit scrollbar (Chrome, Safari, Edge) */
+.scrollable-main::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollable-main::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+  border-radius: 4px;
+}
+
+.scrollable-main::-webkit-scrollbar-thumb {
+  background: hsl(var(--hell-fire) / 0.6);
+  border-radius: 4px;
+  border: 1px solid hsl(var(--background));
+}
+
+.scrollable-main::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--hell-fire) / 0.8);
+}
+
+/* Dark theme scrollbar variations */
+.dark .scrollable-main {
+  scrollbar-color: hsl(var(--hell-ember) / 0.7) hsl(var(--background));
+}
+
+.dark .scrollable-main::-webkit-scrollbar-thumb {
+  background: hsl(var(--hell-ember) / 0.7);
+}
+
+.dark .scrollable-main::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--hell-ember) / 0.9);
+}
+
+/* Scroll fade indicators */
+.scrollable-main::before,
+.scrollable-main::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 30px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 10;
+}
+
+.scrollable-main::before {
+  top: calc(env(safe-area-inset-top) + 4rem);
+  background: linear-gradient(
+    to bottom,
+    hsl(var(--background)) 0%,
+    hsl(var(--background) / 0.8) 40%,
+    transparent 100%
+  );
+  box-shadow: 0 2px 8px hsl(var(--hell-fire) / 0.3);
+}
+
+.scrollable-main::after {
+  bottom: calc(env(safe-area-inset-bottom) + 7rem);
+  background: linear-gradient(
+    to top,
+    hsl(var(--background)) 0%,
+    hsl(var(--background) / 0.8) 40%,
+    transparent 100%
+  );
+  box-shadow: 0 -2px 8px hsl(var(--hell-fire) / 0.3);
+}
+
+.scrollable-main[data-scroll-up="true"]::before {
+  opacity: 1;
+}
+
+.scrollable-main[data-scroll-down="true"]::after {
+  opacity: 1;
+}
